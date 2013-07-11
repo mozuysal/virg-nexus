@@ -1,0 +1,246 @@
+/**
+ * @file nx_filter.c
+ *
+ * This file is part of the IYTE Visual Intelligence Research Group Software Library
+ *
+ * Copyright (C) 2013 Izmir Institute of Technology. All rights reserved.
+ *
+ * @author Mustafa Ozuysal
+ *
+ * Contact mustafaozuysal@iyte.edu.tr for comments and bug reports.
+ *
+ */
+#include "virg/nexus/nx_filter.h"
+
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+
+#include "virg/nexus/nx_assert.h"
+#include "virg/nexus/nx_alloc.h"
+#include "virg/nexus/nx_math.h"
+
+static void fill_buffer_border_uc(int n, uchar *buffer, int n_border, enum NXBorderMode mode);
+
+double nx_kernel_loss_gaussian(int n, double sigma)
+{
+        NX_ASSERT(n > 0);
+        NX_ASSERT(sigma > 0);
+
+        double erf_f = 1.0 / (sqrt(2.0)*sigma);
+        double g_n_plus = 0.5 * nx_erf((n+1) * 0.5 * erf_f);
+        double g_n = 2.0 * g_n_plus;
+
+        return 1.0 - g_n;
+}
+
+short nx_kernel_sym_gaussian_si(int n_k, short *kernel, float sigma)
+{
+        NX_ASSERT(n_k > 1);
+        NX_ASSERT(kernel != NULL);
+        NX_ASSERT(sigma > 0);
+
+        double erf_f = 1.0 / (sqrt(2.0)*sigma);
+        double g_n_plus  = 0.5 * nx_erf((n_k - 0.5) * erf_f);
+        double g_n_minus = 0.5 * nx_erf((n_k - 1.5) * erf_f);
+        double g_n_inv = 1.0 / (g_n_plus - g_n_minus);
+
+        kernel[n_k-1] = 1;
+        short sum = 2 * kernel[n_k-1];
+        double g_i_plus = g_n_minus;
+        double g_i_minus;
+        for (int i = n_k-2; i > 0; --i) {
+                g_i_minus = 0.5 * nx_erf((i - 0.5) * erf_f);
+                kernel[i] = g_n_inv * (g_i_plus - g_i_minus);
+                sum += 2 * kernel[i];
+                g_i_plus = g_i_minus;
+        }
+
+        // g_i_minus = g_0.5
+        kernel[0] = g_n_inv * 2.0 * g_i_minus;
+        sum += kernel[0];
+
+        return sum;
+}
+
+void nx_kernel_sym_gaussian_s(int n_k, float *kernel, float sigma)
+{
+        NX_ASSERT(n_k > 1);
+        NX_ASSERT(kernel != NULL);
+        NX_ASSERT(sigma > 0);
+
+        double erf_f = 1.0 / (sqrt(2.0)*sigma);
+
+        kernel[0] = nx_erf(0.5 * erf_f);
+        float sum = kernel[0];
+        double g_i_minus = 0.5 * kernel[0];
+        for (int i = 1; i < n_k; ++i) {
+                double g_i_plus = 0.5 * nx_erf((i + 0.5) * erf_f);
+                kernel[i] = g_i_plus - g_i_minus;
+                sum += 2.0f * kernel[i];
+                g_i_minus = g_i_plus;
+        }
+
+        float sum_inv = 1.0f / sum;
+        for (int i = 0; i < n_k; ++i) {
+                kernel[i] *= sum_inv;
+        }
+}
+
+void nx_kernel_sym_gaussian_d(int n_k, double *kernel, double sigma)
+{
+        NX_ASSERT(n_k > 1);
+        NX_ASSERT(kernel != NULL);
+        NX_ASSERT(sigma > 0);
+
+        double erf_f = 1.0 / (sqrt(2.0)*sigma);
+
+        kernel[0] = nx_erf(0.5 * erf_f);
+        double sum = kernel[0];
+        double g_i_minus = 0.5 * kernel[0];
+        for (int i = 1; i < n_k; ++i) {
+                double g_i_plus = 0.5 * nx_erf((i + 0.5) * erf_f);
+                kernel[i] = g_i_plus - g_i_minus;
+                sum += 2.0 * kernel[i];
+                g_i_minus = g_i_plus;
+        }
+
+        double sum_inv = 1.0 / sum;
+        for (int i = 0; i < n_k; ++i) {
+                kernel[i] *= sum_inv;
+        }
+}
+
+void nx_convolve_sym_si_uc(int n, uchar *data, int n_k, const short *kernel, const short kernel_sum)
+{
+        NX_ASSERT(n > 1);
+        NX_ASSERT(data != NULL);
+        NX_ASSERT(n_k > 1);
+        NX_ASSERT(kernel != NULL);
+        NX_ASSERT(kernel_sum > 0);
+
+        float norm_factor = 1.0f / kernel_sum;
+
+        for (int i = 0; i < n; ++i) {
+                uchar* dk0 = data + i + n_k - 1;
+                int sum = kernel[0] * *dk0;
+                for (int k = 1; k < n_k; ++k) {
+                        sum += kernel[k] * (dk0[-k] + dk0[+k]);
+                }
+                data[i] = norm_factor * sum;
+        }
+}
+
+void nx_convolve_sym_s_uc(int n, uchar *data, int n_k, const float *kernel)
+{
+        NX_ASSERT(n > 1);
+        NX_ASSERT(data != NULL);
+        NX_ASSERT(n_k > 1);
+        NX_ASSERT(kernel != NULL);
+
+        for (int i = 0; i < n; ++i) {
+                uchar* dk0 = data + i + n_k - 1;
+                float sum = kernel[0] * *dk0;
+                for (int k = 1; k < n_k; ++k) {
+                        sum += kernel[k] * (dk0[-k] + dk0[+k]);
+                }
+                data[i] = sum;
+        }
+}
+
+void nx_convolve_sym_downsample2_si_uc(int n, uchar *data, int n_k, const short *kernel, const short kernel_sum)
+{
+        NX_ASSERT(n > 1);
+        NX_ASSERT(data != NULL);
+        NX_ASSERT(n_k > 1);
+        NX_ASSERT(kernel != NULL);
+        NX_ASSERT(kernel_sum > 0);
+
+        float norm_factor = 1.0f / kernel_sum;
+
+        for (int i = 0; i < n; i += 2) {
+                uchar* dk0 = data + i + n_k - 1;
+                int sum = kernel[0] * *dk0;
+                for (int k = 1; k < n_k; ++k) {
+                        sum += kernel[k] * (dk0[-k] + dk0[+k]);
+                }
+
+                data[i/2] = norm_factor * sum;
+        }
+}
+
+void nx_convolve_sym_downsample2_s_uc(int n, uchar *data, int n_k, const float *kernel)
+{
+        NX_ASSERT(n > 1);
+        NX_ASSERT(data != NULL);
+        NX_ASSERT(n_k > 1);
+        NX_ASSERT(kernel != NULL);
+
+        for (int i = 0; i < n; i += 2) {
+                uchar* dk0 = data + i + n_k - 1;
+                float sum = kernel[0] * *dk0;
+                for (int k = 1; k < n_k; ++k) {
+                        sum += kernel[k] * (dk0[-k] + dk0[+k]);
+                }
+                data[i/2] = sum;
+        }
+}
+
+void fill_buffer_border_uc(int n, uchar *buffer, int n_border, enum NXBorderMode mode)
+{
+        uchar buffer_b;
+        switch (mode) {
+        case NX_BORDER_ZERO:
+                memset(buffer, 0, n_border * sizeof(uchar));
+                memset(buffer+n+n_border, 0, n_border * sizeof(uchar));
+                break;
+        case NX_BORDER_REPEAT:
+                buffer_b = buffer[n_border];
+                for (int i = 0; i < n_border; ++i)
+                        buffer[i] = buffer_b;
+                buffer_b = buffer[n_border+n-1];
+                for (int i = 0; i < n_border; ++i)
+                        buffer[n_border+n+i] = buffer_b;
+                break;
+        case NX_BORDER_MIRROR:
+                for (int i = 0; i < n_border; ++i)
+                        buffer[i] = buffer[2*n_border-i];
+                for (int i = 0; i < n_border; ++i)
+                        buffer[n_border+n+i] = buffer[n_border+n-i-2];
+                break;
+        }
+}
+
+void nx_filter_copy_to_buffer1_uc(int n, uchar *buffer, const uchar *data, int n_border, enum NXBorderMode mode)
+{
+        NX_ASSERT(n > 1);
+        NX_ASSERT(buffer != NULL);
+        NX_ASSERT(data != NULL);
+
+        memcpy(buffer + n_border, data, n*sizeof(uchar));
+        fill_buffer_border_uc(n, buffer, n_border, mode);
+}
+
+void nx_filter_copy_to_buffer_uc(int n, uchar *buffer, const uchar *data, int stride, int n_border, enum NXBorderMode mode)
+{
+        NX_ASSERT(n > 1);
+        NX_ASSERT(buffer != NULL);
+        NX_ASSERT(data != NULL);
+
+        for (int i = 0; i < n; ++i) {
+                buffer[n_border + i] = data[i * stride];
+        }
+        fill_buffer_border_uc(n, buffer, n_border, mode);
+}
+
+uchar *nx_filter_buffer_alloc(int n, int n_border)
+{
+        size_t l = n + 2 * n_border;
+        return nx_new_uc(l);
+}
+
+uchar *nx_filter_simd_buffer_alloc(int n, int n_border)
+{
+        size_t l = n + 2 * n_border;
+        return (uchar *)nx_aligned_alloc(l * sizeof(uchar), NX_SIMD_ALIGNMENT);
+}

@@ -12,6 +12,7 @@ set(virg_nexus_SOURCES
   src/nx_alloc.c
   src/nx_mem_block.c
   src/nx_math.c
+  src/nx_filter.c
 )
 
 set(virg_nexus_HEADERS
@@ -22,6 +23,7 @@ set(virg_nexus_HEADERS
   include/virg/nexus/nx_alloc.h
   include/virg/nexus/nx_mem_block.h
   include/virg/nexus/nx_math.h
+  include/virg/nexus/nx_filter.h
 )
 
 if (NOT VIRG_NEXUS_ANDROID)
