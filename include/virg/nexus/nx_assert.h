@@ -25,8 +25,35 @@ __NX_BEGIN_DECL
         do {                                                            \
                 if (!(expr)) {                                          \
                         nx_fatal("NX_ASSERT",                           \
-                                 "Assertion %s failed on file %s:%d",   \
+                                 "Assertion '%s' failed on file %s:%d",   \
                                  #expr, __FILE__, __LINE__);            \
+                }                                                       \
+        } while(0)
+#endif
+
+#if defined(NDEBUG)
+#  define NX_ASSERT_PTR(ptr) do { (void)sizeof(ptr); } while(0)
+#else
+#  define NX_ASSERT_PTR(ptr)                                            \
+        do {                                                            \
+                if (!(ptr)) {                                           \
+                        nx_fatal("NX_ASSERT_PTR",                       \
+                                 "Unexpected NULL pointer detected on file %s:%d", \
+                                 __FILE__, __LINE__);                   \
+                }                                                       \
+        } while(0)
+#endif
+
+
+#if defined(NDEBUG)
+#  define NX_ASSERT_CUSTOM(tag,msg,expr) do { (void)sizeof(expr); } while(0)
+#else
+#  define NX_ASSERT_CUSTOM(tag,msg,expr)                                    \
+        do {                                                            \
+                if (!(expr)) {                                          \
+                        nx_fatal((tag),                                 \
+                                 "%s - on file %s:%d",                  \
+                                 (msg), __FILE__, __LINE__);            \
                 }                                                       \
         } while(0)
 #endif

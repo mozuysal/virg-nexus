@@ -28,7 +28,9 @@ struct NXMemBlock
         NXBool own_memory;
 };
 
-struct NXMemBlock *nx_mem_block_alloc(size_t init_sz);
+struct NXMemBlock *nx_mem_block_alloc();
+
+struct NXMemBlock *nx_mem_block_new(size_t init_sz);
 
 void nx_mem_block_free(struct NXMemBlock *mem);
 
@@ -40,7 +42,9 @@ void nx_mem_block_wrap(struct NXMemBlock *mem, uchar* ptr, size_t sz, NXBool own
 
 void nx_mem_block_swap(struct NXMemBlock *mem0, struct NXMemBlock *mem1);
 
-void nx_mem_block_copy(struct NXMemBlock *src, const struct NXMemBlock *dest);
+struct NXMemBlock *nx_mem_block_copy0(struct NXMemBlock *mem);
+
+void nx_mem_block_copy(struct NXMemBlock *dest, const struct NXMemBlock *src);
 
 void nx_mem_block_set_zero(struct NXMemBlock *mem);
 

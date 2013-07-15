@@ -13,6 +13,8 @@ set(virg_nexus_SOURCES
   src/nx_mem_block.c
   src/nx_math.c
   src/nx_filter.c
+  src/nx_image.c
+  src/nx_colorspace.c
 )
 
 set(virg_nexus_HEADERS
@@ -23,7 +25,8 @@ set(virg_nexus_HEADERS
   include/virg/nexus/nx_alloc.h
   include/virg/nexus/nx_mem_block.h
   include/virg/nexus/nx_math.h
-  include/virg/nexus/nx_filter.h
+  include/virg/nexus/nx_image.h
+  include/virg/nexus/nx_colorspace.h
 )
 
 if (NOT VIRG_NEXUS_ANDROID)
@@ -49,7 +52,7 @@ if (VIRG_NEXUS_PC_LINUX)
   # SSE
   if (VIRG_NEXUS_USE_SIMD)
     set(VIRG_NEXUS_USE_SSE 1)
-    set(VIRG_NEXUS_FLAGS_SIMD "-msse -mfpmath=sse -DVIRG_NEXUS_USE_SSE")
+    set(VIRG_NEXUS_FLAGS_SIMD "-DVIRG_NEXUS_USE_SIMD -msse -mfpmath=sse -DVIRG_NEXUS_USE_SSE")
   endif (VIRG_NEXUS_USE_SIMD)
 endif(VIRG_NEXUS_PC_LINUX)
 
@@ -59,7 +62,7 @@ if (VIRG_NEXUS_ANDROID)
   # NEON
   if (VIRG_NEXUS_USE_SIMD)
     set(VIRG_NEXUS_USE_NEON 1)
-    set(VIRG_NEXUS_FLAGS_SIMD "-DVIRG_NEXUS_USE_NEON")
+    set(VIRG_NEXUS_FLAGS_SIMD "-DVIRG_NEXUS_USE_SIMD -DVIRG_NEXUS_USE_NEON")
   endif (VIRG_NEXUS_USE_SIMD)
 endif(VIRG_NEXUS_ANDROID)
 

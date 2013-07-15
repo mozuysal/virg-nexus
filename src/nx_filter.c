@@ -55,7 +55,7 @@ double nx_kernel_loss_gaussian(int n, double sigma)
 short nx_kernel_sym_gaussian_si(int n_k, short *kernel, float sigma)
 {
         NX_ASSERT(n_k > 1);
-        NX_ASSERT(kernel != NULL);
+        NX_ASSERT_PTR(kernel);
         NX_ASSERT(sigma > 0);
 
         double erf_f = 1.0 / (sqrt(2.0)*sigma);
@@ -94,7 +94,7 @@ short nx_kernel_sym_gaussian_si(int n_k, short *kernel, float sigma)
 void nx_kernel_sym_gaussian_s(int n_k, float *kernel, float sigma)
 {
         NX_ASSERT(n_k > 1);
-        NX_ASSERT(kernel != NULL);
+        NX_ASSERT_PTR(kernel);
         NX_ASSERT(sigma > 0);
 
         double erf_f = 1.0 / (sqrt(2.0)*sigma);
@@ -118,7 +118,7 @@ void nx_kernel_sym_gaussian_s(int n_k, float *kernel, float sigma)
 void nx_kernel_sym_gaussian_d(int n_k, double *kernel, double sigma)
 {
         NX_ASSERT(n_k > 1);
-        NX_ASSERT(kernel != NULL);
+        NX_ASSERT_PTR(kernel);
         NX_ASSERT(sigma > 0);
 
         double erf_f = 1.0 / (sqrt(2.0)*sigma);
@@ -155,9 +155,9 @@ void nx_kernel_sym_gaussian_d(int n_k, double *kernel, double sigma)
 void nx_convolve_sym_si_uc(int n, uchar *data, int n_k, const short *kernel, const short kernel_sum)
 {
         NX_ASSERT(n > 1);
-        NX_ASSERT(data != NULL);
+        NX_ASSERT_PTR(data);
         NX_ASSERT(n_k > 1);
-        NX_ASSERT(kernel != NULL);
+        NX_ASSERT_PTR(kernel);
         NX_ASSERT(kernel_sum > 0);
 
         float norm_factor = 1.0f / kernel_sum;
@@ -184,9 +184,9 @@ void nx_convolve_sym_si_uc(int n, uchar *data, int n_k, const short *kernel, con
 void nx_convolve_sym_s_uc(int n, uchar *data, int n_k, const float *kernel)
 {
         NX_ASSERT(n > 1);
-        NX_ASSERT(data != NULL);
+        NX_ASSERT_PTR(data);
         NX_ASSERT(n_k > 1);
-        NX_ASSERT(kernel != NULL);
+        NX_ASSERT_PTR(kernel);
 
         for (int i = 0; i < n; ++i) {
                 uchar* dk0 = data + i + n_k - 1;
@@ -211,9 +211,9 @@ void nx_convolve_sym_s_uc(int n, uchar *data, int n_k, const float *kernel)
 void nx_convolve_sym_downsample2_si_uc(int n, uchar *data, int n_k, const short *kernel, const short kernel_sum)
 {
         NX_ASSERT(n > 1);
-        NX_ASSERT(data != NULL);
+        NX_ASSERT_PTR(data);
         NX_ASSERT(n_k > 1);
-        NX_ASSERT(kernel != NULL);
+        NX_ASSERT_PTR(kernel);
         NX_ASSERT(kernel_sum > 0);
 
         float norm_factor = 1.0f / kernel_sum;
@@ -241,9 +241,9 @@ void nx_convolve_sym_downsample2_si_uc(int n, uchar *data, int n_k, const short 
 void nx_convolve_sym_downsample2_s_uc(int n, uchar *data, int n_k, const float *kernel)
 {
         NX_ASSERT(n > 1);
-        NX_ASSERT(data != NULL);
+        NX_ASSERT_PTR(data);
         NX_ASSERT(n_k > 1);
-        NX_ASSERT(kernel != NULL);
+        NX_ASSERT_PTR(kernel);
 
         for (int i = 0; i < n; i += 2) {
                 uchar* dk0 = data + i + n_k - 1;
@@ -293,8 +293,8 @@ void fill_buffer_border_uc(int n, uchar *buffer, int n_border, enum NXBorderMode
 void nx_filter_copy_to_buffer1_uc(int n, uchar *buffer, const uchar *data, int n_border, enum NXBorderMode mode)
 {
         NX_ASSERT(n > 1);
-        NX_ASSERT(buffer != NULL);
-        NX_ASSERT(data != NULL);
+        NX_ASSERT_PTR(buffer);
+        NX_ASSERT_PTR(data);
 
         memcpy(buffer + n_border, data, n*sizeof(uchar));
         fill_buffer_border_uc(n, buffer, n_border, mode);
@@ -314,8 +314,8 @@ void nx_filter_copy_to_buffer1_uc(int n, uchar *buffer, const uchar *data, int n
 void nx_filter_copy_to_buffer_uc(int n, uchar *buffer, const uchar *data, int stride, int n_border, enum NXBorderMode mode)
 {
         NX_ASSERT(n > 1);
-        NX_ASSERT(buffer != NULL);
-        NX_ASSERT(data != NULL);
+        NX_ASSERT_PTR(buffer);
+        NX_ASSERT_PTR(data);
 
         for (int i = 0; i < n; ++i) {
                 buffer[n_border + i] = data[i * stride];
@@ -333,8 +333,12 @@ void nx_filter_copy_to_buffer_uc(int n, uchar *buffer, const uchar *data, int st
  */
 uchar *nx_filter_buffer_alloc(int n, int n_border)
 {
+#if defined(VIRG_NEXUS_USE_SIMD)
+        return nx_filter_simd_buffer_alloc(n, n_border);
+#else
         size_t l = n + 2 * n_border;
         return nx_new_uc(l);
+#endif
 }
 
 /**
