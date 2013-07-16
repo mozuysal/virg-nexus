@@ -38,6 +38,7 @@ void *nx_faligned_alloc(size_t sz, size_t alignment);
 #define nx_new(n,type) ((type *)nx_fmalloc((n) * sizeof(type)))
 #define nx_new_c(n)    nx_new((n),char)
 #define nx_new_uc(n)   nx_new((n),unsigned char)
+#define nx_new_si(n)   nx_new((n),short)
 #define nx_new_i(n)    nx_new((n),int)
 #define nx_new_ui(n)   nx_new((n),unsigned int)
 #define nx_new_l(n)    nx_new((n),long)

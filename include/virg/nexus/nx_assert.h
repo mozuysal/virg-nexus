@@ -46,12 +46,12 @@ __NX_BEGIN_DECL
 
 
 #if defined(NDEBUG)
-#  define NX_ASSERT_CUSTOM(tag,msg,expr) do { (void)sizeof(expr); } while(0)
+#  define NX_ASSERT_CUSTOM(msg,expr) do { (void)(sizeof(expr),sizeof(msg)); } while(0)
 #else
-#  define NX_ASSERT_CUSTOM(tag,msg,expr)                                    \
+#  define NX_ASSERT_CUSTOM(msg,expr)                                    \
         do {                                                            \
                 if (!(expr)) {                                          \
-                        nx_fatal((tag),                                 \
+                        nx_fatal("NX_ASSERT_CUSTOM",                    \
                                  "%s - on file %s:%d",                  \
                                  (msg), __FILE__, __LINE__);            \
                 }                                                       \

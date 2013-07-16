@@ -18,11 +18,25 @@
 
 __NX_BEGIN_DECL
 
+inline uchar nx_rgb_to_gray(uchar r, uchar g, uchar b);
+
 void nx_convert_rgba_to_gray(int width, int height, uchar *gray, int gray_stride,
                              const uchar *rgba, int rgba_stride);
 
 void nx_convert_gray_to_rgba(int width, int height, uchar *rgba, int rgba_stride,
                              const uchar *gray, int gray_stride);
+
+uchar nx_rgb_to_gray(uchar r, uchar g, uchar b)
+{
+        int gray = r*0.3f + g*0.59f + b*0.11f;
+
+        if (gray < 0)
+                return 0;
+        else if (gray > 255)
+                return 255;
+        else
+                return gray;
+}
 
 __NX_END_DECL
 

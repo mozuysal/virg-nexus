@@ -1,5 +1,5 @@
 /**
- * @file nx_types.h
+ * @file nx_io.h
  *
  * This file is part of the IYTE Visual Intelligence Research Group Software Library
  *
@@ -10,31 +10,20 @@
  * Contact mustafaozuysal@iyte.edu.tr for comments and bug reports.
  *
  */
-#ifndef VIRG_NEXUS_NX_TYPES_H
-#define VIRG_NEXUS_NX_TYPES_H
+#ifndef VIRG_NEXUS_NX_IO_H
+#define VIRG_NEXUS_NX_IO_H
 
 #include "virg/nexus/nx_config.h"
 
-#ifdef VIRG_NEXUS_PC_WIN32
-typedef __int32 int32_t;
-typedef unsigned __int32 uint32_t;
-#else
-#  include <inttypes.h>
-#endif
+#include <stdio.h>
 
 __NX_BEGIN_DECL
 
-typedef unsigned char uchar;
+__NX_NO_RETURN void nx_io_fatal_exit(const char *tag, const char *fmt, ...) __attribute__((format (printf, 2, 3)));
 
-typedef int NXBool;
+FILE *nx_xfopen(const char *path, const char *mode);
 
-#define NX_FALSE 0
-#define NX_TRUE  1
-
-typedef int NXResult;
-
-#define NX_OK 0
-#define NX_FAIL -1
+void nx_xfclose(FILE *stream, const char *stream_label);
 
 __NX_END_DECL
 

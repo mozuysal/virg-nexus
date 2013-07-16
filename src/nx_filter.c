@@ -21,6 +21,7 @@
 #include "virg/nexus/nx_math.h"
 
 static void fill_buffer_border_uc(int n, uchar *buffer, int n_border, enum NXBorderMode mode);
+static double kernel_value_gaussian(int i, double sigma);
 
 /**
  * Calculates the lost area under the Gaussian curve by using a kernel of length n.
@@ -36,10 +37,44 @@ double nx_kernel_loss_gaussian(int n, double sigma)
         NX_ASSERT(sigma > 0);
 
         double erf_f = 1.0 / (sqrt(2.0)*sigma);
-        double g_n_plus = 0.5 * nx_erf((n+1) * 0.5 * erf_f);
+        double g_n_plus = 0.5 * nx_erf(n * 0.5 * erf_f);
         double g_n = 2.0 * g_n_plus;
 
         return 1.0 - g_n;
+}
+
+/**
+ * Calculates the minimum kernel size such that the loass is below the given
+ * threshold.
+ *
+ * @param sigma Gaussian standard deviation
+ * @param loss_threshold Maximum allowable loss (percentage of area under the Gaussian curve)
+ *
+ * @return Minimum kernel length
+ */
+int nx_kernel_size_min_gaussian(double sigma, double loss_threshold)
+{
+        int n = 3;
+        while (nx_kernel_loss_gaussian(n, sigma) > loss_threshold) {
+                n += 2;
+        }
+
+        return n;
+}
+
+double kernel_value_gaussian(int i, double sigma)
+{
+        NX_ASSERT(i >= 0);
+
+        double erf_f = 1.0 / (sqrt(2.0)*sigma);
+        double g_i_plus  = 0.5 * nx_erf((i + 0.5) * erf_f);
+
+        if (i == 0) {
+                return 2.0 * g_i_plus;
+        } else {
+                double g_i_minus = 0.5 * nx_erf((i - 0.5) * erf_f);
+                return g_i_plus - g_i_minus;
+        }
 }
 
 /**
@@ -58,24 +93,26 @@ short nx_kernel_sym_gaussian_si(int n_k, short *kernel, float sigma)
         NX_ASSERT_PTR(kernel);
         NX_ASSERT(sigma > 0);
 
-        double erf_f = 1.0 / (sqrt(2.0)*sigma);
-        double g_n_plus  = 0.5 * nx_erf((n_k - 0.5) * erf_f);
-        double g_n_minus = 0.5 * nx_erf((n_k - 1.5) * erf_f);
-        double g_n_inv = 1.0 / (g_n_plus - g_n_minus);
+        const double kernel_0 = kernel_value_gaussian(0, sigma);
+        int i = n_k-1;
+        double limit = kernel_0 * 1e-3;
+        double g_i = kernel_value_gaussian(i, sigma);
 
-        kernel[n_k-1] = 1;
-        short sum = 2 * kernel[n_k-1];
-        double g_i_plus = g_n_minus;
-        double g_i_minus;
-        for (int i = n_k-2; i > 0; --i) {
-                g_i_minus = 0.5 * nx_erf((i - 0.5) * erf_f);
-                kernel[i] = g_n_inv * (g_i_plus - g_i_minus);
-                sum += 2 * kernel[i];
-                g_i_plus = g_i_minus;
+        while (g_i < limit) {
+                kernel[i] = 0;
+                --i;
+                g_i = kernel_value_gaussian(i, sigma);
         }
 
-        // g_i_minus = g_0.5
-        kernel[0] = g_n_inv * 2.0 * g_i_minus;
+        kernel[i] = 1;
+        short sum = 0;
+        double g_inv = 1.0 / g_i;
+        for (; i > 0; --i) {
+                kernel[i] = g_inv * kernel_value_gaussian(i, sigma);
+                sum += 2 * kernel[i];
+        }
+
+        kernel[0] = g_inv * kernel_0;
         sum += kernel[0];
 
         return sum;
@@ -97,16 +134,11 @@ void nx_kernel_sym_gaussian_s(int n_k, float *kernel, float sigma)
         NX_ASSERT_PTR(kernel);
         NX_ASSERT(sigma > 0);
 
-        double erf_f = 1.0 / (sqrt(2.0)*sigma);
-
-        kernel[0] = nx_erf(0.5 * erf_f);
+        kernel[0] = kernel_value_gaussian(0, sigma);
         float sum = kernel[0];
-        double g_i_minus = 0.5 * kernel[0];
         for (int i = 1; i < n_k; ++i) {
-                double g_i_plus = 0.5 * nx_erf((i + 0.5) * erf_f);
-                kernel[i] = g_i_plus - g_i_minus;
+                kernel[i] = kernel_value_gaussian(i, sigma);
                 sum += 2.0f * kernel[i];
-                g_i_minus = g_i_plus;
         }
 
         float sum_inv = 1.0f / sum;
@@ -121,16 +153,11 @@ void nx_kernel_sym_gaussian_d(int n_k, double *kernel, double sigma)
         NX_ASSERT_PTR(kernel);
         NX_ASSERT(sigma > 0);
 
-        double erf_f = 1.0 / (sqrt(2.0)*sigma);
-
-        kernel[0] = nx_erf(0.5 * erf_f);
+        kernel[0] = kernel_value_gaussian(0, sigma);
         double sum = kernel[0];
-        double g_i_minus = 0.5 * kernel[0];
         for (int i = 1; i < n_k; ++i) {
-                double g_i_plus = 0.5 * nx_erf((i + 0.5) * erf_f);
-                kernel[i] = g_i_plus - g_i_minus;
+                kernel[i] = kernel_value_gaussian(i, sigma);
                 sum += 2.0 * kernel[i];
-                g_i_minus = g_i_plus;
         }
 
         double sum_inv = 1.0 / sum;

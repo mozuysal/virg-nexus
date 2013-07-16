@@ -25,6 +25,12 @@ enum NXImageType {
         NX_IMAGE_RGBA
 };
 
+enum NXImageLoadMode {
+        NX_IMAGE_LOAD_AS_IS = -1,
+        NX_IMAGE_LOAD_GRAYSCALE = 0,
+        NX_IMAGE_LOAD_RGBA
+};
+
 struct NXImage
 {
         int width;
@@ -49,7 +55,8 @@ struct NXImage *nx_image_new_rgba(int width, int height);
 
 void nx_image_free(struct NXImage *img);
 
-void nx_image_resize(struct NXImage *img, int width, int height, enum NXImageType type);
+void nx_image_resize(struct NXImage *img, int width, int height,
+                     int row_stride, enum NXImageType type);
 
 void nx_image_release(struct NXImage *img);
 
@@ -68,20 +75,28 @@ void nx_image_convert(struct NXImage *dest, const struct NXImage *src);
 
 void nx_image_scale(struct NXImage *dest, const struct NXImage *src, float scale_f);
 
-void nx_image_downsample(struct NXImage *dest, const struct NXImage *src, NXBool antialias, uchar *filter_buffer);
+void nx_image_downsample(struct NXImage *dest, const struct NXImage *src);
 
-void nx_image_smooth_si(struct NXImage *dest, const struct NXImage *src, float sigma, uchar *filter_buffer);
+uchar *nx_image_filter_buffer_alloc(int width, int height, float sigma_x, float sigma_y);
 
-void nx_image_smooth_s(struct NXImage *dest, const struct NXImage *src, float sigma, uchar *filter_buffer);
+void nx_image_smooth_si(struct NXImage *dest, const struct NXImage *src,
+                        float sigma_x, float sigma_y, uchar *filter_buffer);
 
-#define NX_IMAGE_ASSERT_GRAYSCALE(tag,img) \
+void nx_image_smooth_s(struct NXImage *dest, const struct NXImage *src,
+                       float sigma_x, float sigma_y, uchar *filter_buffer);
+
+void nx_image_xsave_pnm(const struct NXImage *img, const char *filename);
+
+void nx_image_xload_pnm(struct NXImage *img, const char *filename, enum NXImageLoadMode mode);
+
+#define NX_IMAGE_ASSERT_GRAYSCALE(img) \
         do {                               \
-                NX_ASSERT_CUSTOM(tag,"Image must be grayscale",img->type == NX_IMAGE_GRAYSCALE); \
+                NX_ASSERT_CUSTOM("Image must be grayscale",img->type == NX_IMAGE_GRAYSCALE); \
         } while(0)
 
-#define NX_IMAGE_ASSERT_EQUAL_TYPES(tag,img0,img1)  \
+#define NX_IMAGE_ASSERT_EQUAL_TYPES(img0,img1)  \
         do {                               \
-                NX_ASSERT_CUSTOM(tag,"Images must be of the same type",img0->type == img1->type); \
+                NX_ASSERT_CUSTOM("Images must be of the same type",img0->type == img1->type); \
         } while(0)
 
 __NX_END_DECL

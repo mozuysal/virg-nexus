@@ -12,6 +12,7 @@ set(virg_nexus_SOURCES
   src/nx_alloc.c
   src/nx_mem_block.c
   src/nx_math.c
+  src/nx_io.c
   src/nx_filter.c
   src/nx_image.c
   src/nx_colorspace.c
@@ -25,6 +26,7 @@ set(virg_nexus_HEADERS
   include/virg/nexus/nx_alloc.h
   include/virg/nexus/nx_mem_block.h
   include/virg/nexus/nx_math.h
+  include/virg/nexus/nx_io.h
   include/virg/nexus/nx_image.h
   include/virg/nexus/nx_colorspace.h
 )
@@ -66,9 +68,9 @@ if (VIRG_NEXUS_ANDROID)
   endif (VIRG_NEXUS_USE_SIMD)
 endif(VIRG_NEXUS_ANDROID)
 
-set(VIRG_NEXUS_FLAGS_DEBUG          "-Wall -pedantic -g ${VIRG_NEXUS_FLAGS_PLATFORM} ${VIRG_NEXUS_FLAGS_SIMD}")
+set(VIRG_NEXUS_FLAGS_DEBUG          "-Wall -pedantic -g -rdynamic ${VIRG_NEXUS_FLAGS_PLATFORM} ${VIRG_NEXUS_FLAGS_SIMD}")
 set(VIRG_NEXUS_FLAGS_RELEASE        "-Wall -pedantic -O2 -DNDEBUG ${VIRG_NEXUS_FLAGS_PLATFORM} ${VIRG_NEXUS_FLAGS_SIMD}")
-set(VIRG_NEXUS_FLAGS_RELWITHDEBINFO "-Wall -pedantic -O2 -DNDEBUG -g ${VIRG_NEXUS_FLAGS_PLATFORM} ${VIRG_NEXUS_FLAGS_SIMD}")
+set(VIRG_NEXUS_FLAGS_RELWITHDEBINFO "-Wall -pedantic -O2 -DNDEBUG -g -rdynamic ${VIRG_NEXUS_FLAGS_PLATFORM} ${VIRG_NEXUS_FLAGS_SIMD}")
 
 set(CMAKE_C_FLAGS_DEBUG          "${VIRG_NEXUS_FLAGS_DEBUG} -std=c99")
 set(CMAKE_C_FLAGS_RELEASE        "${VIRG_NEXUS_FLAGS_RELEASE} -std=c99")

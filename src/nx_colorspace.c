@@ -14,7 +14,6 @@
 
 #include "virg/nexus/nx_assert.h"
 
-
 void nx_convert_rgba_to_gray(int width, int height, uchar *gray, int gray_stride,
                              const uchar *rgba, int rgba_stride)
 {
@@ -25,10 +24,9 @@ void nx_convert_rgba_to_gray(int width, int height, uchar *gray, int gray_stride
                 const uchar* rgba_row = rgba + y*rgba_stride;
                 uchar* gray_row = gray + y*gray_stride;
                 for (int x = 0; x < width; ++x) {
-                        gray_row[x] = rgba_row[4*x]*77 + rgba_row[4*x+1]*151 + rgba_row[4*x+2]*28;
+                        gray_row[x] = nx_rgb_to_gray(rgba_row[4*x], rgba_row[4*x+1], rgba_row[4*x+2]);
                 }
         }
-
 }
 
 void nx_convert_gray_to_rgba(int width, int height, uchar *rgba, int rgba_stride,

@@ -23,12 +23,12 @@
                 fprintf(MESSAGE_STREAM, MESSAGE_HEADER_FORMAT, (type), tag);   \
         } while(0)
 
-static void default_fatal_func(const char* tag, const char* msg, va_list prm);
+static __NX_NO_RETURN void default_fatal_func(const char* tag, const char* msg, va_list prm);
 
 static const char *MESSAGE_HEADER_FORMAT = "[%-7s][%s] ";
 
 static enum NXMessageVerbosity g_message_verbosity = NX_MESSAGE_NORMAL;
-static NXFatalFuncP g_fatal_func = default_fatal_func;
+static __NX_NO_RETURN_PTR NXFatalFuncP g_fatal_func = default_fatal_func;
 
 static inline void print_call_stack()
 {

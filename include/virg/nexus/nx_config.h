@@ -21,8 +21,24 @@
 #  define __NX_END_DECL
 #endif
 
+#if defined(__GNUC__)
+#  define __NX_NO_RETURN __attribute__((noreturn))
+#  define __NX_NO_RETURN_PTR __attribute__((__noreturn__))
+#elif defined(_MSC_VER)
+#  define __NX_NO_RETURN __declspec(noreturn)
+#  define __NX_NO_RETURN_PTR
+#else
+#  define __NX_NO_RETURN
+#  define __NX_NO_RETURN_PTR
+#  ifndef __attribute__
+#    define __attribute__(x)
+#  endif
+#endif
+
 #define NX_EXIT_FATAL -99
 
 #define NX_SIMD_ALIGNMENT 32
+
+#define NX_LOG_TAG "VIRGNEXUS"
 
 #endif

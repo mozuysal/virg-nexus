@@ -13,11 +13,17 @@
 #include "virg/nexus/nx_image.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "virg/nexus/nx_assert.h"
 #include "virg/nexus/nx_alloc.h"
+#include "virg/nexus/nx_io.h"
+#include "virg/nexus/nx_math.h"
 #include "virg/nexus/nx_mem_block.h"
 #include "virg/nexus/nx_colorspace.h"
+#include "virg/nexus/nx_filter.h"
+
+static const double NX_IMAGE_SMOOTH_KERNEL_LOSS = 0.003;
 
 struct NXImage *nx_image_alloc()
 {
@@ -38,7 +44,8 @@ struct NXImage *nx_image_alloc()
 struct NXImage *nx_image_new(int width, int height, enum NXImageType type)
 {
         struct NXImage *img = nx_image_alloc();
-        nx_image_resize(img, width, height, type);
+        int n_ch = nx_image_n_channels(type);
+        nx_image_resize(img, width, height, width*n_ch, type);
 
         return img;
 }
@@ -61,14 +68,20 @@ void nx_image_free(struct NXImage *img)
         }
 }
 
-void nx_image_resize(struct NXImage *img, int width, int height, enum NXImageType type)
+void nx_image_resize(struct NXImage *img, int width, int height, int row_stride, enum NXImageType type)
 {
         NX_ASSERT_PTR(img);
         NX_ASSERT(width > 0);
         NX_ASSERT(height > 0);
 
+        if (img->width == width &&
+            img->height == height &&
+            img->row_stride == row_stride &&
+            img->type == type)
+                return;
+
         int n_ch = nx_image_n_channels(type);
-        size_t length = width * height * n_ch;
+        size_t length = row_stride * height;
         nx_mem_block_resize(img->mem, length);
 
         img->width = width;
@@ -76,7 +89,7 @@ void nx_image_resize(struct NXImage *img, int width, int height, enum NXImageTyp
         img->type = type;
         img->n_channels = n_ch;
         img->data = img->mem->ptr;
-        img->row_stride = width;
+        img->row_stride = row_stride;
 }
 
 void nx_image_release(struct NXImage *img)
@@ -170,7 +183,9 @@ void nx_image_convert(struct NXImage *dest, const struct NXImage *src)
                 return;
         }
 
-        nx_image_resize(dest, src->width, src->height, dest->type);
+        int n_ch = nx_image_n_channels(dest->type);
+        int dest_row_stride = src->width*n_ch;
+        nx_image_resize(dest, src->width, src->height, dest_row_stride, dest->type);
 
         switch (dest->type) {
         case NX_IMAGE_GRAYSCALE:
@@ -184,7 +199,7 @@ void nx_image_convert(struct NXImage *dest, const struct NXImage *src)
                                         src->data, src->row_stride);
                 break;
         default:
-                nx_fatal("nx_image_convert", "Unknown destination image type %d!", (int)dest->type);
+                nx_fatal(NX_LOG_TAG, "Unknown destination image type %d!", (int)dest->type);
                 return;
         }
 }
@@ -193,11 +208,16 @@ void nx_image_scale(struct NXImage *dest, const struct NXImage *src, float scale
 {
         NX_ASSERT_PTR(src);
         NX_ASSERT_PTR(dest);
-        NX_IMAGE_ASSERT_GRAYSCALE("nx_image_scale", src);
-        NX_IMAGE_ASSERT_GRAYSCALE("nx_image_scale", dest);
+        NX_IMAGE_ASSERT_GRAYSCALE(src);
+        NX_IMAGE_ASSERT_GRAYSCALE(dest);
+
+        int dest_width = src->width * scale_f;
+        int dest_height = src->height * scale_f;
+        int n_ch = nx_image_n_channels(src->type);
+        int dest_row_stride = dest_width*n_ch;
+        nx_image_resize(dest, dest_width, dest_height, dest_row_stride, src->type);
 
         float inv_scale = 1.0f / scale_f;
-
         for (int y = 0; y < dest->height; ++y) {
                 uchar *row = dest->data + y * dest->row_stride;
 
@@ -233,33 +253,275 @@ void nx_image_scale(struct NXImage *dest, const struct NXImage *src, float scale
         }
 }
 
-void nx_image_downsample(struct NXImage *dest, const struct NXImage *src, NXBool antialias, uchar *filter_buffer)
+void nx_image_downsample(struct NXImage *dest, const struct NXImage *src)
 {
         NX_ASSERT_PTR(src);
         NX_ASSERT_PTR(dest);
-        NX_IMAGE_ASSERT_GRAYSCALE("nx_image_downsample", src);
-        NX_IMAGE_ASSERT_GRAYSCALE("nx_image_downsample", dest);
+        NX_IMAGE_ASSERT_GRAYSCALE(src);
+        NX_IMAGE_ASSERT_GRAYSCALE(dest);
 
-        NX_ASSERT_CUSTOM("nx_image_downsample", "NOT IMPLEMENTED", NX_FALSE);
+        int dest_width = src->width / 2;
+        int dest_height = src->height / 2;
+        int n_ch = nx_image_n_channels(src->type);
+        int dest_row_stride = dest_width*n_ch;
+        nx_image_resize(dest, dest_width, dest_height, dest_row_stride, src->type);
 
+        for (int y = 0; y < dest->height; ++y) {
+                const uchar *src_row = src->data + y * src->row_stride;
+                uchar *dest_row = dest->data + y * dest->row_stride;
+                for (int x = 0; x < dest->width; ++x) {
+                        dest_row[x] = src_row[2*x];
+                }
+        }
 }
 
-void nx_image_smooth_si(struct NXImage *dest, const struct NXImage *src, float sigma, uchar *filter_buffer)
+uchar *nx_image_filter_buffer_alloc(int width, int height, float sigma_x, float sigma_y)
 {
-        NX_ASSERT_PTR(src);
-        NX_ASSERT_PTR(dest);
-        NX_IMAGE_ASSERT_GRAYSCALE("nx_image_smooth_si", src);
-        NX_IMAGE_ASSERT_GRAYSCALE("nx_image_smooth_si", dest);
+        int nkx = nx_kernel_size_min_gaussian(sigma_x, NX_IMAGE_SMOOTH_KERNEL_LOSS);
+        int nky = nx_kernel_size_min_gaussian(sigma_y, NX_IMAGE_SMOOTH_KERNEL_LOSS);
+        int nk_max = nx_max_i(nkx, nky);
 
-        NX_ASSERT_CUSTOM("nx_image_smooth_si", "NOT IMPLEMENTED", NX_FALSE);
+        int max_dim = nx_max_i(width, height);
+
+        return nx_filter_buffer_alloc(max_dim, nk_max / 2);
 }
 
-void nx_image_smooth_s(struct NXImage *dest, const struct NXImage *src, float sigma, uchar *filter_buffer)
+
+void nx_image_smooth_si(struct NXImage *dest, const struct NXImage *src,
+                        float sigma_x, float sigma_y, uchar *filter_buffer)
 {
         NX_ASSERT_PTR(src);
         NX_ASSERT_PTR(dest);
-        NX_IMAGE_ASSERT_GRAYSCALE("nx_image_smooth_s", src);
-        NX_IMAGE_ASSERT_GRAYSCALE("nx_image_smooth_s", dest);
+        NX_IMAGE_ASSERT_GRAYSCALE(src);
+        NX_IMAGE_ASSERT_GRAYSCALE(dest);
 
-        NX_ASSERT_CUSTOM("nx_image_smooth_s", "NOT IMPLEMENTED", NX_FALSE);
+        int dest_width = src->width;
+        int dest_height = src->height;
+        int n_ch = nx_image_n_channels(src->type);
+        int dest_row_stride = dest_width*n_ch;
+        nx_image_resize(dest, dest_width, dest_height, dest_row_stride, src->type);
+
+        uchar *buffer = filter_buffer;
+        if (!buffer) {
+                buffer = nx_image_filter_buffer_alloc(src->width, src->height,
+                                                      sigma_x, sigma_y);
+        }
+
+        int nkx = nx_kernel_size_min_gaussian(sigma_x, NX_IMAGE_SMOOTH_KERNEL_LOSS);
+        int nky = nx_kernel_size_min_gaussian(sigma_y, NX_IMAGE_SMOOTH_KERNEL_LOSS);
+        int nk_max = nx_max_i(nkx, nky);
+        int nk_sym = nk_max / 2 + 1;
+        short *kernel = nx_new_si(nk_sym);
+
+        // Smooth in x-direction
+        int nk = nkx / 2 + 1;
+        short k_sum = nx_kernel_sym_gaussian_si(nk, kernel, sigma_x);
+        for (int y = 0; y < src->height; ++y) {
+                const uchar *src_row = src->data + y * src->row_stride;
+                uchar *dest_row = dest->data + y * dest->row_stride;
+                nx_filter_copy_to_buffer1_uc(src->width, buffer, src_row, nkx / 2, NX_BORDER_MIRROR);
+                nx_convolve_sym_si_uc(src->width, buffer, nk, kernel, k_sum);
+                memcpy(dest_row, buffer, dest->width * dest->n_channels * sizeof(uchar));
+        }
+
+        // Smooth in y-direction
+        nk = nky / 2 + 1;
+        k_sum = nx_kernel_sym_gaussian_si(nk, kernel, sigma_y);
+        for (int x = 0; x < dest->width; ++x) {
+                uchar *dest_col = dest->data + x;
+                nx_filter_copy_to_buffer_uc(dest->width, buffer, dest_col, dest->row_stride, nky / 2, NX_BORDER_MIRROR);
+                nx_convolve_sym_si_uc(dest->width, buffer, nk, kernel, k_sum);
+                for (int y = 0; y < dest->height; ++y)
+                        dest_col[y*dest->row_stride] = buffer[y];
+        }
+
+        nx_free(kernel);
+
+        // Clean-up if allocated buffer
+        if (!filter_buffer)
+                nx_free(buffer);
+}
+
+void nx_image_smooth_s(struct NXImage *dest, const struct NXImage *src,
+                       float sigma_x, float sigma_y, uchar *filter_buffer)
+{
+        NX_ASSERT_PTR(src);
+        NX_ASSERT_PTR(dest);
+        NX_IMAGE_ASSERT_GRAYSCALE(src);
+        NX_IMAGE_ASSERT_GRAYSCALE(dest);
+
+
+        int dest_width = src->width;
+        int dest_height = src->height;
+        int n_ch = nx_image_n_channels(src->type);
+        int dest_row_stride = dest_width*n_ch;
+        nx_image_resize(dest, dest_width, dest_height, dest_row_stride, src->type);
+
+        uchar *buffer = filter_buffer;
+        if (!buffer) {
+                buffer = nx_image_filter_buffer_alloc(src->width, src->height,
+                                                      sigma_x, sigma_y);
+        }
+
+        int nkx = nx_kernel_size_min_gaussian(sigma_x, NX_IMAGE_SMOOTH_KERNEL_LOSS);
+        int nky = nx_kernel_size_min_gaussian(sigma_y, NX_IMAGE_SMOOTH_KERNEL_LOSS);
+        int nk_max = nx_max_i(nkx, nky);
+        int nk_sym = nk_max / 2 + 1;
+        float *kernel = nx_new_s(nk_sym);
+
+        // Smooth in x-direction
+        int nk = nkx / 2 + 1;
+        nx_kernel_sym_gaussian_s(nk, kernel, sigma_x);
+        for (int y = 0; y < src->height; ++y) {
+                const uchar *src_row = src->data + y * src->row_stride;
+                uchar *dest_row = dest->data + y * dest->row_stride;
+                nx_filter_copy_to_buffer1_uc(src->width, buffer, src_row, nkx / 2, NX_BORDER_MIRROR);
+                nx_convolve_sym_s_uc(src->width, buffer, nk, kernel);
+                memcpy(dest_row, buffer, dest->width * dest->n_channels * sizeof(uchar));
+        }
+
+        // Smooth in y-direction
+        nk = nky / 2 + 1;
+        nx_kernel_sym_gaussian_s(nk, kernel, sigma_y);
+        for (int x = 0; x < dest->width; ++x) {
+                uchar *dest_col = dest->data + x;
+                nx_filter_copy_to_buffer_uc(dest->width, buffer, dest_col, dest->row_stride, nky / 2, NX_BORDER_MIRROR);
+                nx_convolve_sym_s_uc(dest->width, buffer, nk, kernel);
+                for (int y = 0; y < dest->height; ++y)
+                        dest_col[y*dest->row_stride] = buffer[y];
+        }
+
+        nx_free(kernel);
+
+        // Clean-up if allocated buffer
+        if (!filter_buffer)
+                nx_free(buffer);
+}
+
+void nx_image_xsave_pnm(const struct NXImage *img, const char *filename)
+{
+        NX_ASSERT_PTR(img);
+        NX_ASSERT_PTR(filename);
+
+        FILE *pnm = nx_xfopen(filename, "wb");
+
+        if (img->type == NX_IMAGE_GRAYSCALE) {
+                const char *magic_head = "P5";
+                fprintf(pnm, "%s\n%d %d %d\n", magic_head, img->width, img->height, 255);
+
+                for (int y = 0; y < img->height; ++y) {
+                        const uchar *row = img->data + y * img->row_stride;
+                        fwrite((const void*)row, sizeof(uchar), img->width, pnm);
+                }
+        } else if (img->type == NX_IMAGE_RGBA) {
+                const char *magic_head = "P6";
+                fprintf(pnm, "%s\n%d %d\n%d\n", magic_head, img->width, img->height, 255);
+
+                for (int y = 0; y < img->height; ++y) {
+                        const uchar *row = img->data + y*img->row_stride;
+                        for (int x = 0; x < img->width; ++x) {
+                                fwrite((const void*)(row+4*x), sizeof(uchar), 3, pnm);
+                        }
+                }
+        } else {
+                nx_fatal(NX_LOG_TAG, "Can not save image of unknown type '%d' as PNM", (int)img->type);
+        }
+
+        nx_xfclose(pnm, filename);
+}
+
+void nx_image_xload_pnm(struct NXImage *img, const char *filename,
+                            enum NXImageLoadMode mode)
+{
+        NX_ASSERT_PTR(img);
+        NX_ASSERT_PTR(filename);
+
+        FILE *pnm = nx_xfopen(filename, "rb");
+
+        char ch1, ch2;
+        if (fscanf(pnm, "%c%c", &ch1, &ch2) != 2) {
+                nx_io_fatal_exit(NX_LOG_TAG, "Could not read image header from %s", filename);
+        }
+
+        if(ch1 != 'P' || (ch2 != '5' && ch2 != '6')) {
+                nx_fatal(NX_LOG_TAG, "Image %s is not a PNM file", filename);
+        }
+
+        enum NXImageType pnm_type;
+        if(ch2 == '5') {
+                pnm_type = NX_IMAGE_GRAYSCALE;
+        } else if(ch2 == '6') {
+                pnm_type = NX_IMAGE_RGBA;
+        }
+
+        int pnm_width;
+        int pnm_height;
+        int pnm_levels;
+
+        if (fscanf(pnm, "%d %d %d", &pnm_width, &pnm_height, &pnm_levels) != 3) {
+                nx_io_fatal_exit(NX_LOG_TAG, "Could not read image attributes from %s", filename);
+        }
+
+        // Skip a new line
+        char buffer[256];
+        fgets(buffer, sizeof(buffer), pnm);
+
+        enum NXImageType img_type;
+        switch (mode) {
+        case NX_IMAGE_LOAD_GRAYSCALE:
+                img_type = NX_IMAGE_GRAYSCALE;
+                break;
+        case NX_IMAGE_LOAD_RGBA:
+                img_type = NX_IMAGE_RGBA;
+                break;
+        case NX_IMAGE_LOAD_AS_IS:
+        default:
+                img_type = pnm_type;
+                break;
+        }
+
+        int n_ch = nx_image_n_channels(img_type);
+        nx_image_resize(img, pnm_width, pnm_height, pnm_width*n_ch, img_type);
+
+        if (pnm_type == NX_IMAGE_GRAYSCALE) {
+                if (img_type == NX_IMAGE_GRAYSCALE) {
+                        for (int y = 0; y < img->height; ++y) {
+                                uchar* row = img->data + y * img->row_stride;
+                                fread((void*)row, sizeof(uchar), img->width, pnm);
+                        }
+                } else {
+                        for (int y = 0; y < img->height; ++y) {
+                                uchar* row = img->data + y * img->row_stride;
+                                for(int x = 0; x < img->width; ++x) {
+                                        uchar value;
+                                        fread((void*)&value, sizeof(uchar), 1, pnm);
+                                        row[4*x] = value;
+                                        row[4*x+1] = value;
+                                        row[4*x+2] = value;
+                                        row[4*x+3] = 255;
+                                }
+                        }
+                }
+        } else {
+                if (img_type == NX_IMAGE_GRAYSCALE) {
+                        for (int y = 0; y < img->height; ++y) {
+                                uchar* row = img->data + y * img->row_stride;
+                                for (int x = 0; x < img->width; ++x) {
+                                        uchar value[3];
+                                        fread((void*)&value, sizeof(uchar), 3, pnm);
+                                        row[x] = nx_rgb_to_gray(value[0], value[1], value[2]);
+                                }
+                        }
+                } else {
+                        for (int y = 0; y < img->height; ++y) {
+                                uchar* row = img->data + y * img->row_stride;
+                                for (int x = 0; x < img->width; ++x) {
+                                        fread((void*)(row + 4*x), sizeof(uchar), 3, pnm);
+                                        row[4*x+3] = 255;
+                                }
+                        }
+                }
+        }
+
+        nx_xfclose(pnm, filename);
 }
