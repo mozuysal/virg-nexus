@@ -52,10 +52,16 @@ void nx_mem_block_resize(struct NXMemBlock *mem, size_t new_sz)
         NX_ASSERT_PTR(mem);
 
         if (new_sz > mem->capacity) {
-                mem->ptr = (uchar *)nx_frealloc(mem->ptr, new_sz * sizeof(uchar));
-                mem->capacity = new_sz;
+                if (mem->own_memory) {
+                        mem->ptr = (uchar *)nx_frealloc(mem->ptr, new_sz * sizeof(uchar));
+                } else {
+                        uchar *new_ptr = nx_new_uc(new_sz);
+                        memcpy(new_ptr, mem->ptr, mem->size * sizeof(uchar));
+                        mem->ptr = new_ptr;
+                        mem->own_memory = NX_TRUE;
+                }
 
-                mem->own_memory = NX_TRUE;
+                mem->capacity = new_sz;
         }
 
        mem->size = new_sz;
