@@ -18,7 +18,7 @@
 
 __NX_BEGIN_DECL
 
-inline uchar nx_rgb_to_gray(uchar r, uchar g, uchar b);
+static inline uchar nx_rgb_to_gray(uchar r, uchar g, uchar b);
 
 void nx_convert_rgba_to_gray(int width, int height, uchar *gray, int gray_stride,
                              const uchar *rgba, int rgba_stride);

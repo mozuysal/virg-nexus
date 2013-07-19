@@ -127,6 +127,8 @@ set_target_properties(gtest PROPERTIES ARCHIVE_OUTPUT_DIRECTORY lib)
 set(test_SOURCES
   tests/tests_main.cc
   tests/tests_mem_block.cc
+  tests/tests_filter.cc
+  tests/tests_image.cc
 )
 
 add_executable(virg-nexus-tests ${test_SOURCES})

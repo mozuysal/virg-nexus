@@ -19,13 +19,13 @@ __NX_BEGIN_DECL
 
 #define NX_PI 3.14159265358979323846
 
-inline int nx_min_i(int x, int y);
-inline float nx_min_s(float x, float y);
-inline double nx_min_d(double x, double y);
+static inline int nx_min_i(int x, int y);
+static inline float nx_min_s(float x, float y);
+static inline double nx_min_d(double x, double y);
 
-inline int nx_max_i(int x, int y);
-inline float nx_max_s(float x, float y);
-inline double nx_max_d(double x, double y);
+static inline int nx_max_i(int x, int y);
+static inline float nx_max_s(float x, float y);
+static inline double nx_max_d(double x, double y);
 
 double nx_erf(double x);
 

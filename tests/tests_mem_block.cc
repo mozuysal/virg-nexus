@@ -20,7 +20,6 @@
 
 #include "virg/nexus/nx_mem_block.h"
 
-
 using namespace std;
 
 namespace {

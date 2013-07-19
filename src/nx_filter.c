@@ -320,6 +320,7 @@ void fill_buffer_border_uc(int n, uchar *buffer, int n_border, enum NXBorderMode
 void nx_filter_copy_to_buffer1_uc(int n, uchar *buffer, const uchar *data, int n_border, enum NXBorderMode mode)
 {
         NX_ASSERT(n > 1);
+        NX_ASSERT(n > n_border);
         NX_ASSERT_PTR(buffer);
         NX_ASSERT_PTR(data);
 
@@ -341,6 +342,7 @@ void nx_filter_copy_to_buffer1_uc(int n, uchar *buffer, const uchar *data, int n
 void nx_filter_copy_to_buffer_uc(int n, uchar *buffer, const uchar *data, int stride, int n_border, enum NXBorderMode mode)
 {
         NX_ASSERT(n > 1);
+        NX_ASSERT(n > n_border);
         NX_ASSERT_PTR(buffer);
         NX_ASSERT_PTR(data);
 

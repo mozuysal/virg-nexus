@@ -43,7 +43,7 @@ struct NXImage
         int row_stride;
 };
 
-inline int nx_image_n_channels(enum NXImageType type);
+static inline int nx_image_n_channels(enum NXImageType type);
 
 struct NXImage *nx_image_alloc();
 
