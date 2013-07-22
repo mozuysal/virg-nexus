@@ -39,6 +39,6 @@
 
 #define NX_SIMD_ALIGNMENT 32
 
-#define NX_LOG_TAG "VIRGNEXUS"
+#define NX_LOG_TAG "VIRG-NEXUS"
 
 #endif

@@ -37,7 +37,11 @@ endif()
 
 
 add_library(virg-nexus STATIC ${virg_nexus_SOURCES})
-set_target_properties(virg-nexus PROPERTIES ARCHIVE_OUTPUT_DIRECTORY lib)
+set_target_properties(virg-nexus PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
+
+add_library(virg-nexus-shared SHARED ${virg_nexus_SOURCES})
+set_target_properties(virg-nexus-shared PROPERTIES OUTPUT_NAME virg-nexus)
+set_target_properties(virg-nexus-shared PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR} )
 include_directories(include)
@@ -84,7 +88,7 @@ set(CMAKE_BUILD_TYPE Debug)
 # set(CMAKE_BUILD_TYPE Release)
 # set(CMAKE_BUILD_TYPE RelWithDebInfo)
 
-configure_file(virg-nexus.pc.in ${CMAKE_SOURCE_DIR}/virg-nexus.pc @ONLY)
+configure_file(virg-nexus.pc.in ${CMAKE_SOURCE_DIR}/lib/pkgconfig/virg-nexus.pc @ONLY)
 
 # -------------------------- install target ----------------------------
 install(TARGETS virg-nexus ARCHIVE DESTINATION lib)
@@ -92,14 +96,7 @@ foreach(virg_nexus_header ${virg_nexus_HEADERS})
   get_filename_component(install_RELPATH ${virg_nexus_header} PATH)
   install(FILES ${virg_nexus_header} DESTINATION ${install_RELPATH})
 endforeach(virg_nexus_header)
-install(FILES virg-nexus.pc DESTINATION lib/pkgconfig)
-
-# -------------------------- ebrowse target ----------------------------
-add_custom_target(browse DEPENDS ${marl_HEADERS} ${marl_SOURCES})
-add_custom_command(COMMAND ebrowse
-  ARGS ${marl_HEADERS} ${marl_SOURCES} -o BROWSE
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-  TARGET browse)
+install(FILES lib/pkgconfig/virg-nexus.pc DESTINATION lib/pkgconfig)
 
 # --------------------------------- doc target -----------------------------------
 find_package(Doxygen)
