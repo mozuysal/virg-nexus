@@ -1,6 +1,8 @@
 import ctypes as _C
 
-from __init__ import _nexus
+import __init__ as _NX
+
+_nexus = _NX._nexus
 
 _POINTER = _C.POINTER
 _c_ubyte = _C.c_ubyte
@@ -10,10 +12,10 @@ _c_float = _C.c_float
 _c_char_p = _C.c_char_p
 
 class Struct(_C.Structure):
-    _fields_ = [("ptr", _POINTER(_c_ubyte)),
+    _fields_ = [("ptr", _POINTER(_NX.uchar)),
                 ("size", _c_size_t),
                 ("capacity", _c_size_t),
-                ("own_memory", _c_int)]
+                ("own_memory", _NX.Bool)]
 
     def __str__(self):
         return "<NXMemBlock: {} / {}>".format(self.size, self.capacity);
@@ -41,7 +43,7 @@ release.argtypes = [Ptr]
 release.restype = None
 
 wrap = _nexus.nx_mem_block_wrap
-wrap.argtypes = [Ptr, _POINTER(_c_ubyte), _c_size_t, _c_int]
+wrap.argtypes = [Ptr, _POINTER(_NX.uchar), _c_size_t, _NX.Bool]
 wrap.restype = None
 
 swap = _nexus.nx_mem_block_swap

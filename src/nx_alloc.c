@@ -96,3 +96,8 @@ void *nx_frealloc(void *ptr, size_t sz)
 
         return res_ptr;
 }
+
+void nx_free(void *ptr)
+{
+        free(ptr);
+}

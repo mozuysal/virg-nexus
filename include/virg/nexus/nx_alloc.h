@@ -33,7 +33,7 @@ void *nx_aligned_alloc(size_t sz, size_t alignment);
 
 void *nx_faligned_alloc(size_t sz, size_t alignment);
 
-#define nx_free(x) free((x))
+void nx_free(void *ptr);
 
 #define nx_new(n,type) ((type *)nx_fmalloc((n) * sizeof(type)))
 #define nx_new_c(n)    nx_new((n),char)

@@ -267,7 +267,7 @@ void nx_image_downsample(struct NXImage *dest, const struct NXImage *src)
         nx_image_resize(dest, dest_width, dest_height, dest_row_stride, src->type);
 
         for (int y = 0; y < dest->height; ++y) {
-                const uchar *src_row = src->data + y * src->row_stride;
+                const uchar *src_row = src->data + 2*y * src->row_stride;
                 uchar *dest_row = dest->data + y * dest->row_stride;
                 for (int x = 0; x < dest->width; ++x) {
                         dest_row[x] = src_row[2*x];

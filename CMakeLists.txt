@@ -33,8 +33,7 @@ set(virg_nexus_HEADERS
 
 if (NOT VIRG_NEXUS_ANDROID)
   set(virg_nexus_SOURCES ${virg_nexus_SOURCES} src/nx_message_c_impl.c)
-endif() 
-
+endif()
 
 add_library(virg-nexus STATIC ${virg_nexus_SOURCES})
 set_target_properties(virg-nexus PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
@@ -92,6 +91,7 @@ configure_file(virg-nexus.pc.in ${CMAKE_SOURCE_DIR}/lib/pkgconfig/virg-nexus.pc 
 
 # -------------------------- install target ----------------------------
 install(TARGETS virg-nexus ARCHIVE DESTINATION lib)
+install(TARGETS virg-nexus-shared LIBRARY DESTINATION lib)
 foreach(virg_nexus_header ${virg_nexus_HEADERS})
   get_filename_component(install_RELPATH ${virg_nexus_header} PATH)
   install(FILES ${virg_nexus_header} DESTINATION ${install_RELPATH})
