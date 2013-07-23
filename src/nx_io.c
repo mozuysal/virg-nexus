@@ -26,11 +26,22 @@ void nx_io_fatal_exit(const char *tag, const char *fmt, ...)
         va_end(prm);
 }
 
+void nx_io_error(const char *tag, const char *fmt, ...)
+{
+        perror(NULL);
+
+        va_list prm;
+        va_start(prm, fmt);
+        nx_verror(tag, fmt, prm);
+        va_end(prm);
+}
+
+
 FILE *nx_xfopen(const char *path, const char *mode)
 {
         FILE *stream = fopen(path, mode);
         if (!stream)
-                nx_io_fatal_exit("nx_xfopen", "Error opening file %s",
+                nx_io_fatal_exit(NX_LOG_TAG, "Error opening file %s",
                                  path);
         else
                 return stream;
@@ -43,7 +54,33 @@ void nx_xfclose(FILE *stream, const char *stream_label)
         fclose(stream);
 
         if (e) {
-                 nx_io_fatal_exit("nx_xfclose", "Error detected before closing stream %s",
+                 nx_io_fatal_exit(NX_LOG_TAG, "Error detected before closing stream %s",
                                   stream_label);
         }
+}
+
+FILE *nx_fopen(const char *path, const char *mode)
+{
+        FILE *stream = fopen(path, mode);
+        if (!stream) {
+                nx_io_error(NX_LOG_TAG, "Error opening file %s",
+                            path);
+        }
+
+        return stream;
+}
+
+NXResult nx_fclose(FILE *stream, const char *stream_label)
+{
+        int e = ferror(stream);
+
+        fclose(stream);
+
+        if (e) {
+                nx_io_error(NX_LOG_TAG, "Error detected before closing stream %s",
+                            stream_label);
+                return NX_FAIL;
+        }
+
+        return NX_OK;
 }

@@ -112,3 +112,11 @@ xsave_pnm.restype = None
 xload_pnm = _nexus.nx_image_xload_pnm
 xload_pnm.argtypes = [Ptr, _c_char_p, LoadMode]
 xload_pnm.restype = None
+
+save_pnm = _nexus.nx_image_save_pnm
+xsave_pnm.argtypes = [Ptr, _c_char_p]
+xsave_pnm.restype = _NX.Result
+
+load_pnm = _nexus.nx_image_load_pnm
+xload_pnm.argtypes = [Ptr, _c_char_p, LoadMode]
+xload_pnm.restype = _NX.Result

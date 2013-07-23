@@ -78,11 +78,19 @@ class NXImage(object):
     def resize(self, w, h, image_type):
         _Img.resize(self.__ptr, w, h, NXImage.n_channels_by_type(image_type)*w, image_type)
 
-    def xsave_pnm(self, filename):
-        _Img.xsave_pnm(self.__ptr, filename)
+    def save_pnm(self, filename):
+        res = _Img.save_pnm(self.__ptr, filename)
+        if res == _NX.OK:
+            return True
+        else:
+            return False
 
-    def xload_pnm(self, filename, load_mode):
-        _Img.xload_pnm(self.__ptr, filename, load_mode)
+    def load_pnm(self, filename, load_mode):
+        res = _Img.load_pnm(self.__ptr, filename, load_mode)
+        if res == _NX.OK:
+            return True
+        else:
+            return False
 
     def copy(self):
         img = NXImage()
@@ -113,6 +121,12 @@ class NXImage(object):
         buff = _POINTER(_NX.uchar)() # NULL pointer
         _Img.smooth_s(img.__ptr, self.__ptr, sx, sy, buff)
         return img
+
+    def smooth_self(self, sigma_x, sigma_y):
+        sx = _c_float(sigma_x)
+        sy = _c_float(sigma_y)
+        buff = _POINTER(_NX.uchar)() # NULL pointer
+        _Img.smooth_s(self.__ptr, self.__ptr, sx, sy, buff)
 
     def convert(self, image_type):
         img = NXImage(1, 1, image_type)

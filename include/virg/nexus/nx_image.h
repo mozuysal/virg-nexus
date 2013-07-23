@@ -89,6 +89,8 @@ void nx_image_xsave_pnm(const struct NXImage *img, const char *filename);
 
 void nx_image_xload_pnm(struct NXImage *img, const char *filename, enum NXImageLoadMode mode);
 
+NXResult nx_image_save_pnm(const struct NXImage *img, const char *filename);
+
 #define NX_IMAGE_ASSERT_GRAYSCALE(img) \
         do {                               \
                 NX_ASSERT_CUSTOM("Image must be grayscale",img->type == NX_IMAGE_GRAYSCALE); \

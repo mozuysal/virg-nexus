@@ -398,14 +398,9 @@ void nx_image_smooth_s(struct NXImage *dest, const struct NXImage *src,
                 nx_free(buffer);
 }
 
-void nx_image_xsave_pnm(const struct NXImage *img, const char *filename)
+static NXResult save_as_pnm(const struct NXImage *img, FILE *pnm)
 {
-        NX_ASSERT_PTR(img);
-        NX_ASSERT_PTR(filename);
-
-        FILE *pnm = nx_xfopen(filename, "wb");
-
-        if (img->type == NX_IMAGE_GRAYSCALE) {
+       if (img->type == NX_IMAGE_GRAYSCALE) {
                 const char *magic_head = "P5";
                 fprintf(pnm, "%s\n%d %d %d\n", magic_head, img->width, img->height, 255);
 
@@ -424,10 +419,92 @@ void nx_image_xsave_pnm(const struct NXImage *img, const char *filename)
                         }
                 }
         } else {
+                return NX_FAIL;
+        }
+
+       return NX_OK;
+}
+
+void nx_image_xsave_pnm(const struct NXImage *img, const char *filename)
+{
+        NX_ASSERT_PTR(img);
+        NX_ASSERT_PTR(filename);
+
+        FILE *pnm = nx_xfopen(filename, "wb");
+
+        if (save_as_pnm(img, pnm) != NX_OK) {
                 nx_fatal(NX_LOG_TAG, "Can not save image of unknown type '%d' as PNM", (int)img->type);
         }
 
         nx_xfclose(pnm, filename);
+}
+
+NXResult nx_image_save_pnm(const struct NXImage *img, const char *filename)
+{
+        NX_ASSERT_PTR(img);
+        NX_ASSERT_PTR(filename);
+
+        FILE *pnm = nx_fopen(filename, "wb");
+        if (!pnm) {
+                return NX_FAIL;
+        }
+
+        if (save_as_pnm(img, pnm) != NX_OK) {
+                nx_error(NX_LOG_TAG, "Can not save image of unknown type '%d' as PNM", (int)img->type);
+                fclose(pnm);
+                return NX_FAIL;
+        }
+
+        NXResult res = nx_fclose(pnm, filename);
+
+        return res;
+}
+
+static void read_pnm_data(struct NXImage *img, enum NXImageType img_type,
+                          FILE *pnm, int pnm_width, int pnm_height, enum NXImageType pnm_type)
+{
+        int n_ch = nx_image_n_channels(img_type);
+        nx_image_resize(img, pnm_width, pnm_height, pnm_width*n_ch, img_type);
+
+        if (pnm_type == NX_IMAGE_GRAYSCALE) {
+                if (img_type == NX_IMAGE_GRAYSCALE) {
+                        for (int y = 0; y < img->height; ++y) {
+                                uchar* row = img->data + y * img->row_stride;
+                                fread((void*)row, sizeof(uchar), img->width, pnm);
+                        }
+                } else {
+                        for (int y = 0; y < img->height; ++y) {
+                                uchar* row = img->data + y * img->row_stride;
+                                for(int x = 0; x < img->width; ++x) {
+                                        uchar value;
+                                        fread((void*)&value, sizeof(uchar), 1, pnm);
+                                        row[4*x] = value;
+                                        row[4*x+1] = value;
+                                        row[4*x+2] = value;
+                                        row[4*x+3] = 255;
+                                }
+                        }
+                }
+        } else {
+                if (img_type == NX_IMAGE_GRAYSCALE) {
+                        for (int y = 0; y < img->height; ++y) {
+                                uchar* row = img->data + y * img->row_stride;
+                                for (int x = 0; x < img->width; ++x) {
+                                        uchar value[3];
+                                        fread((void*)&value, sizeof(uchar), 3, pnm);
+                                        row[x] = nx_rgb_to_gray(value[0], value[1], value[2]);
+                                }
+                        }
+                } else {
+                        for (int y = 0; y < img->height; ++y) {
+                                uchar* row = img->data + y * img->row_stride;
+                                for (int x = 0; x < img->width; ++x) {
+                                        fread((void*)(row + 4*x), sizeof(uchar), 3, pnm);
+                                        row[4*x+3] = 255;
+                                }
+                        }
+                }
+        }
 }
 
 void nx_image_xload_pnm(struct NXImage *img, const char *filename,
@@ -480,48 +557,72 @@ void nx_image_xload_pnm(struct NXImage *img, const char *filename,
                 break;
         }
 
-        int n_ch = nx_image_n_channels(img_type);
-        nx_image_resize(img, pnm_width, pnm_height, pnm_width*n_ch, img_type);
-
-        if (pnm_type == NX_IMAGE_GRAYSCALE) {
-                if (img_type == NX_IMAGE_GRAYSCALE) {
-                        for (int y = 0; y < img->height; ++y) {
-                                uchar* row = img->data + y * img->row_stride;
-                                fread((void*)row, sizeof(uchar), img->width, pnm);
-                        }
-                } else {
-                        for (int y = 0; y < img->height; ++y) {
-                                uchar* row = img->data + y * img->row_stride;
-                                for(int x = 0; x < img->width; ++x) {
-                                        uchar value;
-                                        fread((void*)&value, sizeof(uchar), 1, pnm);
-                                        row[4*x] = value;
-                                        row[4*x+1] = value;
-                                        row[4*x+2] = value;
-                                        row[4*x+3] = 255;
-                                }
-                        }
-                }
-        } else {
-                if (img_type == NX_IMAGE_GRAYSCALE) {
-                        for (int y = 0; y < img->height; ++y) {
-                                uchar* row = img->data + y * img->row_stride;
-                                for (int x = 0; x < img->width; ++x) {
-                                        uchar value[3];
-                                        fread((void*)&value, sizeof(uchar), 3, pnm);
-                                        row[x] = nx_rgb_to_gray(value[0], value[1], value[2]);
-                                }
-                        }
-                } else {
-                        for (int y = 0; y < img->height; ++y) {
-                                uchar* row = img->data + y * img->row_stride;
-                                for (int x = 0; x < img->width; ++x) {
-                                        fread((void*)(row + 4*x), sizeof(uchar), 3, pnm);
-                                        row[4*x+3] = 255;
-                                }
-                        }
-                }
-        }
+        read_pnm_data(img, img_type, pnm, pnm_width, pnm_height, pnm_type);
 
         nx_xfclose(pnm, filename);
+}
+
+NXResult nx_image_load_pnm(struct NXImage *img, const char *filename,
+                           enum NXImageLoadMode mode)
+{
+        NX_ASSERT_PTR(img);
+        NX_ASSERT_PTR(filename);
+
+        FILE *pnm = nx_fopen(filename, "rb");
+        if (!pnm) {
+                return NX_FAIL;
+        }
+
+        char ch1, ch2;
+        if (fscanf(pnm, "%c%c", &ch1, &ch2) != 2) {
+                nx_io_error(NX_LOG_TAG, "Could not read image header from %s", filename);
+                fclose(pnm);
+                return NX_FAIL;
+        }
+
+        if(ch1 != 'P' || (ch2 != '5' && ch2 != '6')) {
+                nx_error(NX_LOG_TAG, "Image %s is not a PNM file", filename);
+                fclose(pnm);
+                return NX_FAIL;
+        }
+
+        enum NXImageType pnm_type;
+        if(ch2 == '5') {
+                pnm_type = NX_IMAGE_GRAYSCALE;
+        } else if(ch2 == '6') {
+                pnm_type = NX_IMAGE_RGBA;
+        }
+
+        int pnm_width;
+        int pnm_height;
+        int pnm_levels;
+
+        if (fscanf(pnm, "%d %d %d", &pnm_width, &pnm_height, &pnm_levels) != 3) {
+                nx_io_error(NX_LOG_TAG, "Could not read image attributes from %s", filename);
+                fclose(pnm);
+                return NX_FAIL;
+        }
+
+        // Skip a new line
+        char buffer[256];
+        fgets(buffer, sizeof(buffer), pnm);
+
+        enum NXImageType img_type;
+        switch (mode) {
+        case NX_IMAGE_LOAD_GRAYSCALE:
+                img_type = NX_IMAGE_GRAYSCALE;
+                break;
+        case NX_IMAGE_LOAD_RGBA:
+                img_type = NX_IMAGE_RGBA;
+                break;
+        case NX_IMAGE_LOAD_AS_IS:
+        default:
+                img_type = pnm_type;
+                break;
+        }
+
+        read_pnm_data(img, img_type, pnm, pnm_width, pnm_height, pnm_type);
+
+        NXResult res = nx_fclose(pnm, filename);
+        return res;
 }
