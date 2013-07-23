@@ -12,6 +12,9 @@ _c_size_t = _C.c_size_t
 _c_float = _C.c_float
 _c_char_p = _C.c_char_p
 
+_buffer_from_memory = _C.pythonapi.PyBuffer_FromMemory
+_buffer_from_memory.restype = _C.py_object
+
 NX_IMAGE_GRAYSCALE = _Img.GRAYSCALE
 NX_IMAGE_RGBA = _Img.RGBA
 
@@ -55,6 +58,11 @@ class NXImage(object):
     @property
     def n_channels(self):
         return self.__ptr.contents.n_channels;
+
+    def as_buffer(self):
+        buff = _buffer_from_memory(self.__ptr.contents.mem.contents.ptr,
+                                   self.__ptr.contents.mem.contents.size)
+        return buff
 
     def get_pixel(self, x, y):
         w = self.width
