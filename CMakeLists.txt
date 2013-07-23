@@ -97,6 +97,7 @@ foreach(virg_nexus_header ${virg_nexus_HEADERS})
   install(FILES ${virg_nexus_header} DESTINATION ${install_RELPATH})
 endforeach(virg_nexus_header)
 install(FILES lib/pkgconfig/virg-nexus.pc DESTINATION lib/pkgconfig)
+install(DIRECTORY lib/python DESTINATION lib FILES_MATCHING PATTERN "*.py")
 
 # --------------------------------- doc target -----------------------------------
 find_package(Doxygen)
