@@ -129,6 +129,7 @@ set(test_SOURCES
   tests/tests_mem_block.cc
   tests/tests_filter.cc
   tests/tests_image.cc
+  tests/tests_image_pyr.cc
 )
 
 add_executable(virg-nexus-tests ${test_SOURCES})
