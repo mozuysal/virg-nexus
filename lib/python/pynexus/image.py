@@ -93,6 +93,14 @@ downsample = _nexus.nx_image_downsample
 downsample.argtypes = [Ptr, Ptr]
 downsample.restype = None
 
+downsample_aa_x = _nexus.nx_image_downsample_aa_x
+downsample.argtypes = [Ptr, Ptr]
+downsample.restype = None
+
+downsample_aa_y = _nexus.nx_image_downsample_aa_y
+downsample.argtypes = [Ptr, Ptr]
+downsample.restype = None
+
 filter_buffer_alloc = _nexus.nx_image_filter_buffer_alloc
 filter_buffer_alloc.argtypes = [_c_int, _c_int, _c_float, _c_float]
 filter_buffer_alloc.restype = _POINTER(_NX.uchar)

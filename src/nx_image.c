@@ -25,6 +25,8 @@
 
 static const double NX_IMAGE_SMOOTH_KERNEL_LOSS = 0.003;
 
+static void nx_process_aa_buffer(uchar *buffer, int n);
+
 struct NXImage *nx_image_alloc()
 {
         struct NXImage *img = nx_new(1, struct NXImage);
@@ -277,6 +279,64 @@ void nx_image_downsample(struct NXImage *dest, const struct NXImage *src)
                         dest_row[x] = src_row[2*x];
                 }
         }
+}
+
+void nx_process_aa_buffer(uchar *buffer, int n)
+{
+        float norm_f = 1.0f / (1 + 6 + 11 + 6 + 1);
+
+        for (int i = 0; i < n; i += 2) {
+                int sum = buffer[i] + buffer[i+4] + 6*(buffer[i+1] + buffer[i+3]) + 11 * buffer[i+2];
+                buffer[i/2] = sum * norm_f;
+        }
+}
+
+void nx_image_downsample_aa_x(struct NXImage *dest, const struct NXImage *src)
+{
+        NX_ASSERT_PTR(src);
+        NX_ASSERT_PTR(dest);
+        NX_IMAGE_ASSERT_GRAYSCALE(src);
+        NX_IMAGE_ASSERT_GRAYSCALE(dest);
+
+        int dest_width = src->width / 2;
+        int dest_height = src->height;
+        nx_image_resize(dest, dest_width, dest_height, 0, src->type);
+
+        uchar *aa_buff = nx_filter_buffer_alloc(src->width, 2);
+        for (int y = 0; y < dest->height; ++y) {
+                const uchar *src_row = src->data + y * src->row_stride;
+                nx_filter_copy_to_buffer1_uc(src->width, aa_buff, src_row, 2, NX_BORDER_MIRROR);
+                nx_process_aa_buffer(aa_buff, src->width);
+
+                uchar *dest_row = dest->data + y * dest->row_stride;
+                for (int x = 0; x < dest->width; ++x)
+                        dest_row[x] = aa_buff[x];
+        }
+        nx_free(aa_buff);
+}
+
+void nx_image_downsample_aa_y(struct NXImage *dest, const struct NXImage *src)
+{
+        NX_ASSERT_PTR(src);
+        NX_ASSERT_PTR(dest);
+        NX_IMAGE_ASSERT_GRAYSCALE(src);
+        NX_IMAGE_ASSERT_GRAYSCALE(dest);
+
+        int dest_width = src->width;
+        int dest_height = src->height / 2;
+        nx_image_resize(dest, dest_width, dest_height, 0, src->type);
+
+        uchar *aa_buff = nx_filter_buffer_alloc(src->width, 2);
+        for (int x = 0; x < dest->width; ++x) {
+                const uchar *src_col = src->data + x;
+                nx_filter_copy_to_buffer_uc(src->height, aa_buff, src_col, src->row_stride, 2, NX_BORDER_MIRROR);
+                nx_process_aa_buffer(aa_buff, src->height);
+
+                uchar *dest_col = dest->data + x;
+                for (int y = 0; y < dest->height; ++y)
+                        dest_col[y * dest->row_stride] = aa_buff[y];
+        }
+        nx_free(aa_buff);
 }
 
 uchar *nx_image_filter_buffer_alloc(int width, int height, float sigma_x, float sigma_y)

@@ -77,6 +77,10 @@ void nx_image_scale(struct NXImage *dest, const struct NXImage *src, float scale
 
 void nx_image_downsample(struct NXImage *dest, const struct NXImage *src);
 
+void nx_image_downsample_aa_x(struct NXImage *dest, const struct NXImage *src);
+
+void nx_image_downsample_aa_y(struct NXImage *dest, const struct NXImage *src);
+
 uchar *nx_image_filter_buffer_alloc(int width, int height, float sigma_x, float sigma_y);
 
 void nx_image_smooth_si(struct NXImage *dest, const struct NXImage *src,

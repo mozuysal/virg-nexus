@@ -119,7 +119,6 @@ short nx_kernel_sym_gaussian_si(int n_k, short *kernel, float sigma)
 }
 
 /**
- * @defgroup nx_kernel_sym_sd Functions related to computation of floating-point symmetric kernels
  * Computes the symmetric Gaussian kernel with single precision. The kernel
  * elements sum up to 1.0f.
  *
@@ -146,28 +145,6 @@ void nx_kernel_sym_gaussian_s(int n_k, float *kernel, float sigma)
                 kernel[i] *= sum_inv;
         }
 }
-
-void nx_kernel_sym_gaussian_d(int n_k, double *kernel, double sigma)
-{
-        NX_ASSERT(n_k > 1);
-        NX_ASSERT_PTR(kernel);
-        NX_ASSERT(sigma > 0);
-
-        kernel[0] = kernel_value_gaussian(0, sigma);
-        double sum = kernel[0];
-        for (int i = 1; i < n_k; ++i) {
-                kernel[i] = kernel_value_gaussian(i, sigma);
-                sum += 2.0 * kernel[i];
-        }
-
-        double sum_inv = 1.0 / sum;
-        for (int i = 0; i < n_k; ++i) {
-                kernel[i] *= sum_inv;
-        }
-}
-/**
- * @}
-*/
 
 /**
  * Convolves a unsigned char data buffer using a symmetric kernel of length
@@ -222,63 +199,6 @@ void nx_convolve_sym_s_uc(int n, uchar *data, int n_k, const float *kernel)
                         sum += kernel[k] * (dk0[-k] + dk0[+k]);
                 }
                 data[i] = sum;
-        }
-}
-
-/**
- * Convolves a unsigned char data buffer using a symmetric kernel of length
- * (2*n_k+1) in integer precision and downsample by two.
- *
- * @param n Number of elements to convolve not including the border values
- * @param data Pointer to the beginning of the buffer
- * @param n_k Number of elements in the kernel array
- * @param kernel The kernel
- * @param kernel_sum Sum of the elements of the kernel
- */
-void nx_convolve_sym_downsample2_si_uc(int n, uchar *data, int n_k, const short *kernel, const short kernel_sum)
-{
-        NX_ASSERT(n > 1);
-        NX_ASSERT_PTR(data);
-        NX_ASSERT(n_k > 1);
-        NX_ASSERT_PTR(kernel);
-        NX_ASSERT(kernel_sum > 0);
-
-        float norm_factor = 1.0f / kernel_sum;
-
-        for (int i = 0; i < n; i += 2) {
-                uchar* dk0 = data + i + n_k - 1;
-                int sum = kernel[0] * *dk0;
-                for (int k = 1; k < n_k; ++k) {
-                        sum += kernel[k] * (dk0[-k] + dk0[+k]);
-                }
-
-                data[i/2] = norm_factor * sum;
-        }
-}
-
-/**
- * Convolves unsigned char data buffer using a symmetric kernel of length
- * (2*n_k+1) in single precision and downsample by two.
- *
- * @param n Number of elements to convolve not including the border values
- * @param data Pointer to the beginning of the buffer
- * @param n_k Number of elements in the kernel array
- * @param kernel The kernel
- */
-void nx_convolve_sym_downsample2_s_uc(int n, uchar *data, int n_k, const float *kernel)
-{
-        NX_ASSERT(n > 1);
-        NX_ASSERT_PTR(data);
-        NX_ASSERT(n_k > 1);
-        NX_ASSERT_PTR(kernel);
-
-        for (int i = 0; i < n; i += 2) {
-                uchar* dk0 = data + i + n_k - 1;
-                float sum = kernel[0] * *dk0;
-                for (int k = 1; k < n_k; ++k) {
-                        sum += kernel[k] * (dk0[-k] + dk0[+k]);
-                }
-                data[i/2] = sum;
         }
 }
 
@@ -362,26 +282,11 @@ void nx_filter_copy_to_buffer_uc(int n, uchar *buffer, const uchar *data, int st
  */
 uchar *nx_filter_buffer_alloc(int n, int n_border)
 {
-#if defined(VIRG_NEXUS_USE_SIMD)
-        return nx_filter_simd_buffer_alloc(n, n_border);
-#else
         size_t l = n + 2 * n_border;
+
+#if defined(VIRG_NEXUS_USE_SIMD)
+        return (uchar *)nx_aligned_alloc(l * sizeof(uchar), NX_SIMD_ALIGNMENT);
+#else
         return nx_new_uc(l);
 #endif
-}
-
-/**
- * Allocates an unsigned uchar buffer that will be used for convolution using
- * SIMD instructions.
- *
- * @param n Number of data elements to be convolved
- * @param n_border Number of border elements at one side
- *
- * @return Allocated buffer pointer aligned according to SIMD requirements, must
- * be freed by nx_free()
- */
-uchar *nx_filter_simd_buffer_alloc(int n, int n_border)
-{
-        size_t l = n + 2 * n_border;
-        return (uchar *)nx_aligned_alloc(l * sizeof(uchar), NX_SIMD_ALIGNMENT);
 }

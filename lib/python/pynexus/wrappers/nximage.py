@@ -122,6 +122,16 @@ class NXImage(object):
         _Img.downsample(img.__ptr, self.__ptr)
         return img
 
+    def downsample_aa_x(self):
+        img = NXImage()
+        _Img.downsample_aa_x(img.__ptr, self.__ptr)
+        return img
+
+    def downsample_aa_y(self):
+        img = NXImage()
+        _Img.downsample_aa_y(img.__ptr, self.__ptr)
+        return img
+
     def smooth(self, sigma_x, sigma_y):
         img = NXImage()
         sx = _c_float(sigma_x)

@@ -35,23 +35,15 @@ short nx_kernel_sym_gaussian_si(int n_k, short *kernel, float sigma);
 
 void nx_kernel_sym_gaussian_s(int n_k, float *kernel, float sigma);
 
-void nx_kernel_sym_gaussian_d(int n_k, double *kernel, double sigma);
-
 void nx_convolve_sym_si_uc(int n, uchar *data, int n_k, const short *kernel, const short kernel_sum);
 
 void nx_convolve_sym_s_uc(int n, uchar *data, int n_k, const float *kernel);
-
-void nx_convolve_sym_downsample2_si_uc(int n, uchar *data, int n_k, const short *kernel, const short kernel_sum);
-
-void nx_convolve_sym_downsample2_s_uc(int n, uchar *data, int n_k, const float *kernel);
 
 void nx_filter_copy_to_buffer1_uc(int n, uchar *buffer, const uchar *data, int n_border, enum NXBorderMode mode);
 
 void nx_filter_copy_to_buffer_uc(int n, uchar *buffer, const uchar *data, int stride, int n_border, enum NXBorderMode mode);
 
 uchar *nx_filter_buffer_alloc(int n, int n_border);
-
-uchar *nx_filter_simd_buffer_alloc(int n, int n_border);
 
 __NX_END_DECL
 
