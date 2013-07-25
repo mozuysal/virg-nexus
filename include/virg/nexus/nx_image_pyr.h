@@ -19,8 +19,6 @@
 
 __NX_BEGIN_DECL
 
-struct NXMemBlock;
-
 #define NX_IMAGE_PYR_INIT_SIGMA 0.5f
 
 enum NXImagePyrType {
@@ -70,7 +68,7 @@ struct NXImagePyr
         enum NXImagePyrType type;
         union NXImagePyrInfo info;
 
-        struct NXMemBlock *work_mem;
+        struct NXImage *work_img;
 };
 
 struct NXImagePyr *nx_image_pyr_alloc();

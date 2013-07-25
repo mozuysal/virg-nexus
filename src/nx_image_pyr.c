@@ -19,10 +19,15 @@
 #include <virg/nexus/nx_alloc.h>
 #include <virg/nexus/nx_message.h>
 #include <virg/nexus/nx_assert.h>
-#include <virg/nexus/nx_mem_block.h>
 
 static void nx_image_pyr_free_levels(struct NXImagePyr *pyr);
 static void nx_image_pyr_ensure_n_levels(struct NXImagePyr *pyr, int n_levels);
+
+static void nx_image_pyr_update_fast(struct NXImagePyr *pyr);
+static void nx_image_pyr_update_fine(struct NXImagePyr *pyr);
+static void nx_image_pyr_update_scaled(struct NXImagePyr *pyr);
+
+static inline float compute_sigma_g(float sigma_current, float sigma_desired);
 
 struct NXImagePyr *nx_image_pyr_alloc()
 {
@@ -33,7 +38,7 @@ struct NXImagePyr *nx_image_pyr_alloc()
         pyr->type = NX_IMAGE_PYR_FAST;
         memset(&pyr->info, 0, sizeof(union NXImagePyrInfo));
 
-        pyr->work_mem = nx_mem_block_alloc();
+        pyr->work_img = nx_image_alloc();
 
         return pyr;
 }
@@ -79,7 +84,7 @@ void nx_image_pyr_free(struct NXImagePyr *pyr)
 {
         if (pyr) {
                 nx_image_pyr_free_levels(pyr);
-                nx_mem_block_free(pyr->work_mem);
+                nx_image_free(pyr->work_img);
                 nx_free(pyr);
         }
 }
@@ -193,7 +198,7 @@ void nx_image_pyr_release(struct NXImagePyr *pyr)
         nx_image_pyr_free_levels(pyr);
         pyr->type = NX_IMAGE_PYR_FAST;
         memset(&pyr->info, 0, sizeof(union NXImagePyrInfo));
-        nx_mem_block_release(pyr->work_mem);
+        nx_image_release(pyr->work_img);
 }
 
 void nx_image_pyr_compute(struct NXImagePyr *pyr, const struct NXImage *img)
@@ -209,7 +214,28 @@ void nx_image_pyr_compute(struct NXImagePyr *pyr, const struct NXImage *img)
         nx_image_pyr_update(pyr);
 }
 
-void nx_image_pyr_update(struct NXImagePyr *pyr);
+void nx_image_pyr_update(struct NXImagePyr *pyr)
+{
+        NX_ASSERT_PTR(pyr);
+
+        if (pyr->n_levels <= 0)
+                return;
+
+        switch (pyr->type) {
+        case NX_IMAGE_PYR_FAST:
+                nx_image_pyr_update_fast(pyr);
+                break;
+        case NX_IMAGE_PYR_FINE:
+                nx_image_pyr_update_fine(pyr);
+                break;
+        case NX_IMAGE_PYR_SCALED:
+                nx_image_pyr_update_scaled(pyr);
+                        break;
+        default:
+                nx_fatal(NX_LOG_TAG, "Can not update image pyramid of unknown type %d!",
+                         (int)pyr->type);
+        }
+}
 
 struct NXImagePyr *nx_image_pyr_copy0(const struct NXImagePyr *pyr)
 {
@@ -291,4 +317,84 @@ void nx_image_pyr_ensure_n_levels(struct NXImagePyr *pyr, int n_levels)
                 }
                 pyr->n_levels = n_levels;
         }
+}
+
+void nx_image_pyr_update_fast(struct NXImagePyr *pyr)
+{
+        // Downsample each layer with AA filter to yield the next one
+        int n_levels = pyr->n_levels;
+        for (int i = 1; i < n_levels; ++i) {
+                nx_image_downsample_aa_x(pyr->work_img, pyr->levels[i-1].img);
+                nx_image_downsample_aa_y(pyr->levels[i].img, pyr->work_img);
+        }
+}
+
+void nx_image_pyr_update_fine(struct NXImagePyr *pyr)
+{
+        struct NXImagePyrFineInfo *info = &(pyr->info.fine);
+        int n_oct = info->n_octaves;
+        int n_steps = info->n_octave_steps;
+
+        float sigma_current = NX_IMAGE_PYR_INIT_SIGMA;
+        float sigma_multiplier = 1.0f;
+        for (int i = 0; i < n_oct; ++i) {
+                struct NXImagePyrLevel *oct_levels = pyr->levels + i * n_steps;
+
+                // On first octave smooth the original image to sigma0.
+                if (i == 0) {
+                        float sigma_g = compute_sigma_g(sigma_current, oct_levels[0].sigma);
+                        nx_image_smooth_s(oct_levels[0].img, oct_levels[0].img, sigma_g, sigma_g, NULL);
+                        sigma_current = oct_levels[0].sigma;
+                }
+
+                // Within the octave each image (other than the first) is the
+                // smoothed version of the previous.
+                for (int j = 1; j < n_steps; ++j) {
+                        float sigma_desired = oct_levels[j].sigma * sigma_multiplier;
+                        float sigma_g = compute_sigma_g(sigma_current, sigma_desired);
+                        nx_image_smooth_s(oct_levels[j].img, oct_levels[j-1].img, sigma_g, sigma_g, NULL);
+                        sigma_current = sigma_desired;
+                }
+
+                // If we are not at the last octave, smooth and downsample the
+                // last image to prepare the first image of the next octave.
+                if (i != n_oct-1) {
+                        struct NXImagePyrLevel *next_oct_level0 = oct_levels + n_steps;
+                        float sigma_desired = next_oct_level0->sigma * sigma_multiplier;
+                        float sigma_g = compute_sigma_g(sigma_current, sigma_desired);
+                        nx_image_smooth_s(pyr->work_img, oct_levels[n_steps-1].img, sigma_g, sigma_g, NULL);
+                        nx_image_downsample(next_oct_level0->img, pyr->work_img);
+                        sigma_current = sigma_desired;
+
+                        sigma_current *= 0.5;
+                        sigma_multiplier *= 0.5f;
+                }
+        }
+}
+
+void nx_image_pyr_update_scaled(struct NXImagePyr *pyr)
+{
+        float sigma_current = NX_IMAGE_PYR_INIT_SIGMA;
+        float sigma_g = compute_sigma_g(sigma_current, pyr->levels[0].sigma);
+        nx_image_smooth_s(pyr->levels[0].img, pyr->levels[0].img, sigma_g, sigma_g, NULL);
+        sigma_current = pyr->levels[0].sigma;
+
+        // Each other level is a smoothed and scaled version of the previous level
+        nx_image_copy(pyr->work_img, pyr->levels[0].img);
+        int n_levels = pyr->n_levels;
+        for (int i = 1; i < n_levels; ++i) {
+                float sigma_desired = pyr->levels[i].sigma;
+                float sigma_g = compute_sigma_g(sigma_current, sigma_desired);
+                nx_image_smooth_s(pyr->work_img, pyr->work_img, sigma_g, sigma_g, NULL);
+                sigma_current = sigma_desired;
+
+                nx_image_scale(pyr->levels[i].img, pyr->work_img, 1.0f / pyr->levels[i].scale);
+        }
+}
+
+float compute_sigma_g(float sigma_current, float sigma_desired)
+{
+        float sigma_g = sqrt(sigma_desired*sigma_desired - sigma_current*sigma_current);
+
+        return sigma_g;
 }
