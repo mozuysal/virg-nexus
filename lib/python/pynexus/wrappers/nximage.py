@@ -105,8 +105,17 @@ class NXImage(object):
         _Img.copy(img.__ptr, self.__ptr)
         return img
 
+    def copy_of(self, img):
+        if isinstance(img, _NXImg):
+            _Img.copy(self.__ptr, img.__ptr)
+        else:
+            _Img.copy(self.__ptr, img)
+
     def swap(self, img):
-        _Img.swap(img.__ptr, self.__ptr)
+        if isinstance(img, _NXImg):
+            _Img.swap(img.__ptr, self.__ptr)
+        else:
+            _Img.swap(img, self.__ptr)
 
     def set_zero(self):
         _Img.set_zero(self.__ptr)
@@ -159,3 +168,4 @@ class NXImage(object):
             return 4
         else:
             return 0
+
