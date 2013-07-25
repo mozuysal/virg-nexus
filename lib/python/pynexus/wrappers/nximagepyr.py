@@ -21,10 +21,7 @@ NX_IMAGE_PYR_SCALED = _Pyr.SCALED
 class NXImagePyrInfo(object):
     """Wrapper class for extracting information on VIRG-Nexus image pyramids"""
     def __init__(self, pyr):
-        if isinstance(pyr, NXImagePyr):
-            ptr = pyr.ptr
-        else:
-            ptr = pyr
+        ptr = NXImagePyr.ptr_of(pyr)
 
         if ptr.contents.type == NX_IMAGE_PYR_FAST:
             inf = ptr.contents.info.fast
@@ -50,10 +47,7 @@ class NXImagePyrInfo(object):
 class NXImagePyrLevel(object):
     """Wrapper class for VIRG-Nexus image pyramid levels"""
     def __init__(self, pyr, level_id):
-        if isinstance(pyr, NXImagePyr):
-            self.__pyr_ptr = pyr.ptr
-        else:
-            self.__pyr_ptr = pyr
+        self.__pyr_ptr = NXImagePyr.ptr_of(pyr)
         self.level_id = level_id
 
     def __safe_get_prop(self, prop_name):
@@ -121,13 +115,18 @@ class NXImagePyr(object):
         _Pyr.update(self.__ptr)
 
     def compute(self, img):
-        if isinstance(img, _NXImg):
-            _Pyr.compute(self.__ptr, img.ptr)
-        else:
-            _Pyr.compute(self.__ptr, img)
+        ptr = _NXImg.ptr_of(img)
+        _Pyr.compute(self.__ptr, ptr)
 
     def copy(self):
         pyr = NXImagePyr()
         _Pyr.copy(pyr.__ptr, self.__ptr)
         return pyr
+
+    @staticmethod
+    def ptr_of(pyr):
+        if isinstance(pyr, NXImagePyr):
+            return pyr.__ptr
+        else:
+            return pyr
 

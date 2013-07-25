@@ -59,11 +59,6 @@ class NXImage(object):
     def n_channels(self):
         return self.__ptr.contents.n_channels;
 
-    def as_buffer(self):
-        buff = _buffer_from_memory(self.__ptr.contents.mem.contents.ptr,
-                                   self.__ptr.contents.mem.contents.size)
-        return buff
-
     def get_pixel(self, x, y):
         w = self.width
         h = self.height
@@ -106,16 +101,12 @@ class NXImage(object):
         return img
 
     def copy_of(self, img):
-        if isinstance(img, _NXImg):
-            _Img.copy(self.__ptr, img.__ptr)
-        else:
-            _Img.copy(self.__ptr, img)
+        ptr = NXImage.ptr_of(img)
+        _Img.copy(self.__ptr, ptr)
 
     def swap(self, img):
-        if isinstance(img, _NXImg):
-            _Img.swap(img.__ptr, self.__ptr)
-        else:
-            _Img.swap(img, self.__ptr)
+        ptr = NXImage.ptr_of(img)
+        _Img.swap(ptr, self.__ptr)
 
     def set_zero(self):
         _Img.set_zero(self.__ptr)
@@ -168,4 +159,18 @@ class NXImage(object):
             return 4
         else:
             return 0
+
+    @staticmethod
+    def as_buffer(img):
+        ptr = NXImage.ptr_of(img)
+        buff = _buffer_from_memory(ptr.contents.mem.contents.ptr,
+                                   ptr.contents.mem.contents.size)
+        return buff
+
+    @staticmethod
+    def ptr_of(img):
+        if isinstance(img, NXImage):
+            return img.__ptr
+        else:
+            return img
 
