@@ -1,0 +1,20 @@
+/**
+ * @file test_data.hh
+ *
+ * This file is part of the IYTE Visual Intelligence Research Group Software Library
+ *
+ * Copyright (C) 2013 Izmir Institute of Technology. All rights reserved.
+ *
+ * @author Mustafa Ozuysal
+ *
+ * Contact mustafaozuysal@iyte.edu.tr for comments and bug reports.
+ *
+ */
+#ifndef TEST_DATA_HH
+#define TEST_DATA_HH
+
+#define TEST_DATA_PATH "@VIRG_NEXUS_TEST_DATA_PATH@"
+
+const char *TEST_DATA_LENA_PPM = TEST_DATA_PATH "/lena.ppm";
+
+#endif

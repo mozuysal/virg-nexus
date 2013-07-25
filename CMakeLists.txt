@@ -132,6 +132,10 @@ set(test_SOURCES
   tests/tests_image_pyr.cc
 )
 
+set(VIRG_NEXUS_TEST_DATA_PATH "${CMAKE_SOURCE_DIR}/tests/data")
+configure_file(${CMAKE_SOURCE_DIR}/tests/test_data.hh.in ${CMAKE_SOURCE_DIR}/tests/test_data.hh @ONLY)
+include_directories(${CMAKE_SOURCE_DIR}/tests)
+
 add_executable(virg-nexus-tests ${test_SOURCES})
 target_link_libraries(virg-nexus-tests virg-nexus gtest ${CMAKE_THREAD_LIBS_INIT} ${EXEC_LIBRARIES})
 set_target_properties(virg-nexus-tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY bin)

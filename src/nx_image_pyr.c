@@ -176,7 +176,7 @@ void nx_image_pyr_resize_scaled(struct NXImagePyr *pyr, int width0, int height0,
                 int hi = height0 / si;
 
                 nx_image_resize(level->img, wi, hi, 0, NX_IMAGE_GRAYSCALE);
-                level->sigma = NX_IMAGE_PYR_INIT_SIGMA * si;
+                level->sigma = sigma0 * si;
                 level->scale = si;
 
                 si *= scale_factor;

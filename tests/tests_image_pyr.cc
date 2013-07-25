@@ -18,6 +18,8 @@
 
 #include "gtest/gtest.h"
 
+#include "test_data.hh"
+
 #include "virg/nexus/nx_image.h"
 #include "virg/nexus/nx_image_pyr.h"
 
@@ -36,13 +38,20 @@ const float TEST_SIGMA0 = 1.5f;
 class NXImagePyrTest : public ::testing::Test {
 protected:
         NXImagePyrTest() {
+                lena_ = NULL;
                 pyr0_ = NULL;
         }
 
-        virtual void SetUp() {}
+        virtual void SetUp() {
+                lena_ = nx_image_alloc();
+                nx_image_xload_pnm(lena_, TEST_DATA_LENA_PPM, NX_IMAGE_LOAD_GRAYSCALE);
+        }
 
-        virtual void TearDown() {}
+        virtual void TearDown() {
+                nx_image_free(lena_);
+        }
 
+        struct NXImage *lena_;
         struct NXImagePyr *pyr0_;
 };
 
@@ -113,61 +122,69 @@ TEST_F(NXImagePyrTest, ImagePyrNewScaledFree) {
         nx_image_pyr_free(pyr0_);
 }
 
-/*
-  TEST_F(NXImagePyrTest, ImageNewRGBAFree) {
-  pyr0_ = nx_image_pyr_new_rgba(640, 480);
-  EXPECT_TRUE(NULL != pyr0_);
-  EXPECT_TRUE(NULL != pyr0_->mem);
-  EXPECT_TRUE(NULL != pyr0_->data);
-  EXPECT_EQ(640, pyr0_->width);
-  EXPECT_EQ(480, pyr0_->height);
-  EXPECT_EQ(4, pyr0_->n_channels);
-  nx_image_pyr_free(pyr0_);
-  }
+TEST_F(NXImagePyrTest, ImagePyrComputeFastLena) {
+        pyr0_ = nx_image_pyr_new_fast(lena_->width, lena_->height, TEST_N_LEVELS);
+        nx_image_pyr_compute(pyr0_, lena_);
 
-  TEST_F(NXImagePyrTest, ImageGraySaveLoadAsIs) {
-  pyr0_ = nx_image_pyr_new_gray(NX, NY);
-  memcpy(pyr0_->data, TEST_IMAGE_PYR_DATA, sizeof(TEST_IMAGE_PYR_DATA));
-  nx_image_pyr_xsave_pnm(pyr0_, TMP_PGM_IMAGE_PYR_FILENAME);
-  img1_ = nx_image_pyr_alloc();
-  nx_image_pyr_xload_pnm(img1_, TMP_PGM_IMAGE_PYR_FILENAME, NX_IMAGE_PYR_LOAD_AS_IS);
-  for (int i = 0; i < N; ++i)
-  EXPECT_EQ(TEST_IMAGE_PYR_DATA[i], img1_->data[i]);
-  nx_image_pyr_free(pyr0_);
-  nx_image_pyr_free(img1_);
-  }
+        EXPECT_TRUE(NULL != pyr0_);
+        EXPECT_TRUE(NULL != pyr0_->levels);
+        EXPECT_TRUE(NULL != pyr0_->work_img);
+        EXPECT_EQ(lena_->width, pyr0_->info.fast.width0);
+        EXPECT_EQ(lena_->height, pyr0_->info.fast.height0);
+        EXPECT_EQ(TEST_N_LEVELS, pyr0_->n_levels);
+        for (int i = 0; i < TEST_N_LEVELS; ++i) {
+                EXPECT_TRUE(NULL != pyr0_->levels[i].img);
+                EXPECT_EQ(lena_->width / (1 << i), pyr0_->levels[i].img->width);
+                EXPECT_EQ(lena_->height / (1 << i), pyr0_->levels[i].img->height);
+                EXPECT_EQ(NX_IMAGE_GRAYSCALE, pyr0_->levels[i].img->type);
+        }
 
-  TEST_F(NXImagePyrTest, ImageRGBASaveLoadAsIs) {
-  pyr0_ = nx_image_pyr_new_rgba(NX, NY);
-  memcpy(pyr0_->data, TEST_IMAGE_PYR_COLOR_DATA, sizeof(TEST_IMAGE_PYR_COLOR_DATA));
-  nx_image_pyr_xsave_pnm(pyr0_, TMP_PPM_IMAGE_PYR_FILENAME);
-  img1_ = nx_image_pyr_alloc();
-  nx_image_pyr_xload_pnm(img1_, TMP_PPM_IMAGE_PYR_FILENAME, NX_IMAGE_PYR_LOAD_AS_IS);
-  for (int i = 0; i < 4*N; ++i)
-  EXPECT_EQ(TEST_IMAGE_PYR_COLOR_DATA[i], img1_->data[i]);
-  nx_image_pyr_free(pyr0_);
-  nx_image_pyr_free(img1_);
-  }
+        nx_image_pyr_free(pyr0_);
+}
 
-  TEST_F(NXImagePyrTest, ImageGrayFilterSI) {
-  pyr0_ = nx_image_pyr_new_gray(NX, NY);
-  memcpy(pyr0_->data, TEST_IMAGE_PYR_DATA, sizeof(TEST_IMAGE_PYR_DATA));
-  img1_ = nx_image_pyr_alloc();
-  nx_image_pyr_smooth_si(img1_, pyr0_, TEST_SIGMA, TEST_SIGMA, NULL);
-  nx_image_pyr_free(pyr0_);
-  nx_image_pyr_free(img1_);
-  }
+TEST_F(NXImagePyrTest, ImagePyrComputeFineLena) {
+        pyr0_ = nx_image_pyr_new_fine(lena_->width, lena_->height, TEST_OCTAVES, TEST_STEPS, TEST_SIGMA0);
+        nx_image_pyr_compute(pyr0_, lena_);
 
-  TEST_F(NXImagePyrTest, ImageGrayFilterS) {
-  pyr0_ = nx_image_pyr_new_gray(NX, NY);
-  memcpy(pyr0_->data, TEST_IMAGE_PYR_DATA, sizeof(TEST_IMAGE_PYR_DATA));
-  img1_ = nx_image_pyr_alloc();
-  nx_image_pyr_smooth_s(img1_, pyr0_, TEST_SIGMA, TEST_SIGMA, NULL);
-  nx_image_pyr_free(pyr0_);
-  nx_image_pyr_free(img1_);
-  }
+        EXPECT_TRUE(NULL != pyr0_);
+        EXPECT_TRUE(NULL != pyr0_->levels);
+        EXPECT_TRUE(NULL != pyr0_->work_img);
+        EXPECT_EQ(lena_->width, pyr0_->info.fine.width0);
+        EXPECT_EQ(lena_->height, pyr0_->info.fine.height0);
+        EXPECT_EQ(TEST_OCTAVES, pyr0_->info.fine.n_octaves);
+        EXPECT_EQ(TEST_STEPS, pyr0_->info.fine.n_octave_steps);
+        EXPECT_EQ(TEST_SIGMA0, pyr0_->info.fine.sigma0);
+        EXPECT_EQ(TEST_OCTAVES*TEST_STEPS, pyr0_->n_levels);
+        for (int i = 0; i < TEST_N_LEVELS; ++i) {
+                EXPECT_TRUE(NULL != pyr0_->levels[i].img);
+                EXPECT_EQ(lena_->width / (1 << (i/TEST_STEPS)), pyr0_->levels[i].img->width);
+                EXPECT_EQ(lena_->height / (1 << (i/TEST_STEPS)), pyr0_->levels[i].img->height);
+                EXPECT_EQ(NX_IMAGE_GRAYSCALE, pyr0_->levels[i].img->type);
+        }
 
-*/
+        nx_image_pyr_free(pyr0_);
+}
 
+TEST_F(NXImagePyrTest, ImagePyrComputeScaledFree) {
+        pyr0_ = nx_image_pyr_new_scaled(lena_->width, lena_->height, TEST_N_LEVELS, TEST_SCALE_F, TEST_SIGMA0);
+        nx_image_pyr_compute(pyr0_, lena_);
+
+        EXPECT_TRUE(NULL != pyr0_);
+        EXPECT_TRUE(NULL != pyr0_->levels);
+        EXPECT_TRUE(NULL != pyr0_->work_img);
+        EXPECT_EQ(lena_->width, pyr0_->info.scaled.width0);
+        EXPECT_EQ(lena_->height, pyr0_->info.scaled.height0);
+        EXPECT_EQ(TEST_SCALE_F, pyr0_->info.scaled.scale_factor);
+        EXPECT_EQ(TEST_SIGMA0, pyr0_->info.scaled.sigma0);
+        EXPECT_EQ(TEST_N_LEVELS, pyr0_->n_levels);
+        for (int i = 0; i < TEST_N_LEVELS; ++i) {
+                EXPECT_TRUE(NULL != pyr0_->levels[i].img);
+                EXPECT_EQ(static_cast<int>(lena_->width / pow(TEST_SCALE_F, i)), pyr0_->levels[i].img->width);
+                EXPECT_EQ(static_cast<int>(lena_->height / pow(TEST_SCALE_F, i)), pyr0_->levels[i].img->height);
+                EXPECT_EQ(NX_IMAGE_GRAYSCALE, pyr0_->levels[i].img->type);
+        }
+
+        nx_image_pyr_free(pyr0_);
+}
 
 } // namespace

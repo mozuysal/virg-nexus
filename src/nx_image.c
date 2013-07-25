@@ -326,7 +326,7 @@ void nx_image_downsample_aa_y(struct NXImage *dest, const struct NXImage *src)
         int dest_height = src->height / 2;
         nx_image_resize(dest, dest_width, dest_height, 0, src->type);
 
-        uchar *aa_buff = nx_filter_buffer_alloc(src->width, 2);
+        uchar *aa_buff = nx_filter_buffer_alloc(src->height, 2);
         for (int x = 0; x < dest->width; ++x) {
                 const uchar *src_col = src->data + x;
                 nx_filter_copy_to_buffer_uc(src->height, aa_buff, src_col, src->row_stride, 2, NX_BORDER_MIRROR);
