@@ -101,7 +101,7 @@ class NXImagePyr(object):
         return NXImagePyrInfo(self)
 
     def level(self, level_id):
-        if (level_id > 0) and (level_id < self.n_levels):
+        if (level_id >= 0) and (level_id < self.n_levels):
             return NXImagePyrLevel(self, level_id)
         else:
             return None
