@@ -96,6 +96,9 @@ void nx_image_pyr_resize_fast(struct NXImagePyr *pyr, int width0, int height0, i
         NX_ASSERT(height0 > 0);
         NX_ASSERT(n_levels > 0);
 
+        if (sigma0 < NX_IMAGE_PYR_INIT_SIGMA)
+                sigma0 = NX_IMAGE_PYR_INIT_SIGMA;
+
         nx_image_pyr_ensure_n_levels(pyr, n_levels);
 
         int wi = width0;
@@ -128,6 +131,9 @@ void nx_image_pyr_resize_fine(struct NXImagePyr *pyr, int width0, int height0, i
         NX_ASSERT(height0 > 0);
         NX_ASSERT(n_octaves > 0);
         NX_ASSERT(n_octave_steps > 0);
+
+        if (sigma0 < NX_IMAGE_PYR_INIT_SIGMA)
+                sigma0 = NX_IMAGE_PYR_INIT_SIGMA;
 
         int n_levels = n_octaves * n_octave_steps;
         nx_image_pyr_ensure_n_levels(pyr, n_levels);
@@ -166,6 +172,9 @@ void nx_image_pyr_resize_scaled(struct NXImagePyr *pyr, int width0, int height0,
         NX_ASSERT(width0 > 0);
         NX_ASSERT(height0 > 0);
         NX_ASSERT(n_levels > 0);
+
+        if (sigma0 < NX_IMAGE_PYR_INIT_SIGMA)
+                sigma0 = NX_IMAGE_PYR_INIT_SIGMA;
 
         nx_image_pyr_ensure_n_levels(pyr, n_levels);
 
