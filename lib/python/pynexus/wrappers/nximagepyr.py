@@ -28,6 +28,7 @@ class NXImagePyrInfo(object):
             self.type = NX_IMAGE_PYR_FAST
             self.width0 = inf.width0
             self.height0 = inf.height0
+            self.sigma0 = inf.sigma0
         elif ptr.contents.type == NX_IMAGE_PYR_FINE:
             inf = ptr.contents.info.fine
             self.type = NX_IMAGE_PYR_FINE
@@ -106,8 +107,8 @@ class NXImagePyr(object):
         else:
             return None
 
-    def resize_fast(self, width, height, n_levels):
-        _Pyr.resize_fast(self.__ptr, width, height, n_levels)
+    def resize_fast(self, width, height, n_levels, sigma0):
+        _Pyr.resize_fast(self.__ptr, width, height, n_levels, sigma0)
 
     def resize_fine(self, width, height, n_octaves, n_octave_steps, sigma0):
         _Pyr.resize_fine(self.__ptr, width, height, n_octaves, n_octave_steps, sigma0)

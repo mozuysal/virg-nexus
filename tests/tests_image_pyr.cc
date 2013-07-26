@@ -64,13 +64,14 @@ TEST_F(NXImagePyrTest, ImagePyrAllocFree) {
 }
 
 TEST_F(NXImagePyrTest, ImagePyrNewFastFree) {
-        pyr0_ = nx_image_pyr_new_fast(TEST_WIDTH0, TEST_HEIGHT0, TEST_N_LEVELS);
+        pyr0_ = nx_image_pyr_new_fast(TEST_WIDTH0, TEST_HEIGHT0, TEST_N_LEVELS, TEST_SIGMA0);
         EXPECT_TRUE(NULL != pyr0_);
         EXPECT_TRUE(NULL != pyr0_->levels);
         EXPECT_TRUE(NULL != pyr0_->work_img);
         EXPECT_EQ(TEST_WIDTH0, pyr0_->info.fast.width0);
         EXPECT_EQ(TEST_HEIGHT0, pyr0_->info.fast.height0);
         EXPECT_EQ(TEST_N_LEVELS, pyr0_->n_levels);
+        EXPECT_EQ(TEST_SIGMA0, pyr0_->info.fast.sigma0);
         for (int i = 0; i < TEST_N_LEVELS; ++i) {
                 EXPECT_TRUE(NULL != pyr0_->levels[i].img);
                 EXPECT_EQ(TEST_WIDTH0 / (1 << i), pyr0_->levels[i].img->width);
@@ -123,7 +124,7 @@ TEST_F(NXImagePyrTest, ImagePyrNewScaledFree) {
 }
 
 TEST_F(NXImagePyrTest, ImagePyrComputeFastLena) {
-        pyr0_ = nx_image_pyr_new_fast(lena_->width, lena_->height, TEST_N_LEVELS);
+        pyr0_ = nx_image_pyr_new_fast(lena_->width, lena_->height, TEST_N_LEVELS, TEST_SIGMA0);
         nx_image_pyr_compute(pyr0_, lena_);
 
         EXPECT_TRUE(NULL != pyr0_);

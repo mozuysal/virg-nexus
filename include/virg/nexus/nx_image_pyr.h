@@ -37,6 +37,7 @@ struct NXImagePyrLevel
 struct NXImagePyrFastInfo {
         int width0;
         int height0;
+        float sigma0;
 };
 
 struct NXImagePyrFineInfo {
@@ -73,7 +74,7 @@ struct NXImagePyr
 
 struct NXImagePyr *nx_image_pyr_alloc();
 
-struct NXImagePyr *nx_image_pyr_new_fast(int width0, int height0, int n_levels);
+struct NXImagePyr *nx_image_pyr_new_fast(int width0, int height0, int n_levels, float sigma0);
 
 struct NXImagePyr *nx_image_pyr_new_fine(int width0, int height0, int n_octaves, int n_octave_steps, float sigma0);
 
@@ -81,7 +82,7 @@ struct NXImagePyr *nx_image_pyr_new_scaled(int width0, int height0, int n_levels
 
 void nx_image_pyr_free(struct NXImagePyr *pyr);
 
-void nx_image_pyr_resize_fast(struct NXImagePyr *pyr, int width0, int height0, int n_levels);
+void nx_image_pyr_resize_fast(struct NXImagePyr *pyr, int width0, int height0, int n_levels, float sigma0);
 
 void nx_image_pyr_resize_fine(struct NXImagePyr *pyr, int width0, int height0, int n_octaves, int n_octave_steps, float sigma0);
 

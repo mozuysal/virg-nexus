@@ -21,7 +21,8 @@ class Level(_C.Structure):
 
 class FastInfo(_C.Structure):
     _fields_ = [('width0', _c_int),
-                ('height0', _c_int)]
+                ('height0', _c_int),
+                ('sigma0', _c_float)]
 
 class FineInfo(_C.Structure):
     _fields_ = [('width0', _c_int),
@@ -60,7 +61,7 @@ alloc.argtypes = []
 
 new_fast = _nexus.nx_image_pyr_new_fast
 new_fast.restype = Ptr
-new_fast.argtypes = [_c_int, _c_int, _c_int]
+new_fast.argtypes = [_c_int, _c_int, _c_int, _c_float]
 
 new_fine = _nexus.nx_image_pyr_new_fine
 new_fine.restype = Ptr
@@ -76,7 +77,7 @@ free.argtypes = [Ptr]
 
 resize_fast = _nexus.nx_image_pyr_resize_fast
 resize_fast.restype = None
-resize_fast.argtypes = [Ptr, _c_int, _c_int, _c_int]
+resize_fast.argtypes = [Ptr, _c_int, _c_int, _c_int, _c_float]
 
 resize_fine = _nexus.nx_image_pyr_resize_fine
 resize_fine.restype = None

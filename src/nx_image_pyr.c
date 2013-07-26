@@ -43,14 +43,14 @@ struct NXImagePyr *nx_image_pyr_alloc()
         return pyr;
 }
 
-struct NXImagePyr *nx_image_pyr_new_fast(int width0, int height0, int n_levels)
+struct NXImagePyr *nx_image_pyr_new_fast(int width0, int height0, int n_levels, float sigma0)
 {
         NX_ASSERT(width0 > 0);
         NX_ASSERT(height0 > 0);
         NX_ASSERT(n_levels > 0);
 
         struct NXImagePyr *pyr = nx_image_pyr_alloc();
-        nx_image_pyr_resize_fast(pyr, width0, height0, n_levels);
+        nx_image_pyr_resize_fast(pyr, width0, height0, n_levels, sigma0);
 
         return pyr;
 }
@@ -89,7 +89,7 @@ void nx_image_pyr_free(struct NXImagePyr *pyr)
         }
 }
 
-void nx_image_pyr_resize_fast(struct NXImagePyr *pyr, int width0, int height0, int n_levels)
+void nx_image_pyr_resize_fast(struct NXImagePyr *pyr, int width0, int height0, int n_levels, float sigma0)
 {
         NX_ASSERT_PTR(pyr);
         NX_ASSERT(width0 > 0);
@@ -105,7 +105,7 @@ void nx_image_pyr_resize_fast(struct NXImagePyr *pyr, int width0, int height0, i
                 struct NXImagePyrLevel *level = pyr->levels + i;
 
                 nx_image_resize(level->img, wi, hi, 0, NX_IMAGE_GRAYSCALE);
-                level->sigma = NX_IMAGE_PYR_INIT_SIGMA;
+                level->sigma = sigma0;
                 level->scale = sij;
 
                 wi /= 2;
@@ -118,6 +118,7 @@ void nx_image_pyr_resize_fast(struct NXImagePyr *pyr, int width0, int height0, i
         memset(&pyr->info, 0, sizeof(union NXImagePyrInfo));
         pyr->info.fast.width0 = width0;
         pyr->info.fast.height0 = height0;
+        pyr->info.fast.sigma0 = sigma0;
 }
 
 void nx_image_pyr_resize_fine(struct NXImagePyr *pyr, int width0, int height0, int n_octaves, int n_octave_steps, float sigma0)
@@ -262,7 +263,8 @@ void nx_image_pyr_copy(struct NXImagePyr *dest, const struct NXImagePyr *src)
                 case NX_IMAGE_PYR_FAST:
                         nx_image_pyr_resize_fast(dest, src->info.fast.width0,
                                                  src->info.fast.height0,
-                                                 src->n_levels);
+                                                 src->n_levels,
+                                                 src->info.fast.sigma0);
                         break;
                 case NX_IMAGE_PYR_FINE:
                         nx_image_pyr_resize_fine(dest, src->info.fine.width0,
@@ -321,6 +323,10 @@ void nx_image_pyr_ensure_n_levels(struct NXImagePyr *pyr, int n_levels)
 
 void nx_image_pyr_update_fast(struct NXImagePyr *pyr)
 {
+        float sigma_g = compute_sigma_g(NX_IMAGE_PYR_INIT_SIGMA, pyr->levels[0].sigma);
+        if (sigma_g > 0.0f)
+                nx_image_smooth_s(pyr->levels[0].img, pyr->levels[0].img, sigma_g, sigma_g, NULL);
+
         // Downsample each layer with AA filter to yield the next one
         int n_levels = pyr->n_levels;
         for (int i = 1; i < n_levels; ++i) {
@@ -376,8 +382,11 @@ void nx_image_pyr_update_scaled(struct NXImagePyr *pyr)
 {
         float sigma_current = NX_IMAGE_PYR_INIT_SIGMA;
         float sigma_g = compute_sigma_g(sigma_current, pyr->levels[0].sigma);
-        nx_image_smooth_s(pyr->levels[0].img, pyr->levels[0].img, sigma_g, sigma_g, NULL);
-        sigma_current = pyr->levels[0].sigma;
+
+        if (sigma_g > 0.0f) {
+                nx_image_smooth_s(pyr->levels[0].img, pyr->levels[0].img, sigma_g, sigma_g, NULL);
+                sigma_current = pyr->levels[0].sigma;
+        }
 
         // Each other level is a smoothed and scaled version of the previous level
         nx_image_copy(pyr->work_img, pyr->levels[0].img);
