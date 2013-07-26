@@ -89,6 +89,10 @@ class NXImagePyr(object):
         return self.__ptr.contents.n_levels;
 
     @property
+    def levels(self):
+        return self.__ptr.contents.levels;
+
+    @property
     def type(self):
         return self.__ptr.contents.type;
 
