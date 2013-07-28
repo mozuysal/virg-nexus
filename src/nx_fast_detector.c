@@ -120,7 +120,6 @@ struct NXFastDetector *nx_fast_detector_alloc()
 struct NXFastDetector *nx_fast_detector_new(int max_n_keys, int initial_work_size)
 {
         NX_ASSERT(max_n_keys > 0);
-        NX_ASSERT(initial_work_size >= max_n_keys);
 
         struct NXFastDetector *detector = nx_new(1, struct NXFastDetector);
         nx_fast_detector_resize(detector, max_n_keys, initial_work_size);
@@ -140,7 +139,6 @@ void nx_fast_detector_resize(struct NXFastDetector *detector, int max_n_keys, in
 {
         NX_ASSERT_PTR(detector);
         NX_ASSERT(max_n_keys > 0);
-        NX_ASSERT(initial_work_size >= max_n_keys);
 
         detector->max_n_keys = max_n_keys;
         detector->threshold = 15;
@@ -148,7 +146,10 @@ void nx_fast_detector_resize(struct NXFastDetector *detector, int max_n_keys, in
         detector->n_keys = 0;
         detector->keys = nx_new(max_n_keys, struct NXKeypoint);
 
-        detector->n_work = max_n_keys * NX_FAST_DETECTOR_WORK_MULTIPLIER;
+        if (initial_work_size <= 0)
+                initial_work_size = max_n_keys * NX_FAST_DETECTOR_WORK_MULTIPLIER;
+
+        detector->n_work = initial_work_size;
         nx_mem_block_resize(detector->mem, detector->n_work * sizeof(struct NXKeypoint));
         detector->keys_work = (struct NXKeypoint *)detector->mem->ptr;
 }

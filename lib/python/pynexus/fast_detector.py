@@ -26,7 +26,7 @@ class Struct(_C.Structure):
                 ('mem', memblock.Ptr)]
 
     def __str__(self):
-        return "<pynexus.fast_detector.Struct: {} of {} maximum>".format(self.n_keys, self.max_n_keys);
+        return "<pynexus.fast_detector.Struct: {} of {} maximum, threshold: {}>".format(self.n_keys, self.max_n_keys, self.threshold)
 
 Ptr = _POINTER(Struct)
 

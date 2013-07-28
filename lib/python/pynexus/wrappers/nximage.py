@@ -33,31 +33,31 @@ class NXImage(object):
         _Img.free(self.__ptr)
 
     def __str__(self):
-        return "<NXImage: {}x{}x{}>".format(self.width, self.height, self.n_channels);
+        return "<NXImage: {}x{}x{}>".format(self.width, self.height, self.n_channels)
 
     @property
     def ptr(self):
-        return self.__ptr;
+        return self.__ptr
 
     @property
     def width(self):
-        return self.__ptr.contents.width;
+        return self.__ptr.contents.width
 
     @property
     def height(self):
-        return self.__ptr.contents.height;
+        return self.__ptr.contents.height
 
     @property
     def type(self):
-        return self.__ptr.contents.type;
+        return self.__ptr.contents.type
 
     @property
     def row_stride(self):
-        return self.__ptr.contents.row_stride;
+        return self.__ptr.contents.row_stride
 
     @property
     def n_channels(self):
-        return self.__ptr.contents.n_channels;
+        return self.__ptr.contents.n_channels
 
     def get_pixel(self, x, y):
         w = self.width

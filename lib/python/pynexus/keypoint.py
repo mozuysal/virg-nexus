@@ -21,6 +21,7 @@ class Struct(_C.Structure):
                ('id', _c_long)]
 
     def __str__(self):
-        return "<pynexus.keypoint.Struct: ({}, {}) scale: {}, sigma: {}, score: {}>".format(self.x, self.y, self.scale, self.sigma, self.score);
+        return "<pynexus.keypoint.Struct: ({}, {}) scale: {}, sigma: {}, ori: {}, score: {}>"
+    .format(self.x, self.y, self.scale, self.sigma, self.ori, self.score)
 
 Ptr = _POINTER(Struct)

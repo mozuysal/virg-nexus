@@ -79,23 +79,23 @@ class NXImagePyr(object):
         _Pyr.free(self.__ptr)
 
     def __str__(self):
-        return "<NXImagePyr: {} Levels>".format(self.n_levels);
+        return "<NXImagePyr: {} Levels>".format(self.n_levels)
 
     @property
     def ptr(self):
-        return self.__ptr;
+        return self.__ptr
 
     @property
     def n_levels(self):
-        return self.__ptr.contents.n_levels;
+        return self.__ptr.contents.n_levels
 
     @property
     def levels(self):
-        return self.__ptr.contents.levels;
+        return self.__ptr.contents.levels
 
     @property
     def type(self):
-        return self.__ptr.contents.type;
+        return self.__ptr.contents.type
 
     @property
     def info(self):
