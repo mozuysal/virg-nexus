@@ -26,8 +26,14 @@ extern void fast_nonmax_suppression(int *ret_num_nonmax, struct NXKeypoint *ret_
 int nx_fast_detect_keypoints(int n_keys_max, struct NXKeypoint *keys,
                              const struct NXImage *img, int threshold)
 {
+        NX_ASSERT(n_keys_max >= 0);
         NX_ASSERT_PTR(keys);
         NX_ASSERT_PTR(img);
+
+        if (n_keys_max == 0) {
+                nx_warning(NX_LOG_TAG, "Call to nx_fast_detect_keypoints with 0 as the max. number of keypoints!");
+                return 0;
+        }
 
         fast9_detect(keys, img->data, img->width, img->height,
                      img->row_stride, threshold, &n_keys_max);
@@ -46,6 +52,7 @@ int nx_fast_detect_keypoints(int n_keys_max, struct NXKeypoint *keys,
 void nx_fast_score_keypoints(int n_keys, struct NXKeypoint *keys,
                              const struct NXImage *img, int threshold)
 {
+        NX_ASSERT(n_keys >= 0);
         NX_ASSERT_PTR(keys);
         NX_ASSERT_PTR(img);
 
@@ -56,6 +63,17 @@ int nx_fast_detect_keypoints_pyr(int n_keys_supp_max, struct NXKeypoint *keys_su
                                  int n_keys_max, struct NXKeypoint *keys,
                                  const struct NXImagePyr *pyr, int threshold)
 {
+        NX_ASSERT(n_keys_supp_max >= 0);
+        NX_ASSERT(n_keys_max >= 0);
+        NX_ASSERT_PTR(keys);
+        NX_ASSERT_PTR(keys_supp);
+        NX_ASSERT_PTR(pyr);
+
+        if (n_keys_supp_max == 0 || n_keys_max == 0) {
+                nx_warning(NX_LOG_TAG, "Call to nx_fast_detect_keypoints_pyr with 0 as the maximum number of keypoints!");
+                return 0;
+        }
+
         int n_keys_supp = 0;
         int n_level_keys_max = n_keys_supp_max;
         struct NXKeypoint *level_keys = keys_supp;
@@ -71,6 +89,7 @@ int nx_fast_detect_keypoints_pyr(int n_keys_supp_max, struct NXKeypoint *keys_su
 
                 n_level_keys = nx_fast_suppress_keypoints(n_level_keys_max, level_keys,
                                                           n_level_keys, keys);
+
                 // Fill scales/sigmas, fix keypoint ids
                 for (int j = 0; j < n_level_keys; ++j) {
                         level_keys[j].sigma = pyr->levels[i].sigma;
@@ -81,6 +100,9 @@ int nx_fast_detect_keypoints_pyr(int n_keys_supp_max, struct NXKeypoint *keys_su
                 n_level_keys_max -= n_level_keys;
                 level_keys += n_level_keys;
                 n_keys_supp += n_level_keys;
+
+                if (n_level_keys_max <= 0)
+                        break;
         }
 
         return n_keys_supp;

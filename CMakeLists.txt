@@ -135,6 +135,7 @@ set(test_SOURCES
   tests/tests_filter.cc
   tests/tests_image.cc
   tests/tests_image_pyr.cc
+  tests/tests_fast_detector.cc
 )
 
 set(VIRG_NEXUS_TEST_DATA_PATH "${CMAKE_SOURCE_DIR}/tests/data")
@@ -150,7 +151,7 @@ add_custom_target(unit-tests bin/virg-nexus-tests
   DEPENDS virg-nexus virg-nexus-tests
   COMMENT "Unit Testing" VERBATIM)
 
-add_custom_target(unit-tests-valgrind valgrind --leak-check=full --show-reachable=yes bin/virg-nexus-tests
+add_custom_target(unit-tests-valgrind valgrind --leak-check=full --track-origins=yes --show-reachable=yes bin/virg-nexus-tests
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   DEPENDS virg-nexus virg-nexus-tests
   COMMENT "Unit Testing with Valgrind" VERBATIM)

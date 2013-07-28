@@ -2981,6 +2981,7 @@ void fast9_detect(struct NXKeypoint *ret_corners, const unsigned char *im, int x
 	for(y=3; y < ysize - 3; y++)
 		for(x=3; x < xsize - 3; x++)
 		{
+                        /* if ( y == 3 && x == 3 ) printf(" w h s %d %d %d, x  y %d %d --> %d\n", xsize, ysize, stride, x, y, y*stride + x + pixel[0]); */
 			const unsigned char* p = im + y*stride + x;
 
 			int cb = *p + b;

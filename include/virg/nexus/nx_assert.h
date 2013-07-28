@@ -46,7 +46,7 @@ __NX_BEGIN_DECL
 
 
 #if defined(NDEBUG)
-#  define NX_ASSERT_CUSTOM(msg,expr) do { (void)(sizeof(expr),sizeof(msg)); } while(0)
+#  define NX_ASSERT_CUSTOM(msg,expr) do { (void)sizeof(expr);(void)sizeof(msg); } while(0)
 #else
 #  define NX_ASSERT_CUSTOM(msg,expr)                                    \
         do {                                                            \

@@ -22,7 +22,7 @@ void fast_nonmax_suppression(int *ret_num_nonmax, struct NXKeypoint *ret_nonmax,
 	int point_above = 0;
 	int point_below = 0;
 
-	if(num_corners < 1)
+	if (num_corners < 1 || *ret_num_nonmax <= 0)
 	{
 		*ret_num_nonmax = 0;
 		return;
@@ -107,6 +107,8 @@ void fast_nonmax_suppression(int *ret_num_nonmax, struct NXKeypoint *ret_nonmax,
 		}
 
 		ret_nonmax[num_nonmax++] = corners[i];
+                if (num_nonmax == *ret_num_nonmax)
+                        break;
         cont:
                 ;
 	}
