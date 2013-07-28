@@ -44,7 +44,7 @@ class NXFastDetector(object):
 
     @threshold.setter
     def threshold(self, value):
-        return self.__ptr.contents.threshold = value
+        self.__ptr.contents.threshold = value
 
     @property
     def keys(self):
@@ -65,7 +65,7 @@ class NXFastDetector(object):
         if max_n_keys is not None:
             self.resize(max_n_keys)
         pyr_ptr = _NXPyr.ptr_of(pyr)
-        _FD.detect(self.__ptr, pyr_ptr)
+        _FD.detect_pyr(self.__ptr, pyr_ptr)
 
     def adapt_threshold(self):
         _FD.adapt_threshold(self.__ptr)

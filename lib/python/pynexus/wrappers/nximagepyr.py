@@ -107,13 +107,19 @@ class NXImagePyr(object):
         else:
             return None
 
-    def resize_fast(self, width, height, n_levels, sigma0):
+    def resize_fast(self, width, height, n_levels, sigma0 = None):
+        if sigma0 is None:
+            sigma0 = 0.0
         _Pyr.resize_fast(self.__ptr, width, height, n_levels, sigma0)
 
-    def resize_fine(self, width, height, n_octaves, n_octave_steps, sigma0):
+    def resize_fine(self, width, height, n_octaves, n_octave_steps, sigma0 = None):
+        if sigma0 is None:
+            sigma0 = 0.0
         _Pyr.resize_fine(self.__ptr, width, height, n_octaves, n_octave_steps, sigma0)
 
-    def resize_scaled(self, width, height, n_levels, scale_f, sigma0):
+    def resize_scaled(self, width, height, n_levels, scale_f, sigma0 = None):
+        if sigma0 is None:
+            sigma0 = 0.0
         _Pyr.resize_scaled(self.__ptr, width, height, n_levels, scale_f, sigma0)
 
     def update(self):
@@ -122,6 +128,18 @@ class NXImagePyr(object):
     def compute(self, img):
         ptr = _NXImg.ptr_of(img)
         _Pyr.compute(self.__ptr, ptr)
+
+    def compute_fast(self, img, n_levels, sigma0 = None):
+        self.resize_fast(img.width, img.height, n_levels, sigma0)
+        self.compute(img)
+
+    def compute_fine(self, img, n_octaves, n_octave_steps, sigma0 = None):
+        self.resize_fine(img.width, img.height, n_octaves, n_octave_steps, sigma0)
+        self.compute(img)
+
+    def compute_scaled(self, img, n_levels, scale_f, sigma0 = None):
+        self.resize_scaled(img.width, img.height, n_levels, scale_f, sigma0)
+        self.compute(img)
 
     def copy(self):
         pyr = NXImagePyr()

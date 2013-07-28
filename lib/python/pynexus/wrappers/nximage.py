@@ -88,7 +88,9 @@ class NXImage(object):
         else:
             return False
 
-    def load_pnm(self, filename, load_mode):
+    def load_pnm(self, filename, load_mode = None):
+        if load_mode is None:
+            load_mode = NX_IMAGE_LOAD_AS_IS
         res = _Img.load_pnm(self.__ptr, filename, load_mode)
         if res == _NX.OK:
             return True
@@ -173,4 +175,13 @@ class NXImage(object):
             return img.__ptr
         else:
             return img
+
+    @staticmethod
+    def from_pnm(filename, load_mode = None):
+        img = NXImage()
+        r = img.load_pnm(filename, load_mode)
+        if r:
+            return img
+        else:
+            return None
 

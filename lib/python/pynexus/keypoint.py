@@ -10,18 +10,18 @@ _c_float = _C.c_float
 _c_long = _C.c_long
 
 class Struct(_C.Structure):
-   _fields_ = [('x', _c_int),
-               ('y', _c_int),
-               ('xs', _c_float),
-               ('ys', _c_float),
-               ('scale', _c_float),
-               ('sigma', _c_float),
-               ('score', _c_float),
-               ('ori', _c_float),
-               ('id', _c_long)]
+    _fields_ = [('x', _c_int),
+                ('y', _c_int),
+                ('xs', _c_float),
+                ('ys', _c_float),
+                ('scale', _c_float),
+                ('sigma', _c_float),
+                ('score', _c_float),
+                ('ori', _c_float),
+                ('id', _c_long)]
 
     def __str__(self):
-        return "<pynexus.keypoint.Struct: ({}, {}) scale: {}, sigma: {}, ori: {}, score: {}>"
-    .format(self.x, self.y, self.scale, self.sigma, self.ori, self.score)
+        s = "<pynexus.keypoint.Struct: ({}, {}) scale: {}, sigma: {}, ori: {}, score: {}>"
+        return s.format(self.x, self.y, self.scale, self.sigma, self.ori, self.score)
 
 Ptr = _POINTER(Struct)

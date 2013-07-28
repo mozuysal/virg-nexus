@@ -121,7 +121,7 @@ struct NXFastDetector *nx_fast_detector_new(int max_n_keys, int initial_work_siz
 {
         NX_ASSERT(max_n_keys > 0);
 
-        struct NXFastDetector *detector = nx_new(1, struct NXFastDetector);
+        struct NXFastDetector *detector = nx_fast_detector_alloc();
         nx_fast_detector_resize(detector, max_n_keys, initial_work_size);
         return detector;
 }
