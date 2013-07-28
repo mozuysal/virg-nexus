@@ -92,6 +92,7 @@ int nx_fast_detect_keypoints_pyr(int n_keys_supp_max, struct NXKeypoint *keys_su
 
                 // Fill scales/sigmas, fix keypoint ids
                 for (int j = 0; j < n_level_keys; ++j) {
+                        level_keys[j].level = i;
                         level_keys[j].sigma = pyr->levels[i].sigma;
                         level_keys[j].scale = pyr->levels[i].scale;
                         level_keys[j].id = n_keys_supp + j;

@@ -14,6 +14,7 @@ class Struct(_C.Structure):
                 ('y', _c_int),
                 ('xs', _c_float),
                 ('ys', _c_float),
+                ('level', _c_int),
                 ('scale', _c_float),
                 ('sigma', _c_float),
                 ('score', _c_float),

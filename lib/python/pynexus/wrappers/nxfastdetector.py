@@ -60,15 +60,18 @@ class NXFastDetector(object):
             self.resize(max_n_keys)
         img_ptr = _NXImg.ptr_of(img)
         _FD.detect(self.__ptr, img_ptr)
+        return self.n_keys
 
     def detect_pyr(self, pyr, max_n_keys = None):
         if max_n_keys is not None:
             self.resize(max_n_keys)
         pyr_ptr = _NXPyr.ptr_of(pyr)
         _FD.detect_pyr(self.__ptr, pyr_ptr)
+        return self.n_keys
 
     def adapt_threshold(self):
         _FD.adapt_threshold(self.__ptr)
+        return self.threshold
 
     @staticmethod
     def ptr_of(detector):

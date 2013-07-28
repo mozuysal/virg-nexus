@@ -24,6 +24,7 @@ struct NXKeypoint {
         float xs;
         float ys;
 
+        int level;
         float scale;
         float sigma;
 

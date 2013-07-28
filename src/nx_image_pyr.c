@@ -358,8 +358,10 @@ void nx_image_pyr_update_fine(struct NXImagePyr *pyr)
                 // On first octave smooth the original image to sigma0.
                 if (i == 0) {
                         float sigma_g = compute_sigma_g(sigma_current, oct_levels[0].sigma);
-                        nx_image_smooth_s(oct_levels[0].img, oct_levels[0].img, sigma_g, sigma_g, NULL);
-                        sigma_current = oct_levels[0].sigma;
+                        if (sigma_g > 0.0f) {
+                                nx_image_smooth_s(oct_levels[0].img, oct_levels[0].img, sigma_g, sigma_g, NULL);
+                                sigma_current = oct_levels[0].sigma;
+                        }
                 }
 
                 // Within the octave each image (other than the first) is the
