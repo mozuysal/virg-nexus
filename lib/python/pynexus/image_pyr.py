@@ -1,7 +1,7 @@
 import ctypes as _C
 
 import __init__ as _NX
-import pynexus.image as _Img
+import image
 
 _nexus = _NX._nexus
 
@@ -15,7 +15,7 @@ Type = _C.c_int
 (FAST, FINE, SCALED) = (0, 1, 2)
 
 class Level(_C.Structure):
-    _fields_ = [('img', _Img.Ptr),
+    _fields_ = [('img', image.Ptr),
                 ('sigma', _c_float),
                 ('scale', _c_float)]
 
@@ -48,7 +48,7 @@ class Struct(_C.Structure):
                 ('levels', _POINTER(Level)),
                 ('type', Type),
                 ('info', Info),
-                ('work_img', _Img.Ptr)]
+                ('work_img', image.Ptr)]
 
     def __str__(self):
         return "<pynexus.image_pyr.Struct: {} Levels>".format(self.n_levels);
@@ -93,7 +93,7 @@ release.argtypes = [Ptr]
 
 compute = _nexus.nx_image_pyr_compute
 compute.restype = None
-compute.argtypes = [Ptr, _Img.Ptr]
+compute.argtypes = [Ptr, image.Ptr]
 
 update = _nexus.nx_image_pyr_update
 update.restype = None
