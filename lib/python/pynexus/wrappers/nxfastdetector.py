@@ -35,6 +35,10 @@ class NXFastDetector(object):
         return self.__ptr.contents.max_n_keys
 
     @property
+    def compute_ori(self):
+        return self.__ptr.contents.compute_ori
+
+    @property
     def n_keys(self):
         return self.__ptr.contents.n_keys
 
@@ -68,6 +72,13 @@ class NXFastDetector(object):
         pyr_ptr = _NXPyr.ptr_of(pyr)
         _FD.detect_pyr(self.__ptr, pyr_ptr)
         return self.n_keys
+
+    def set_ori_param(self, compute_p, radius):
+        if compute_p:
+            cp = _NX.TRUE
+        else:
+            cp = _NX.FALSE
+        _FD.set_ori_param(self.__ptr, cp, radius);
 
     def adapt_threshold(self):
         _FD.adapt_threshold(self.__ptr)

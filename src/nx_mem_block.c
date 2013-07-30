@@ -19,7 +19,7 @@
 
 struct NXMemBlock *nx_mem_block_alloc()
 {
-        struct NXMemBlock *mem = nx_new(1, struct NXMemBlock);
+        struct NXMemBlock *mem = NX_NEW(1, struct NXMemBlock);
 
         mem->ptr = NULL;
         mem->size = 0;
@@ -55,7 +55,7 @@ void nx_mem_block_resize(struct NXMemBlock *mem, size_t new_sz)
                 if (mem->own_memory) {
                         mem->ptr = (uchar *)nx_frealloc(mem->ptr, new_sz * sizeof(uchar));
                 } else {
-                        uchar *new_ptr = nx_new_uc(new_sz);
+                        uchar *new_ptr = NX_NEW_UC(new_sz);
                         if (mem->size > 0)
                                 memcpy(new_ptr, mem->ptr, mem->size * sizeof(uchar));
                         /* else */

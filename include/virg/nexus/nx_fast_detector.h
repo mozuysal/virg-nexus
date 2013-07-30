@@ -33,6 +33,8 @@ int nx_fast_detect_keypoints_pyr(int n_keys_supp_max, struct NXKeypoint *keys_su
 int nx_fast_suppress_keypoints(int n_keys_supp_max, struct NXKeypoint *keys_supp,
                                int n_keys, const struct NXKeypoint *keys);
 
+struct NXFastDetectorICData;
+
 struct NXFastDetector
 {
         int max_n_keys;
@@ -44,6 +46,9 @@ struct NXFastDetector
         int n_work;
         struct NXKeypoint *keys_work;
         struct NXMemBlock *mem;
+
+        NXBool compute_ori;
+        struct NXFastDetectorICData *ic_data;
 };
 
 struct NXFastDetector *nx_fast_detector_alloc();
@@ -57,6 +62,8 @@ void nx_fast_detector_resize(struct NXFastDetector *detector, int max_n_keys, in
 void nx_fast_detector_detect(struct NXFastDetector *detector, const struct NXImage *img);
 
 void nx_fast_detector_detect_pyr(struct NXFastDetector *detector, const struct NXImagePyr *pyr);
+
+void nx_fast_detector_set_ori_param(struct NXFastDetector *detector, NXBool compute_ori_p, int patch_radius);
 
 void nx_fast_detector_adapt_threshold(struct NXFastDetector *detector);
 

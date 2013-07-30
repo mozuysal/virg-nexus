@@ -29,7 +29,7 @@ static void nx_process_aa_buffer(uchar *buffer, int n);
 
 struct NXImage *nx_image_alloc()
 {
-        struct NXImage *img = nx_new(1, struct NXImage);
+        struct NXImage *img = NX_NEW(1, struct NXImage);
 
         img->width = 0;
         img->height = 0;
@@ -375,7 +375,7 @@ void nx_image_smooth_si(struct NXImage *dest, const struct NXImage *src,
         int nky = nx_kernel_size_min_gaussian(sigma_y, NX_IMAGE_SMOOTH_KERNEL_LOSS);
         int nk_max = nx_max_i(nkx, nky);
         int nk_sym = nk_max / 2 + 1;
-        short *kernel = nx_new_si(nk_sym);
+        short *kernel = NX_NEW_SI(nk_sym);
 
         // Smooth in x-direction
         int nk = nkx / 2 + 1;
@@ -431,7 +431,7 @@ void nx_image_smooth_s(struct NXImage *dest, const struct NXImage *src,
         int nky = nx_kernel_size_min_gaussian(sigma_y, NX_IMAGE_SMOOTH_KERNEL_LOSS);
         int nk_max = nx_max_i(nkx, nky);
         int nk_sym = nk_max / 2 + 1;
-        float *kernel = nx_new_s(nk_sym);
+        float *kernel = NX_NEW_S(nk_sym);
 
         // Smooth in x-direction
         int nk = nkx / 2 + 1;

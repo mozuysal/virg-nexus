@@ -31,7 +31,7 @@ static inline float compute_sigma_g(float sigma_current, float sigma_desired);
 
 struct NXImagePyr *nx_image_pyr_alloc()
 {
-        struct NXImagePyr *pyr = nx_new(1, struct NXImagePyr);
+        struct NXImagePyr *pyr = NX_NEW(1, struct NXImagePyr);
 
         pyr->n_levels = 0;
         pyr->levels = NULL;
@@ -322,7 +322,7 @@ void nx_image_pyr_ensure_n_levels(struct NXImagePyr *pyr, int n_levels)
         }
 
         if (pyr->levels == NULL) {
-                pyr->levels = nx_new(n_levels, struct NXImagePyrLevel);
+                pyr->levels = NX_NEW(n_levels, struct NXImagePyrLevel);
                 for (int i = 0; i < n_levels; ++i) {
                         pyr->levels[i].img = nx_image_alloc();
                 }

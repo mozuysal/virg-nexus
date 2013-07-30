@@ -16,6 +16,9 @@ _c_size_t = _C.c_size_t
 _c_float = _C.c_float
 _c_char_p = _C.c_char_p
 
+class ICData(_C.Structure):
+    pass
+
 class Struct(_C.Structure):
     _fields_ = [('max_n_keys', _c_int),
                 ('threshold', _c_int),
@@ -23,7 +26,9 @@ class Struct(_C.Structure):
                 ('keys', keypoint.Ptr),
                 ('n_work', _c_int),
                 ('keys_work', keypoint.Ptr),
-                ('mem', memblock.Ptr)]
+                ('mem', memblock.Ptr),
+                ('compute_ori', _NX.Bool),
+                ('ic_data', _POINTER(ICData))]
 
     def __str__(self):
         return "<pynexus.fast_detector.Struct: {} of {} maximum, threshold: {}>".format(self.n_keys, self.max_n_keys, self.threshold)
@@ -57,3 +62,7 @@ detect_pyr.argtypes = [Ptr, image_pyr.Ptr]
 adapt_threshold = _nexus.nx_fast_detector_adapt_threshold
 adapt_threshold.restype = None
 adapt_threshold.argtypes = [Ptr]
+
+set_ori_param = _nexus.nx_fast_detector_set_ori_param
+set_ori_param.restype = None
+set_ori_param.argtypes = [Ptr, _NX.Bool, _c_int]

@@ -29,8 +29,8 @@ using std::pow;
 namespace {
 
 const int TEST_N_LEVELS = 3;
-const float TEST_SIGMA0 = 1.2f;
-const int TEST_MAX_N_KEYS = 300;
+const float TEST_SIGMA0 = 0.0f;
+const int TEST_MAX_N_KEYS = 1000;
 
 class NXFastDetectorTest : public ::testing::Test {
 protected:
@@ -44,6 +44,7 @@ protected:
                 nx_image_xload_pnm(lena_, TEST_DATA_LENA_PPM, NX_IMAGE_LOAD_GRAYSCALE);
 
                 pyr_ = nx_image_pyr_new_fast(lena_->width, lena_->height, TEST_N_LEVELS, TEST_SIGMA0);
+                nx_image_pyr_compute(pyr_, lena_);
         }
 
         virtual void TearDown() {

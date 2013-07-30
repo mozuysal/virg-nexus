@@ -12,6 +12,8 @@
  */
 #include "virg/nexus/nx_fast_detector.h"
 
+#include <math.h>
+
 #include "virg/nexus/nx_assert.h"
 #include "virg/nexus/nx_alloc.h"
 #include "virg/nexus/nx_math.h"
@@ -123,9 +125,57 @@ int nx_fast_suppress_keypoints(int n_keys_supp_max, struct NXKeypoint *keys_supp
         return n_keys_supp_max;
 }
 
+struct NXFastDetectorICData {
+        int radius;
+        int n_offsets;
+        int *offset_table;
+};
+
+static struct NXFastDetectorICData *nx_fast_detector_ic_data_new(int radius)
+{
+        struct NXFastDetectorICData *data = NX_NEW(1, struct NXFastDetectorICData);
+
+        data->radius = radius;
+        data->n_offsets = 0;
+        data->offset_table = NULL;
+
+        int r2 = radius*radius;
+        for (int y = -radius; y < radius; ++y) {
+                for (int x = -radius; x < radius; ++x) {
+                        int r2xy = x*x+y*y;
+                        if (r2xy < r2)
+                                ++data->n_offsets;
+                }
+        }
+
+        int table_length = data->n_offsets * 2;
+        data->offset_table = NX_NEW_I(table_length);
+        int *tp = data->offset_table;
+        for (int y = -radius; y < radius; ++y) {
+                for (int x = -radius; x < radius; ++x) {
+                        int r2xy = x*x+y*y;
+                        if (r2xy < r2) {
+                                tp[0] = x;
+                                tp[1] = y;
+                                tp += 2;
+                        }
+                }
+        }
+
+        return data;
+}
+
+static void nx_fast_detector_ic_data_free(struct NXFastDetectorICData *data)
+{
+        if (data) {
+                nx_free(data->offset_table);
+                nx_free(data);
+        }
+}
+
 struct NXFastDetector *nx_fast_detector_alloc()
 {
-        struct NXFastDetector *detector = nx_new(1, struct NXFastDetector);
+        struct NXFastDetector *detector = NX_NEW(1, struct NXFastDetector);
 
         detector->max_n_keys = 0;
         detector->threshold = 255;
@@ -136,6 +186,9 @@ struct NXFastDetector *nx_fast_detector_alloc()
         detector->n_work = 0;
         detector->keys_work = NULL;
         detector->mem = nx_mem_block_alloc();
+
+        detector->compute_ori = NX_FALSE;
+        detector->ic_data = NULL;
 
         return detector;
 }
@@ -154,6 +207,7 @@ void nx_fast_detector_free(struct NXFastDetector *detector)
         if (detector) {
                 nx_free(detector->keys);
                 nx_mem_block_free(detector->mem);
+                nx_fast_detector_ic_data_free(detector->ic_data);
                 nx_free(detector);
         }
 }
@@ -167,7 +221,7 @@ void nx_fast_detector_resize(struct NXFastDetector *detector, int max_n_keys, in
         detector->threshold = 15;
 
         detector->n_keys = 0;
-        detector->keys = nx_new(max_n_keys, struct NXKeypoint);
+        detector->keys = NX_NEW(max_n_keys, struct NXKeypoint);
 
         if (initial_work_size <= 0)
                 initial_work_size = max_n_keys * NX_FAST_DETECTOR_WORK_MULTIPLIER;
@@ -175,6 +229,45 @@ void nx_fast_detector_resize(struct NXFastDetector *detector, int max_n_keys, in
         detector->n_work = initial_work_size;
         nx_mem_block_resize(detector->mem, detector->n_work * sizeof(struct NXKeypoint));
         detector->keys_work = (struct NXKeypoint *)detector->mem->ptr;
+}
+
+static float nx_keypoint_ori_ic(const uchar *center, int n_offsets, const int *offsets, const int *offset_table)
+{
+        int m01 = 0;
+        int m10 = 0;
+
+        for (int i = 0; i < n_offsets; ++i, offset_table += 2) {
+                uchar p = center[offsets[i]];
+                m10 += offset_table[0] * p; // x * I
+                m01 += offset_table[1] * p; // y * I
+        }
+
+        return (float)atan2((double)m01, (double)m10);
+}
+
+static void nx_fast_detector_compute_keypoint_ori_ic(int n_keys, struct NXKeypoint* keys, const struct NXImage *img,
+                                                     const struct NXFastDetectorICData *data)
+{
+        const int r = data->radius;
+        const int xe = img->width - r;
+        const int ye = img->height - r;
+
+        int *img_offsets = NX_NEW_I(data->n_offsets);
+        for (int i = 0; i < data->n_offsets; ++i) {
+                img_offsets[i] = data->offset_table[2*i]
+                        + img->row_stride * data->offset_table[2*i+1];
+        }
+
+        for (int i = 0; i < n_keys; ++i) {
+                struct NXKeypoint *k = keys + i;
+
+                if (k->x >= r && k->x < xe && k->y >= r && k->y < ye) {
+                        const uchar *center = img->data + k->y * img->row_stride + k->x;
+                        k->ori = nx_keypoint_ori_ic(center, data->n_offsets, img_offsets, data->offset_table);
+                }
+        }
+
+        nx_free(img_offsets);
 }
 
 void nx_fast_detector_detect(struct NXFastDetector *detector, const struct NXImage *img)
@@ -193,6 +286,10 @@ void nx_fast_detector_detect(struct NXFastDetector *detector, const struct NXIma
         detector->n_keys = nx_fast_suppress_keypoints(detector->max_n_keys,
                                                       detector->keys,
                                                       n_keys, detector->keys_work);
+
+        if (detector->compute_ori)
+                nx_fast_detector_compute_keypoint_ori_ic(detector->n_keys, detector->keys,
+                                                         img, detector->ic_data);
 }
 
 void nx_fast_detector_detect_pyr(struct NXFastDetector *detector, const struct NXImagePyr *pyr)
@@ -200,12 +297,43 @@ void nx_fast_detector_detect_pyr(struct NXFastDetector *detector, const struct N
         NX_ASSERT_PTR(detector);
         NX_ASSERT_PTR(pyr);
 
-        detector->n_keys = nx_fast_detect_keypoints_pyr(detector->max_n_keys,
-                                                        detector->keys,
-                                                        detector->n_work,
-                                                        detector->keys_work,
-                                                        pyr,
-                                                        detector->threshold);
+        int n_keys_supp = 0;
+        int n_level_keys_max = detector->max_n_keys;
+        struct NXKeypoint *level_keys = detector->keys;
+        for (int i = pyr->n_levels-1; i >= 0 ; --i) {
+                int n_level_keys = nx_fast_detect_keypoints(detector->n_work,
+                                                            detector->keys_work,
+                                                            pyr->levels[i].img,
+                                                            detector->threshold);
+
+                nx_fast_score_keypoints(n_level_keys, detector->keys_work,
+                                        pyr->levels[i].img, detector->threshold);
+
+
+                n_level_keys = nx_fast_suppress_keypoints(n_level_keys_max, level_keys,
+                                                          n_level_keys, detector->keys_work);
+
+                if (detector->compute_ori)
+                        nx_fast_detector_compute_keypoint_ori_ic(n_level_keys, level_keys,
+                                                                 pyr->levels[i].img, detector->ic_data);
+
+                // Fill scales/sigmas, fix keypoint ids
+                for (int j = 0; j < n_level_keys; ++j) {
+                        level_keys[j].level = i;
+                        level_keys[j].sigma = pyr->levels[i].sigma;
+                        level_keys[j].scale = pyr->levels[i].scale;
+                        level_keys[j].id = n_keys_supp + j;
+                }
+
+                n_level_keys_max -= n_level_keys;
+                level_keys += n_level_keys;
+                n_keys_supp += n_level_keys;
+
+                if (n_level_keys_max <= 0)
+                        break;
+        }
+
+        detector->n_keys = n_keys_supp;
 }
 
 void nx_fast_detector_adapt_threshold(struct NXFastDetector *detector)
@@ -226,4 +354,16 @@ void nx_fast_detector_adapt_threshold(struct NXFastDetector *detector)
 
         NX_ASSERT(detector->threshold >= 5);
         NX_ASSERT(detector->threshold <= 250);
+}
+
+void nx_fast_detector_set_ori_param(struct NXFastDetector *detector, NXBool compute_ori_p, int patch_radius)
+{
+        NX_ASSERT_PTR(detector);
+        NX_ASSERT(patch_radius > 0);
+
+        detector->compute_ori = compute_ori_p;
+        if (compute_ori_p) {
+                nx_fast_detector_ic_data_free(detector->ic_data);
+                detector->ic_data = nx_fast_detector_ic_data_new(patch_radius);
+        }
 }

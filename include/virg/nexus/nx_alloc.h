@@ -35,17 +35,17 @@ void *nx_faligned_alloc(size_t sz, size_t alignment);
 
 void nx_free(void *ptr);
 
-#define nx_new(n,type) ((type *)nx_fmalloc((n) * sizeof(type)))
-#define nx_new_c(n)    nx_new((n),char)
-#define nx_new_uc(n)   nx_new((n),unsigned char)
-#define nx_new_si(n)   nx_new((n),short)
-#define nx_new_i(n)    nx_new((n),int)
-#define nx_new_ui(n)   nx_new((n),unsigned int)
-#define nx_new_l(n)    nx_new((n),long)
-#define nx_new_ul(n)   nx_new((n),unsigned long)
-#define nx_new_z(n)    nx_new((n),size_t)
-#define nx_new_s(n)    nx_new((n),float)
-#define nx_new_d(n)    nx_new((n),double)
+#define NX_NEW(n,type) ((type *)nx_fmalloc((n) * sizeof(type)))
+#define NX_NEW_C(n)    NX_NEW((n),char)
+#define NX_NEW_UC(n)   NX_NEW((n),unsigned char)
+#define NX_NEW_SI(n)   NX_NEW((n),short)
+#define NX_NEW_I(n)    NX_NEW((n),int)
+#define NX_NEW_UI(n)   NX_NEW((n),unsigned int)
+#define NX_NEW_L(n)    NX_NEW((n),long)
+#define NX_NEW_UL(n)   NX_NEW((n),unsigned long)
+#define NX_NEW_Z(n)    NX_NEW((n),size_t)
+#define NX_NEW_S(n)    NX_NEW((n),float)
+#define NX_NEW_D(n)    NX_NEW((n),double)
 
 __NX_END_DECL
 
