@@ -12,6 +12,7 @@ set(virg_nexus_SOURCES
   src/nx_alloc.c
   src/nx_mem_block.c
   src/nx_math.c
+  src/nx_transform_2d.c
   src/nx_io.c
   src/nx_filter.c
   src/nx_image.c
@@ -30,6 +31,7 @@ set(virg_nexus_HEADERS
   include/virg/nexus/nx_alloc.h
   include/virg/nexus/nx_mem_block.h
   include/virg/nexus/nx_math.h
+  include/virg/nexus/nx_transform_2d.h
   include/virg/nexus/nx_io.h
   include/virg/nexus/nx_image.h
   include/virg/nexus/nx_image_pyr.h
