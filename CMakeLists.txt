@@ -11,6 +11,8 @@ option(VIRG_NEXUS_PC_WIN32 "Enable Win32 Compilation"  OFF)
 set(virg_nexus_SOURCES
   src/nx_alloc.c
   src/nx_mem_block.c
+  src/SFMT/SFMT.c
+  src/nx_uniform_sampler.c
   src/nx_math.c
   src/nx_spline.c
   src/nx_transform_2d.c
@@ -32,6 +34,7 @@ set(virg_nexus_HEADERS
   include/virg/nexus/nx_message.h
   include/virg/nexus/nx_alloc.h
   include/virg/nexus/nx_mem_block.h
+  include/virg/nexus/nx_uniform_sampler.h
   include/virg/nexus/nx_math.h
   include/virg/nexus/nx_spline.h
   include/virg/nexus/nx_transform_2d.h
