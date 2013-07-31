@@ -83,12 +83,12 @@ void nx_image_resize(struct NXImage *img, int width, int height, int row_stride,
                 return;
 
         int n_ch = nx_image_n_channels(type);
-        int rs = n_ch * width * sizeof(uchar);
+        int rs = n_ch * width;
         if (row_stride < rs)
                 row_stride = rs;
 
         size_t length = row_stride * height;
-        nx_mem_block_resize(img->mem, length);
+        nx_mem_block_resize(img->mem, length * sizeof(uchar));
 
         img->width = width;
         img->height = height;
@@ -149,7 +149,7 @@ void nx_image_wrap(struct NXImage *img, uchar *data, int width, int height, int 
         NX_ASSERT_PTR(data);
         NX_ASSERT(row_stride >= width);
 
-        size_t sz = row_stride * height;
+        size_t sz = row_stride * height * sizeof(uchar);
         nx_mem_block_wrap(img->mem, data, sz, own_memory);
 
         img->width = width;

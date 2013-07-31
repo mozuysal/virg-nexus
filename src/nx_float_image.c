@@ -80,12 +80,12 @@ void nx_float_image_resize(struct NXFloatImage *fimg, int width, int height, int
             fimg->n_channels == n_channels)
                 return;
 
-        int rs = n_channels * width  * sizeof(float);
+        int rs = n_channels * width;
         if (row_stride < rs)
                 row_stride = rs;
 
         size_t length = row_stride * height;
-        nx_mem_block_resize(fimg->mem, length);
+        nx_mem_block_resize(fimg->mem, length * sizeof(float));
 
         fimg->width = width;
         fimg->height = height;
@@ -141,9 +141,9 @@ void nx_float_image_wrap(struct NXFloatImage *fimg, float *data, int width, int 
 {
         NX_ASSERT_PTR(fimg);
         NX_ASSERT_PTR(data);
-        NX_ASSERT(row_stride >= width*n_channels*sizeof(float));
+        NX_ASSERT(row_stride >= width*n_channels);
 
-        size_t sz = row_stride * height;
+        size_t sz = row_stride * height * sizeof(float);
         nx_mem_block_wrap(fimg->mem, (uchar *)data, sz, own_memory);
 
         fimg->width = width;
@@ -354,10 +354,11 @@ void nx_float_image_from_uchar(struct NXFloatImage *fimg, const struct NXImage *
         nx_float_image_resize(fimg, img->width, img->height, img->n_channels, 0);
 
         float norm_f = 1.0f / 255.0f;
+        int n_row_elems = img->width * img->n_channels;
         for (int y = 0; y < img->height; ++y) {
                 const uchar *row = img->data + y*img->row_stride;
                 float *frow = fimg->data + y*fimg->row_stride;
-                for (int x = 0; x < img->width * img->n_channels; ++x) {
+                for (int x = 0; x < n_row_elems; ++x) {
                         frow[x] = row[x] * norm_f;
                 }
         }
@@ -383,10 +384,11 @@ void nx_float_image_to_uchar(const struct NXFloatImage *fimg, struct NXImage *im
 
         nx_image_resize(img, fimg->width, fimg->height, 0, type);
 
+        int n_row_elems = img->width * img->n_channels;
         for (int y = 0; y < img->height; ++y) {
                 const float *frow = fimg->data + y*fimg->row_stride;
                 uchar *row = img->data + y*img->row_stride;
-                for (int x = 0; x < img->width * img->n_channels; ++x) {
+                for (int x = 0; x < n_row_elems; ++x) {
                         int rx = frow[x] * 255.0f;
                         if (rx < 0) rx = 0;
                         else if (rx > 255) rx = 255;
