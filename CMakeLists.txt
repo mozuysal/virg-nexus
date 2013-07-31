@@ -19,6 +19,7 @@ set(virg_nexus_SOURCES
   src/nx_io.c
   src/nx_filter.c
   src/nx_image.c
+  src/nx_image_warp.c
   src/nx_image_pyr.c
   src/nx_float_image.c
   src/nx_colorspace.c
@@ -40,6 +41,7 @@ set(virg_nexus_HEADERS
   include/virg/nexus/nx_transform_2d.h
   include/virg/nexus/nx_io.h
   include/virg/nexus/nx_image.h
+  include/virg/nexus/nx_image_warp.h
   include/virg/nexus/nx_image_pyr.h
   include/virg/nexus/nx_float_image.h
   include/virg/nexus/nx_colorspace.h
