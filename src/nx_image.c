@@ -83,9 +83,9 @@ void nx_image_resize(struct NXImage *img, int width, int height, int row_stride,
                 return;
 
         int n_ch = nx_image_n_channels(type);
-
-        if (row_stride <= 0)
-                row_stride = n_ch * width;
+        int rs = n_ch * width * sizeof(uchar);
+        if (row_stride < rs)
+                row_stride = rs;
 
         size_t length = row_stride * height;
         nx_mem_block_resize(img->mem, length);

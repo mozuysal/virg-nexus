@@ -39,11 +39,19 @@ void nx_convolve_sym_si_uc(int n, uchar *data, int n_k, const short *kernel, con
 
 void nx_convolve_sym_s_uc(int n, uchar *data, int n_k, const float *kernel);
 
+void nx_convolve_sym_s(int n, float *data, int n_k, const float *kernel);
+
 void nx_filter_copy_to_buffer1_uc(int n, uchar *buffer, const uchar *data, int n_border, enum NXBorderMode mode);
 
 void nx_filter_copy_to_buffer_uc(int n, uchar *buffer, const uchar *data, int stride, int n_border, enum NXBorderMode mode);
 
+void nx_filter_copy_to_buffer1_s(int n, float *buffer, const float *data, int n_border, enum NXBorderMode mode);
+
+void nx_filter_copy_to_buffer_s(int n, float *buffer, const float *data, int stride, int n_border, enum NXBorderMode mode);
+
 uchar *nx_filter_buffer_alloc(int n, int n_border);
+
+float *nx_filter_buffer_alloc_s(int n, int n_border);
 
 __NX_END_DECL
 

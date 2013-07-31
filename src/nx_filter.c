@@ -202,6 +202,32 @@ void nx_convolve_sym_s_uc(int n, uchar *data, int n_k, const float *kernel)
         }
 }
 
+/**
+ * Convolves float data buffer using a symmetric kernel of length
+ * (2*n_k+1) in single precision.
+ *
+ * @param n Number of elements to convolve not including the border values
+ * @param data Pointer to the beginning of the buffer
+ * @param n_k Number of elements in the kernel array
+ * @param kernel The kernel
+ */
+void nx_convolve_sym_s(int n, float *data, int n_k, const float *kernel)
+{
+        NX_ASSERT(n > 1);
+        NX_ASSERT_PTR(data);
+        NX_ASSERT(n_k > 1);
+        NX_ASSERT_PTR(kernel);
+
+        for (int i = 0; i < n; ++i) {
+                float* dk0 = data + i + n_k - 1;
+                float sum = kernel[0] * *dk0;
+                for (int k = 1; k < n_k; ++k) {
+                        sum += kernel[k] * (dk0[-k] + dk0[+k]);
+                }
+                data[i] = sum;
+        }
+}
+
 void fill_buffer_border_uc(int n, uchar *buffer, int n_border, enum NXBorderMode mode)
 {
         uchar buffer_b;
@@ -209,6 +235,31 @@ void fill_buffer_border_uc(int n, uchar *buffer, int n_border, enum NXBorderMode
         case NX_BORDER_ZERO:
                 memset(buffer, 0, n_border * sizeof(uchar));
                 memset(buffer+n+n_border, 0, n_border * sizeof(uchar));
+                break;
+        case NX_BORDER_REPEAT:
+                buffer_b = buffer[n_border];
+                for (int i = 0; i < n_border; ++i)
+                        buffer[i] = buffer_b;
+                buffer_b = buffer[n_border+n-1];
+                for (int i = 0; i < n_border; ++i)
+                        buffer[n_border+n+i] = buffer_b;
+                break;
+        case NX_BORDER_MIRROR:
+                for (int i = 0; i < n_border; ++i)
+                        buffer[i] = buffer[2*n_border-i];
+                for (int i = 0; i < n_border; ++i)
+                        buffer[n_border+n+i] = buffer[n_border+n-i-2];
+                break;
+        }
+}
+
+void fill_buffer_border_s(int n, float *buffer, int n_border, enum NXBorderMode mode)
+{
+        float buffer_b;
+        switch (mode) {
+        case NX_BORDER_ZERO:
+                memset(buffer, 0, n_border * sizeof(float));
+                memset(buffer+n+n_border, 0, n_border * sizeof(float));
                 break;
         case NX_BORDER_REPEAT:
                 buffer_b = buffer[n_border];
@@ -273,6 +324,51 @@ void nx_filter_copy_to_buffer_uc(int n, uchar *buffer, const uchar *data, int st
 }
 
 /**
+ * Copies n consecutive float values from a data vector into a buffer
+ * and creates a border around the data elements.
+ *
+ * @param n Number of elements to copy
+ * @param buffer Target buffer pointer
+ * @param data Source data pointer
+ * @param n_border Number of border elements
+ * @param mode Buffer fill mode
+ */
+void nx_filter_copy_to_buffer1_s(int n, float *buffer, const float *data, int n_border, enum NXBorderMode mode)
+{
+        NX_ASSERT(n > 1);
+        NX_ASSERT(n > n_border);
+        NX_ASSERT_PTR(buffer);
+        NX_ASSERT_PTR(data);
+
+        memcpy(buffer + n_border, data, n*sizeof(float));
+        fill_buffer_border_s(n, buffer, n_border, mode);
+}
+
+/**
+ * Copies n strided float values from a data vector into a buffer and creates a
+ * border around the data elements.
+ *
+ * @param n Number of elements to copy
+ * @param buffer Target buffer pointer
+ * @param data Source data pointer
+ * @param stride Stride between source data elements
+ * @param n_border Number of border elements
+ * @param mode Buffer fill mode
+ */
+void nx_filter_copy_to_buffer_s(int n, float *buffer, const float *data, int stride, int n_border, enum NXBorderMode mode)
+{
+        NX_ASSERT(n > 1);
+        NX_ASSERT(n > n_border);
+        NX_ASSERT_PTR(buffer);
+        NX_ASSERT_PTR(data);
+
+        for (int i = 0; i < n; ++i) {
+                buffer[n_border + i] = data[i * stride];
+        }
+        fill_buffer_border_s(n, buffer, n_border, mode);
+}
+
+/**
  * Allocates an unsigned uchar buffer that will be used for convolution.
  *
  * @param n Number of data elements to be convolved
@@ -287,6 +383,26 @@ uchar *nx_filter_buffer_alloc(int n, int n_border)
 #if defined(VIRG_NEXUS_USE_SIMD)
         return (uchar *)nx_aligned_alloc(l * sizeof(uchar), NX_SIMD_ALIGNMENT);
 #else
-        return nx_new_uc(l);
+        return NX_NEW_UC(l);
 #endif
 }
+
+/**
+ * Allocates a float buffer that will be used for convolution.
+ *
+ * @param n Number of data elements to be convolved
+ * @param n_border Number of border elements at one side
+ *
+ * @return Allocated buffer pointer, must be freed by nx_free()
+ */
+float *nx_filter_buffer_alloc_s(int n, int n_border)
+{
+        size_t l = n + 2 * n_border;
+
+#if defined(VIRG_NEXUS_USE_SIMD)
+        return (float *)nx_aligned_alloc(l * sizeof(float), NX_SIMD_ALIGNMENT);
+#else
+        return NX_NEW_S(l);
+#endif
+}
+
