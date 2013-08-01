@@ -128,10 +128,18 @@ if (DOXYGEN_FOUND)
 endif(DOXYGEN_FOUND)
 
 
-# --------------------------------- blas/lapack ----------------------------------
+# --------------------------------- cblas/lapack ----------------------------------
+option(VIRG_NEXUS_USE_TUNED_LAPACK "Use ATLAS generated cblas/lapack version" OFF)
+
 set (LAPACK_LIBRARY_DIRS "")
-set (LAPACK_LIBRARIES "-llapack -lblas")
+set (LAPACK_LIBRARIES "-llapack -lcblas")
 set (LAPACK_INCLUDE_DIR "")
+
+if (VIRG_NEXUS_USE_TUNED_LAPACK)
+  set (LAPACK_INCLUDE_DIR "")
+  set (LAPACK_LIBRARY_DIRS "")
+  set (LAPACK_LIBRARIES "-llapack -lcblas -latlas")
+endif (VIRG_NEXUS_USE_TUNED_LAPACK)
 
 include_directories(${LAPACK_INCLUDE_DIR})
 link_directories(${LAPACK_LIBRARY_DIRS})
