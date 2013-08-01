@@ -4,6 +4,7 @@ import __init__ as _NX
 
 import memblock
 import image
+import image_warp
 
 _nexus = _NX._nexus
 
@@ -83,6 +84,14 @@ smooth_s = _nexus.nx_float_image_smooth_s
 smooth_s.restype = None
 smooth_s.argtypes = [Ptr, Ptr, _c_float, _c_float, _POINTER(_c_float)]
 
+transform_affine = _nexus.nx_float_image_transform_affine
+transform_affine.restype = None
+transform_affine.argtypes = [image.Ptr, Ptr, _POINTER(_c_float), image_warp.BackgroundMode]
+
+transform_affine_prm = _nexus.nx_float_image_transform_affine_prm
+transform_affine_prm.restype = None
+transform_affine_prm.argtypes = [image.Ptr, Ptr, _c_float, _c_float, _c_float, _c_float, image_warp.BackgroundMode]
+
 xsave_raw = _nexus.nx_float_image_xsave_raw
 xsave_raw.restype = None
 xsave_raw.argtypes = [Ptr, _c_char_p]
@@ -109,7 +118,7 @@ from_uchar.argtypes = [Ptr, image.Ptr]
 
 to_uchar = _nexus.nx_float_image_to_uchar
 to_uchar.restype = None
-to_uchar.argtypes = [Ptr, image.Ptr]
+to_uchar.argtypes = [image.Ptr, Ptr]
 
 spline_coeff_of = _nexus.nx_float_image_spline_coeff_of
 spline_coeff_of.restype = None

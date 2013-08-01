@@ -3,6 +3,7 @@ import ctypes as _C
 import __init__ as _NX
 
 import memblock
+from image_warp import BackgroundMode as _BGMode
 
 _nexus = _NX._nexus
 
@@ -112,6 +113,14 @@ smooth_si.restype = None
 smooth_s = _nexus.nx_image_smooth_s
 smooth_s.argtypes = [Ptr, Ptr, _c_float, _c_float, _POINTER(_NX.uchar)]
 smooth_s.restype = None
+
+transform_affine = _nexus.nx_image_transform_affine
+transform_affine.restype = None
+transform_affine.argtypes = [Ptr, Ptr, _POINTER(_c_float), _BGMode]
+
+transform_affine_prm = _nexus.nx_image_transform_affine_prm
+transform_affine_prm.restype = None
+transform_affine_prm.argtypes = [Ptr, Ptr, _c_float, _c_float, _c_float, _c_float, _BGMode]
 
 xsave_pnm = _nexus.nx_image_xsave_pnm
 xsave_pnm.argtypes = [Ptr, _c_char_p]

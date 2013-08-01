@@ -27,8 +27,13 @@ static inline int nx_max_i(int x, int y);
 static inline float nx_max_s(float x, float y);
 static inline double nx_max_d(double x, double y);
 
+float nx_mat3_inv_s(float *Minv, const float *M);
+double nx_mat3_inv_d(double *Minv, const double *M);
+float nx_mat3_inv_sd(float *Minv, const float *M);
+
 double nx_erf(double x);
 
+/* ----------------------------- inline definitions ------------------------------- */
 int nx_min_i(int x, int y)
 {
         return (x < y) ? x : y;

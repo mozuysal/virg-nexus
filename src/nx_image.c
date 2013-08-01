@@ -22,6 +22,8 @@
 #include "virg/nexus/nx_mem_block.h"
 #include "virg/nexus/nx_colorspace.h"
 #include "virg/nexus/nx_filter.h"
+#include "virg/nexus/nx_transform_2d.h"
+#include "virg/nexus/nx_image_warp.h"
 
 static const double NX_IMAGE_SMOOTH_KERNEL_LOSS = 0.003;
 
@@ -460,6 +462,50 @@ void nx_image_smooth_s(struct NXImage *dest, const struct NXImage *src,
         // Clean-up if allocated buffer
         if (!filter_buffer)
                 nx_free(buffer);
+}
+
+void nx_image_transform_affine(struct NXImage *dest, const struct NXImage *src,
+                               const float *t_src2dest, enum NXImageWarpBackgroundMode bg_mode)
+{
+        NX_ASSERT_PTR(src);
+        NX_ASSERT_PTR(dest);
+        NX_IMAGE_ASSERT_GRAYSCALE(src);
+        NX_IMAGE_ASSERT_GRAYSCALE(dest);
+
+
+        float t_dest2src[9];
+        nx_mat3_inv_sd(t_dest2src, t_src2dest);
+
+        float nrm_f = 1.0f / t_dest2src[8];
+        for (int i = 0; i < 9; ++i)
+                t_dest2src[i] *= nrm_f;
+
+        if (dest->data == NULL)
+                nx_image_resize(dest, src->width, src->height, 0, src->type);
+
+
+        nx_image_warp_affine_bilinear(dest->width, dest->height, dest->data, dest->row_stride,
+                                      src->width, src->height, src->data, src->row_stride,
+                                      t_dest2src, bg_mode);
+}
+
+void nx_image_transform_affine_prm(struct NXImage *dest, const struct NXImage *src,
+                                   float lambda, float psi, float theta, float phi,
+                                   enum NXImageWarpBackgroundMode bg_mode)
+{
+        NX_ASSERT_PTR(src);
+        NX_ASSERT_PTR(dest);
+        NX_IMAGE_ASSERT_GRAYSCALE(src);
+        NX_IMAGE_ASSERT_GRAYSCALE(dest);
+
+        if (dest->data == NULL)
+                nx_image_resize(dest, src->width, src->height, 0, src->type);
+
+        float t_src2dest[9];
+        nx_transform_2d_fill_affine_s(t_src2dest, dest->width / 2, dest->height / 2, lambda,
+                                      psi, theta, phi, -src->width / 2, -src->height / 2);
+
+        nx_image_transform_affine(dest, src, t_src2dest, bg_mode);
 }
 
 static NXResult save_as_pnm(const struct NXImage *img, FILE *pnm)

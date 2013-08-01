@@ -23,6 +23,7 @@
 #include "virg/nexus/nx_filter.h"
 #include "virg/nexus/nx_image.h"
 #include "virg/nexus/nx_spline.h"
+#include "virg/nexus/nx_transform_2d.h"
 
 static const double NX_FLOAT_IMAGE_SMOOTH_KERNEL_LOSS = 0.003;
 
@@ -364,7 +365,7 @@ void nx_float_image_from_uchar(struct NXFloatImage *fimg, const struct NXImage *
         }
 }
 
-void nx_float_image_to_uchar(const struct NXFloatImage *fimg, struct NXImage *img)
+void nx_float_image_to_uchar(struct NXImage *img, const struct NXFloatImage *fimg)
 {
         NX_ASSERT_PTR(fimg);
         NX_ASSERT_PTR(img);
@@ -409,4 +410,46 @@ void nx_float_image_spline_coeff_of(struct NXFloatImage *fimg, const struct NXIm
                                  fimg->data, fimg->row_stride,
                                  img->data, img->row_stride);
 
+}
+
+void nx_float_image_transform_affine(struct NXImage *dest, const struct NXFloatImage *src_coeff,
+                                     const float *t_src2dest, enum NXImageWarpBackgroundMode bg_mode)
+{
+        NX_ASSERT_PTR(src_coeff);
+        NX_ASSERT_PTR(dest);
+        NX_FLOAT_IMAGE_ASSERT_GRAYSCALE(src_coeff);
+        NX_IMAGE_ASSERT_GRAYSCALE(dest);
+
+        float t_dest2src[9];
+        nx_mat3_inv_sd(t_dest2src, t_src2dest);
+
+        float nrm_f = 1.0f / t_dest2src[8];
+        for (int i = 0; i < 9; ++i)
+                t_dest2src[i] *= nrm_f;
+
+        if (dest->data == NULL)
+                nx_image_resize(dest, src_coeff->width, src_coeff->height, 0, NX_IMAGE_GRAYSCALE);
+
+        nx_image_warp_affine_spline(dest->width, dest->height, dest->data, dest->row_stride,
+                                    src_coeff->width, src_coeff->height, src_coeff->data, src_coeff->row_stride,
+                                    t_dest2src, bg_mode);
+}
+
+void nx_float_image_transform_affine_prm(struct NXImage *dest, const struct NXFloatImage *src_coeff,
+                                         float lambda, float psi, float theta, float phi,
+                                         enum NXImageWarpBackgroundMode bg_mode)
+{
+        NX_ASSERT_PTR(src_coeff);
+        NX_ASSERT_PTR(dest);
+        NX_FLOAT_IMAGE_ASSERT_GRAYSCALE(src_coeff);
+        NX_IMAGE_ASSERT_GRAYSCALE(dest);
+
+        if (dest->data == NULL)
+                nx_image_resize(dest, src_coeff->width, src_coeff->height, 0, NX_IMAGE_GRAYSCALE);
+
+        float t_src2dest[9];
+        nx_transform_2d_fill_affine_s(t_src2dest, dest->width / 2, dest->height / 2, lambda,
+                                      psi, theta, phi, -src_coeff->width / 2, -src_coeff->height / 2);
+
+        nx_float_image_transform_affine(dest, src_coeff, t_src2dest, bg_mode);
 }

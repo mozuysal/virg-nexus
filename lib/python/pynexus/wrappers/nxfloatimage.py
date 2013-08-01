@@ -4,9 +4,16 @@ import pynexus as _NX
 import pynexus.image as _Img
 import pynexus.float_image as _FImg
 
+from pynexus.image_warp import BLACK as NX_FLOAT_IMAGE_BG_MODE_BLACK
+from pynexus.image_warp import REPEAT as NX_FLOAT_IMAGE_BG_MODE_REPEAT
+from pynexus.image_warp import MIRROR as NX_FLOAT_IMAGE_BG_MODE_MIRROR
+from pynexus.image_warp import NOISE as NX_FLOAT_IMAGE_BG_MODE_NOISE
+from pynexus.image_warp import WHITE as NX_FLOAT_IMAGE_BG_MODE_WHITE
+
 from pynexus.wrappers.nximage import *
 
-__all__ = [ "NXFloatImage" ]
+__all__ = [ "NXFloatImage", "NX_FLOAT_IMAGE_BG_MODE_BLACK", "NX_FLOAT_IMAGE_BG_MODE_REPEAT", "NX_FLOAT_IMAGE_BG_MODE_MIRROR",
+            "NX_FLOAT_IMAGE_BG_MODE_NOISE", "NX_FLOAT_IMAGE_BG_MODE_WHITE" ]
 
 _POINTER = _C.POINTER
 _c_ubyte = _C.c_ubyte
@@ -126,6 +133,23 @@ class NXFloatImage(object):
     def spline_coeff_of(self, img):
         ptr = NXImage.ptr_of(img)
         _FImg.spline_coeff_of(self.__ptr, ptr)
+
+    def transform_affine(self, tm, bg_mode, res_img=None):
+        ta = _c_float * 9;
+        for i in xrange(9):
+            ta[i] = tm[i]
+        if res_img is None:
+            res_img = NXImage()
+        res_ptr = NXImage.ptr_of(res_img)
+        _FImg.transform_affine(res_ptr, self.__ptr, ta, bg_mode)
+        return res_img
+
+    def transform_affine_prm(self, scale, psi, theta, phi, bg_mode, res_img=None):
+        if res_img is None:
+            res_img = NXImage()
+        res_ptr = NXImage.ptr_of(res_img)
+        _FImg.transform_affine_prm(res_ptr, self.__ptr, scale, psi, theta, phi, bg_mode)
+        return res_img
 
     @staticmethod
     def ptr_of(fimg):

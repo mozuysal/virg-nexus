@@ -15,6 +15,7 @@
 
 #include "virg/nexus/nx_config.h"
 #include "virg/nexus/nx_types.h"
+#include "virg/nexus/nx_image_warp.h"
 
 __NX_BEGIN_DECL
 
@@ -63,6 +64,13 @@ float *nx_float_image_filter_buffer_alloc(int width, int height, float sigma_x, 
 void nx_float_image_smooth_s(struct NXFloatImage *dest, const struct NXFloatImage *src,
                              float sigma_x, float sigma_y, float *filter_buffer);
 
+void nx_float_image_transform_affine(struct NXImage *dest, const struct NXFloatImage *src_coeff,
+                                     const float *t_src2dest, enum NXImageWarpBackgroundMode bg_mode);
+
+void nx_float_image_transform_affine_prm(struct NXImage *dest, const struct NXFloatImage *src_coeff,
+                                         float lambda, float psi, float theta, float phi,
+                                         enum NXImageWarpBackgroundMode bg_mode);
+
 void nx_float_image_xsave_raw(const struct NXFloatImage *fimg, const char *filename);
 
 void nx_float_image_xload_raw(struct NXFloatImage *fimg, const char *filename);
@@ -75,7 +83,7 @@ struct NXFloatImage *nx_float_image_from_uchar0(const struct NXImage *img);
 
 void nx_float_image_from_uchar(struct NXFloatImage *fimg, const struct NXImage *img);
 
-void nx_float_image_to_uchar(const struct NXFloatImage *fimg, struct NXImage *img);
+void nx_float_image_to_uchar(struct NXImage *img, const struct NXFloatImage *fimg);
 
 void nx_float_image_spline_coeff_of(struct NXFloatImage *fimg, const struct NXImage *img);
 

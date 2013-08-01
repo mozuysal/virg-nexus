@@ -39,16 +39,33 @@ static struct NXUniformSampler *g_uniform_sampler = NULL;
 
 struct NXUniformSampler *nx_uniform_sampler_instance()
 {
-        if (!g_uniform_sampler)
+        if (!g_uniform_sampler) {
                 g_uniform_sampler = nx_uniform_sampler_new();
+        }
 
         return g_uniform_sampler;
 }
 
-struct NXUniformSampler *nx_uniform_sampler_new()
+struct NXUniformSampler *nx_uniform_sampler_alloc()
 {
         struct NXUniformSampler *sampler = NX_NEW(1, struct NXUniformSampler);
         sampler->state = sfmt_new();
+
+        return sampler;
+}
+
+struct NXUniformSampler *nx_uniform_sampler_new()
+{
+        struct NXUniformSampler *sampler = nx_uniform_sampler_alloc();
+        nx_uniform_sampler_init_time(sampler);
+
+        return sampler;
+}
+
+struct NXUniformSampler *nx_uniform_sampler_new_with_seed(uint32_t seed)
+{
+        struct NXUniformSampler *sampler = nx_uniform_sampler_alloc();
+        nx_uniform_sampler_init_seed(sampler, seed);
 
         return sampler;
 }

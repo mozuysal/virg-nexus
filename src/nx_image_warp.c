@@ -15,6 +15,7 @@
 #include <float.h>
 
 #include "virg/nexus/nx_assert.h"
+#include "virg/nexus/nx_message.h"
 #include "virg/nexus/nx_spline.h"
 #include "virg/nexus/nx_uniform_sampler.h"
 
@@ -36,12 +37,18 @@ void nx_image_warp_affine_bilinear(int dest_w, int dest_h, uchar *dest, int dest
                 bg_fixed = 255;
 
         const float *t = t_dest2src;
-        float xp = t[6];
-        float yp = t[7];
-        for (int y = 0; y < dest_h; ++y, xp += t[4], yp += t[4]) {
+        for (int y = 0; y < dest_h; ++y) {
                 uchar *drow = dest + y*dest_stride;
 
+                float xp = y*t[3] + t[6];
+                float yp = y*t[4] + t[7];
                 for (int x = 0; x < dest_w; ++x, xp += t[0], yp += t[1]) {
+
+                        /* if (x == 256 && y == 256) { */
+                                /* nx_error("NXDBG", "(x, y) -> (xp, yp): (%d, %d) -> (%.4f, %.4f)\n", */
+                                         /* x, y, xp, yp); */
+                        /* } */
+
                         int xpi = xp;
                         int ypi = yp;
 
@@ -97,8 +104,8 @@ void nx_image_warp_affine_bilinear(int dest_w, int dest_h, uchar *dest, int dest
                                 }
 
                                 if (idy[0] < 0) {
-                                        if (idy[0] < 0) idx[0] =  -idy[0] - H2 * (-idy[0] / H2);
-                                        if (idy[1] < 0) idx[1] =  -idy[1] - H2 * (-idy[1] / H2);
+                                        if (idy[0] < 0) idy[0] =  -idy[0] - H2 * (-idy[0] / H2);
+                                        if (idy[1] < 0) idy[1] =  -idy[1] - H2 * (-idy[1] / H2);
                                 } else if (idy[0] >= LAST_Y) {
                                         if (idy[0] >= src_h) idy[0] = H2 - idy[0] - H2 * (idy[0] / H2);
                                         if (idy[1] >= src_h) idy[1] = H2 - idy[1] - H2 * (idy[1] / H2);
@@ -133,11 +140,11 @@ void nx_image_warp_affine_spline(int dest_w, int dest_h, uchar *dest, int dest_s
                 bg_fixed = 255;
 
         const float *t = t_dest2src;
-        float xp = t[6];
-        float yp = t[7];
-        for (int y = 0; y < dest_h; ++y, xp += t[4], yp += t[4]) {
+        for (int y = 0; y < dest_h; ++y) {
                 uchar *drow = dest + y*dest_stride;
 
+                float xp = y*t[3] + t[6];
+                float yp = y*t[4] + t[7];
                 for (int x = 0; x < dest_w; ++x, xp += t[0], yp += t[1]) {
                         int xpi = xp;
                         int ypi = yp;

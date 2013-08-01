@@ -3,7 +3,14 @@ import ctypes as _C
 import pynexus as _NX
 import pynexus.image as _Img
 
-__all__ = [ "NXImage", "NX_IMAGE_GRAYSCALE", "NX_IMAGE_RGBA", "NX_IMAGE_LOAD_AS_IS", "NX_IMAGE_LOAD_GRAYSCALE", "NX_IMAGE_LOAD_RGBA" ]
+from pynexus.image_warp import BLACK as NX_IMAGE_BG_MODE_BLACK
+from pynexus.image_warp import REPEAT as NX_IMAGE_BG_MODE_REPEAT
+from pynexus.image_warp import MIRROR as NX_IMAGE_BG_MODE_MIRROR
+from pynexus.image_warp import NOISE as NX_IMAGE_BG_MODE_NOISE
+from pynexus.image_warp import WHITE as NX_IMAGE_BG_MODE_WHITE
+
+__all__ = [ "NXImage", "NX_IMAGE_GRAYSCALE", "NX_IMAGE_RGBA", "NX_IMAGE_LOAD_AS_IS", "NX_IMAGE_LOAD_GRAYSCALE", "NX_IMAGE_LOAD_RGBA",
+            "NX_IMAGE_BG_MODE_BLACK", "NX_IMAGE_BG_MODE_REPEAT", "NX_IMAGE_BG_MODE_MIRROR", "NX_IMAGE_BG_MODE_NOISE", "NX_IMAGE_BG_MODE_WHITE" ]
 
 _POINTER = _C.POINTER
 _c_ubyte = _C.c_ubyte
@@ -152,6 +159,23 @@ class NXImage(object):
         img = NXImage(1, 1, image_type)
         _Img.convert(img.__ptr, self.__ptr)
         return img
+
+    def transform_affine(self, tm, bg_mode, res_img=None):
+        ta = _c_float * 9;
+        for i in xrange(9):
+            ta[i] = tm[i]
+        if res_img is None:
+            res_img = NXImage()
+        res_ptr = NXImage.ptr_of(res_img)
+        _Img.transform_affine(res_ptr, self.__ptr, ta, bg_mode)
+        return res_img
+
+    def transform_affine_prm(self, scale, psi, theta, phi, bg_mode, res_img=None):
+        if res_img is None:
+            res_img = NXImage()
+        res_ptr = NXImage.ptr_of(res_img)
+        _Img.transform_affine_prm(res_ptr, self.__ptr, scale, psi, theta, phi, bg_mode)
+        return res_img
 
     @staticmethod
     def n_channels_by_type(image_type):

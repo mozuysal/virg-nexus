@@ -15,6 +15,7 @@
 
 #include "virg/nexus/nx_config.h"
 #include "virg/nexus/nx_types.h"
+#include "virg/nexus/nx_image_warp.h"
 
 __NX_BEGIN_DECL
 
@@ -88,6 +89,13 @@ void nx_image_smooth_si(struct NXImage *dest, const struct NXImage *src,
 
 void nx_image_smooth_s(struct NXImage *dest, const struct NXImage *src,
                        float sigma_x, float sigma_y, uchar *filter_buffer);
+
+void nx_image_transform_affine(struct NXImage *dest, const struct NXImage *src,
+                               const float *t_src2dest, enum NXImageWarpBackgroundMode bg_mode);
+
+void nx_image_transform_affine_prm(struct NXImage *dest, const struct NXImage *src,
+                                   float lambda, float psi, float theta, float phi,
+                                   enum NXImageWarpBackgroundMode bg_mode);
 
 void nx_image_xsave_pnm(const struct NXImage *img, const char *filename);
 
