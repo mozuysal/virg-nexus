@@ -85,6 +85,11 @@ class NXImage(object):
         value = _NX.uchar(value)
         self.__ptr.contents.data[stride*y+x] = value
 
+    def sample_bilinear(self, xs, ys):
+        xf = _c_float(xs)
+        yf = _c_float(ys)
+        return _Img.sample_bilinear(self.__ptr, xf, yf)
+
     def resize(self, w, h, image_type):
         _Img.resize(self.__ptr, w, h, NXImage.n_channels_by_type(image_type)*w, image_type)
 

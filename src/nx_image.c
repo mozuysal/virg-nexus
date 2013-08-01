@@ -508,6 +508,57 @@ void nx_image_transform_affine_prm(struct NXImage *dest, const struct NXImage *s
         nx_image_transform_affine(dest, src, t_src2dest, bg_mode);
 }
 
+uchar nx_image_sample_bilinear(const struct NXImage *img, float xs, float ys)
+{
+        NX_ASSERT_PTR(img);
+        NX_ASSERT_PTR(img->data);
+
+        int xsi = xs;
+        int ysi = ys;
+
+        float u = xs-xsi;
+        float v = ys-ysi;
+        float up = 1.0f - u;
+        float vp = 1.0f - v;
+
+        int idx[2] = { xsi, xsi + 1};
+        int idy[2] = { ysi, ysi + 1};
+
+        // Mirror out of bound coordinates
+        const int LAST_X = img->width - 1;
+        const int LAST_Y = img->height - 1;
+        if (idx[0] < 0) {
+                const int W2 = img->width * 2 - 2;
+                if (idx[0] < 0) idx[0] =  -idx[0] - W2 * (-idx[0] / W2);
+                if (idx[1] < 0) idx[1] =  -idx[1] - W2 * (-idx[1] / W2);
+        } else if (idx[0] >= LAST_X) {
+                const int W2 = img->width * 2 - 2;
+                if (idx[0] >= img->width) idx[0] = W2 - idx[0] - W2 * (idx[0] / W2);
+                if (idx[1] >= img->width) idx[1] = W2 - idx[1] - W2 * (idx[1] / W2);
+        }
+
+        if (idy[0] < 0) {
+                const int H2 = img->height * 2 - 2;
+                if (idy[0] < 0) idy[0] =  -idy[0] - H2 * (-idy[0] / H2);
+                if (idy[1] < 0) idy[1] =  -idy[1] - H2 * (-idy[1] / H2);
+        } else if (idy[0] >= LAST_Y) {
+                const int H2 = img->height * 2 - 2;
+                if (idy[0] >= img->height) idy[0] = H2 - idy[0] - H2 * (idy[0] / H2);
+                if (idy[1] >= img->height) idy[1] = H2 - idy[1] - H2 * (idy[1] / H2);
+        }
+
+        const uchar *p0 = img->data + idy[0]*img->row_stride;
+        const uchar *p1 = img->data + idy[1]*img->row_stride;
+
+        short I = vp*(up*p0[idx[0]] + u*p0[idx[1]])
+                + v*(up*p1[idx[0]] + u*p1[idx[1]]);
+
+        if (I < 0) I = 0;
+        else if (I > 255) I = 255;
+
+        return I;
+}
+
 static NXResult save_as_pnm(const struct NXImage *img, FILE *pnm)
 {
        if (img->type == NX_IMAGE_GRAYSCALE) {

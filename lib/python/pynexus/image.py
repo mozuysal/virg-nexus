@@ -10,6 +10,7 @@ _nexus = _NX._nexus
 _POINTER = _C.POINTER
 _c_ubyte = _C.c_ubyte
 _c_int = _C.c_int
+_c_short = _C.c_short
 _c_size_t = _C.c_size_t
 _c_float = _C.c_float
 _c_char_p = _C.c_char_p
@@ -121,6 +122,10 @@ transform_affine.argtypes = [Ptr, Ptr, _POINTER(_c_float), _BGMode]
 transform_affine_prm = _nexus.nx_image_transform_affine_prm
 transform_affine_prm.restype = None
 transform_affine_prm.argtypes = [Ptr, Ptr, _c_float, _c_float, _c_float, _c_float, _BGMode]
+
+sample_bilinear = _nexus.nx_image_sample_bilinear
+sample_bilinear.restype = _NX.uchar
+sample_bilinear.argtypes = [Ptr, _c_float, _c_float]
 
 xsave_pnm = _nexus.nx_image_xsave_pnm
 xsave_pnm.argtypes = [Ptr, _c_char_p]

@@ -97,6 +97,8 @@ void nx_image_transform_affine_prm(struct NXImage *dest, const struct NXImage *s
                                    float lambda, float psi, float theta, float phi,
                                    enum NXImageWarpBackgroundMode bg_mode);
 
+uchar nx_image_sample_bilinear(const struct NXImage *img, float xs, float ys);
+
 void nx_image_xsave_pnm(const struct NXImage *img, const char *filename);
 
 void nx_image_xload_pnm(struct NXImage *img, const char *filename, enum NXImageLoadMode mode);
