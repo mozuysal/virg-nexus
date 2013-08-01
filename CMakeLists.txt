@@ -127,6 +127,15 @@ if (DOXYGEN_FOUND)
     COMMENT "Generating API documentation with Doxygen" VERBATIM)
 endif(DOXYGEN_FOUND)
 
+
+# --------------------------------- blas/lapack ----------------------------------
+set (LAPACK_LIBRARY_DIRS "")
+set (LAPACK_LIBRARIES "-llapack -lblas")
+set (LAPACK_INCLUDE_DIR "")
+
+include_directories(${LAPACK_INCLUDE_DIR})
+link_directories(${LAPACK_LIBRARY_DIRS})
+
 # --------------------------------- Goggle Test ----------------------------------
 if (CMAKE_USE_PTHREADS_INIT)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGTEST_HAS_PTHREAD=1")
