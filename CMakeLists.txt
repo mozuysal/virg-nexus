@@ -26,6 +26,7 @@ set(virg_nexus_SOURCES
   src/fast/fast_9.c
   src/fast/fast_nonmax.c
   src/nx_fast_detector.c
+  src/nx_brief_extractor.c
 )
 
 set(virg_nexus_HEADERS
@@ -47,6 +48,7 @@ set(virg_nexus_HEADERS
   include/virg/nexus/nx_colorspace.h
   include/virg/nexus/nx_keypoint.h
   include/virg/nexus/nx_fast_detector.h
+  include/virg/nexus/nx_brief_extractor.h
 )
 
 if (NOT VIRG_NEXUS_ANDROID)
