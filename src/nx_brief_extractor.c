@@ -79,7 +79,7 @@ void nx_brief_extractor_resize(struct NXBriefExtractor *be, int n_octets, int ra
         nx_brief_extractor_randomize(be);
 }
 
-static void nx_brief_extractor_update_limits(struct NXBriefExtractor *be)
+void nx_brief_extractor_update_limits(struct NXBriefExtractor *be)
 {
         be->offset_limits[0] = INT_MAX; // x_min
         be->offset_limits[1] = -INT_MAX; // x_max
@@ -213,8 +213,7 @@ void nx_brief_extractor_compute_pyr(struct NXBriefExtractor *be, const struct NX
         }
 }
 
-// static look-up table for bit counts of all possible values
-// of a byte
+// static look-up table for bit counts of all possible values of a byte
 static const uchar OCTET_BIT_COUNT_TABLE[256] = {
         0, 1, 1, 2, 1, 2, 2, 3,
         1, 2, 2, 3, 2, 3, 3, 4,
