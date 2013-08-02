@@ -46,6 +46,12 @@ struct NXUniformSampler *nx_uniform_sampler_instance()
         return g_uniform_sampler;
 }
 
+void nx_uniform_sampler_instance_free()
+{
+        nx_uniform_sampler_free(g_uniform_sampler);
+        g_uniform_sampler = NULL;
+}
+
 struct NXUniformSampler *nx_uniform_sampler_alloc()
 {
         struct NXUniformSampler *sampler = NX_NEW(1, struct NXUniformSampler);

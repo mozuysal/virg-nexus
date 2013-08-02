@@ -22,6 +22,8 @@ struct NXUniformSampler;
 
 struct NXUniformSampler *nx_uniform_sampler_instance();
 
+void nx_uniform_sampler_instance_free();
+
 struct NXUniformSampler *nx_uniform_sampler_alloc();
 
 struct NXUniformSampler *nx_uniform_sampler_new();

@@ -167,6 +167,7 @@ set(test_SOURCES
   tests/tests_image_pyr.cc
   tests/tests_float_image.cc
   tests/tests_fast_detector.cc
+  tests/tests_brief_extractor.cc
 )
 
 set(VIRG_NEXUS_TEST_DATA_PATH "${CMAKE_SOURCE_DIR}/tests/data")

@@ -145,7 +145,7 @@ NXBool nx_brief_extractor_check_point_pyr(struct NXBriefExtractor *be, const str
         NX_ASSERT_PTR(pyr);
 
         int sample_level = level + be->pyr_level_offset;
-        if (pyr->n_levels <= sample_level)
+        if (sample_level >= pyr->n_levels)
                 return NX_FALSE;
 
         int width  = pyr->levels[sample_level].img->width;
@@ -186,6 +186,7 @@ void nx_brief_extractor_compute_pyr(struct NXBriefExtractor *be, const struct NX
 
                 uchar I0 = img->data[img->row_stride * sample_y0 + sample_x0];
                 uchar I1 = img->data[img->row_stride * sample_y1 + sample_x1];
+                //printf("Test %2d: I0 = %4d I1 = %4d\n", i*8, ((int)I0)-15, ((int)I1)-15);
 
                 if (I0 > I1)
                         *desc = 1;
@@ -204,6 +205,7 @@ void nx_brief_extractor_compute_pyr(struct NXBriefExtractor *be, const struct NX
 
                         I0 = img->data[img->row_stride * sample_y0 + sample_x0];
                         I1 = img->data[img->row_stride * sample_y1 + sample_x1];
+                        //printf("Test %2d: I0 = %4d I1 = %4d\n", i*8+j, ((int)I0)-15, ((int)I1)-15);
 
                         if (I0 > I1)
                                 *desc |= 1;
