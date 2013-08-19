@@ -4,11 +4,11 @@ import pynexus as _NX
 import pynexus.image as _Img
 import pynexus.float_image as _FImg
 
-from pynexus.image_warp import BLACK as NX_FLOAT_IMAGE_BG_MODE_BLACK
-from pynexus.image_warp import REPEAT as NX_FLOAT_IMAGE_BG_MODE_REPEAT
-from pynexus.image_warp import MIRROR as NX_FLOAT_IMAGE_BG_MODE_MIRROR
-from pynexus.image_warp import NOISE as NX_FLOAT_IMAGE_BG_MODE_NOISE
-from pynexus.image_warp import WHITE as NX_FLOAT_IMAGE_BG_MODE_WHITE
+from pynexus.image_warp import BLACK as _NX_FLOAT_IMAGE_BG_MODE_BLACK
+from pynexus.image_warp import REPEAT as _NX_FLOAT_IMAGE_BG_MODE_REPEAT
+from pynexus.image_warp import MIRROR as _NX_FLOAT_IMAGE_BG_MODE_MIRROR
+from pynexus.image_warp import NOISE as _NX_FLOAT_IMAGE_BG_MODE_NOISE
+from pynexus.image_warp import WHITE as _NX_FLOAT_IMAGE_BG_MODE_WHITE
 
 from pynexus.wrappers.nximage import *
 
@@ -24,6 +24,13 @@ _c_char_p = _C.c_char_p
 
 class NXFloatImage(object):
     """Wrapper class for directly working with VIRG-Nexus floating point images"""
+
+    BG_MODE_BLACK = _NX_FLOAT_IMAGE_BG_MODE_BLACK
+    BG_MODE_REPEAT = _NX_FLOAT_IMAGE_BG_MODE_REPEAT
+    BG_MODE_MIRROR = _NX_FLOAT_IMAGE_BG_MODE_MIRROR
+    BG_MODE_NOISE = _NX_FLOAT_IMAGE_BG_MODE_NOISE
+    BG_MODE_WHITE = _NX_FLOAT_IMAGE_BG_MODE_WHITE
+
     def __init__(self, w = None, h = None, n_ch = 1):
         self.__ptr = _FImg.alloc()
         if w and h:
@@ -31,6 +38,9 @@ class NXFloatImage(object):
 
     def __del__(self):
         _FImg.free(self.__ptr)
+
+    def __len__(self):
+        return self.width * self.height * self.n_channels
 
     def __str__(self):
         return "<NXFloatImage: {}x{}x{}>".format(self.width, self.height, self.n_channels)

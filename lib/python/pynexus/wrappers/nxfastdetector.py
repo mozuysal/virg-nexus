@@ -20,6 +20,9 @@ class NXFastDetector(object):
         else:
             self.__ptr = _FD.alloc()
 
+    def __len__(self):
+        return self.n_keys
+
     def __del__(self):
         _FD.free(self.__ptr)
 

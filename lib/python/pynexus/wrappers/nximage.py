@@ -3,14 +3,13 @@ import ctypes as _C
 import pynexus as _NX
 import pynexus.image as _Img
 
-from pynexus.image_warp import BLACK as NX_IMAGE_BG_MODE_BLACK
-from pynexus.image_warp import REPEAT as NX_IMAGE_BG_MODE_REPEAT
-from pynexus.image_warp import MIRROR as NX_IMAGE_BG_MODE_MIRROR
-from pynexus.image_warp import NOISE as NX_IMAGE_BG_MODE_NOISE
-from pynexus.image_warp import WHITE as NX_IMAGE_BG_MODE_WHITE
+from pynexus.image_warp import BLACK as _NX_IMAGE_BG_MODE_BLACK
+from pynexus.image_warp import REPEAT as _NX_IMAGE_BG_MODE_REPEAT
+from pynexus.image_warp import MIRROR as _NX_IMAGE_BG_MODE_MIRROR
+from pynexus.image_warp import NOISE as _NX_IMAGE_BG_MODE_NOISE
+from pynexus.image_warp import WHITE as _NX_IMAGE_BG_MODE_WHITE
 
-__all__ = [ "NXImage", "NX_IMAGE_GRAYSCALE", "NX_IMAGE_RGBA", "NX_IMAGE_LOAD_AS_IS", "NX_IMAGE_LOAD_GRAYSCALE", "NX_IMAGE_LOAD_RGBA",
-            "NX_IMAGE_BG_MODE_BLACK", "NX_IMAGE_BG_MODE_REPEAT", "NX_IMAGE_BG_MODE_MIRROR", "NX_IMAGE_BG_MODE_NOISE", "NX_IMAGE_BG_MODE_WHITE" ]
+__all__ = [ "NXImage" ]
 
 _POINTER = _C.POINTER
 _c_ubyte = _C.c_ubyte
@@ -22,15 +21,21 @@ _c_char_p = _C.c_char_p
 _buffer_from_memory = _C.pythonapi.PyBuffer_FromMemory
 _buffer_from_memory.restype = _C.py_object
 
-NX_IMAGE_GRAYSCALE = _Img.GRAYSCALE
-NX_IMAGE_RGBA = _Img.RGBA
-
-NX_IMAGE_LOAD_AS_IS = _Img.LOAD_AS_IS
-NX_IMAGE_LOAD_GRAYSCALE = _Img.LOAD_GRAYSCALE
-NX_IMAGE_LOAD_RGBA = _Img.LOAD_RGBA
-
 class NXImage(object):
     """Wrapper class for directly working with VIRG-Nexus images"""
+    GRAYSCALE = _Img.GRAYSCALE
+    RGBA = _Img.RGBA
+
+    LOAD_AS_IS = _Img.LOAD_AS_IS
+    LOAD_GRAYSCALE = _Img.LOAD_GRAYSCALE
+    LOAD_RGBA = _Img.LOAD_RGBA
+
+    BG_MODE_BLACK = _NX_IMAGE_BG_MODE_BLACK
+    BG_MODE_REPEAT = _NX_IMAGE_BG_MODE_REPEAT
+    BG_MODE_MIRROR = _NX_IMAGE_BG_MODE_MIRROR
+    BG_MODE_NOISE = _NX_IMAGE_BG_MODE_NOISE
+    BG_MODE_WHITE = _NX_IMAGE_BG_MODE_WHITE
+
     def __init__(self, w = None, h = None, image_type = _Img.GRAYSCALE):
         self.__ptr = _Img.alloc()
         if w and h:
@@ -38,6 +43,9 @@ class NXImage(object):
 
     def __del__(self):
         _Img.free(self.__ptr)
+
+    def __len__(self):
+        return self.width * self.height * self.n_channels
 
     def __str__(self):
         return "<NXImage: {}x{}x{}>".format(self.width, self.height, self.n_channels)

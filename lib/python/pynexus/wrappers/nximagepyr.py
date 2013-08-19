@@ -5,7 +5,7 @@ import pynexus.image as _Img
 import pynexus.image_pyr as _Pyr
 from pynexus.wrappers.nximage import NXImage as _NXImg
 
-__all__ = [ "NXImagePyr", "NXImagePyrInfo", "NXImagePyrLevel", "NX_IMAGE_PYR_FAST", "NX_IMAGE_PYR_FINE", "NX_IMAGE_PYR_SCALED" ]
+__all__ = [ "NXImagePyr", "NXImagePyrInfo", "NXImagePyrLevel" ]
 
 _POINTER = _C.POINTER
 _c_ubyte = _C.c_ubyte
@@ -13,10 +13,6 @@ _c_int = _C.c_int
 _c_size_t = _C.c_size_t
 _c_float = _C.c_float
 _c_char_p = _C.c_char_p
-
-NX_IMAGE_PYR_FAST = _Pyr.FAST
-NX_IMAGE_PYR_FINE = _Pyr.FINE
-NX_IMAGE_PYR_SCALED = _Pyr.SCALED
 
 class NXImagePyrInfo(object):
     """Wrapper class for extracting information on VIRG-Nexus image pyramids"""
@@ -51,6 +47,12 @@ class NXImagePyrLevel(object):
         self.__pyr_ptr = NXImagePyr.ptr_of(pyr)
         self.level_id = level_id
 
+    def __len__(self):
+        img = self.img
+        if img:
+            return img.__len__()
+        return 0
+
     def __safe_get_prop(self, prop_name):
         if self.__pyr_ptr.contents.n_levels > self.level_id:
             return getattr(self.__pyr_ptr.contents.levels[self.level_id], prop_name)
@@ -72,11 +74,19 @@ class NXImagePyrLevel(object):
 
 class NXImagePyr(object):
     """Wrapper class for directly working with VIRG-Nexus image pyramids"""
+
+    FAST = _Pyr.FAST
+    FINE = _Pyr.FINE
+    SCALED = _Pyr.SCALED
+
     def __init__(self):
         self.__ptr = _Pyr.alloc()
 
     def __del__(self):
         _Pyr.free(self.__ptr)
+
+    def __len__(self):
+        return self.n_levels
 
     def __str__(self):
         return "<NXImagePyr: {} Levels>".format(self.n_levels)

@@ -21,6 +21,9 @@ class NXBriefExtractor(object):
     def __del__(self):
         _BE.free(self.__ptr)
 
+    def __len__(self):
+        return self.n_octets
+
     def __str__(self):
         return "<NXBriefExtractor: {} bits at radius {}>".format(self.n_octets * 8, self.radius);
 
