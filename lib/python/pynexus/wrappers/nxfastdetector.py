@@ -23,6 +23,12 @@ class NXFastDetector(object):
     def __len__(self):
         return self.n_keys
 
+    def __getitem__(self, index):
+        if (self.n_keys > index) and (index >= 0):
+            return self.keys[index]
+        else:
+            raise IndexError('Keypoint index {} is out of bounds, {} keypoints detected'.format(index, self.n_keys))
+
     def __del__(self):
         _FD.free(self.__ptr)
 
@@ -69,11 +75,11 @@ class NXFastDetector(object):
         _FD.detect(self.__ptr, img_ptr)
         return self.n_keys
 
-    def detect_pyr(self, pyr, max_n_keys = None):
+    def detect_pyr(self, pyr, max_n_keys = None, n_pyr_key_levels = -1):
         if max_n_keys is not None:
             self.resize(max_n_keys)
         pyr_ptr = _NXPyr.ptr_of(pyr)
-        _FD.detect_pyr(self.__ptr, pyr_ptr)
+        _FD.detect_pyr(self.__ptr, pyr_ptr, n_pyr_key_levels)
         return self.n_keys
 
     def set_ori_param(self, compute_p, radius):
@@ -86,6 +92,9 @@ class NXFastDetector(object):
     def adapt_threshold(self):
         _FD.adapt_threshold(self.__ptr)
         return self.threshold
+
+    def clone_keys(self):
+        return _Key.Struct.clone_keys(self.n_keys, self.keys)
 
     @staticmethod
     def ptr_of(detector):

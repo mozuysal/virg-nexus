@@ -27,9 +27,13 @@ using std::pow;
 
 namespace {
 
-const int TEST_WIDTH0 = 97;
-const int TEST_HEIGHT0 = 97;
-const int TEST_N_LEVELS = 3;
+// const int TEST_WIDTH0 = 97;
+// const int TEST_HEIGHT0 = 97;
+// const int TEST_N_LEVELS = 3;
+
+const int TEST_WIDTH0 = 921;
+const int TEST_HEIGHT0 = 614;
+const int TEST_N_LEVELS = 5;
 const int TEST_OCTAVES = 3;
 const int TEST_STEPS = 3;
 const float TEST_SCALE_F = 1.2f;
@@ -38,19 +42,24 @@ const float TEST_SIGMA0 = 1.5f;
 class NXImagePyrTest : public ::testing::Test {
 protected:
         NXImagePyrTest() {
+                img_ = NULL;
                 lena_ = NULL;
                 pyr0_ = NULL;
         }
 
         virtual void SetUp() {
+                img_ = nx_image_new_gray(TEST_WIDTH0, TEST_HEIGHT0);
+                nx_image_set_zero(img_);
                 lena_ = nx_image_alloc();
                 nx_image_xload_pnm(lena_, TEST_DATA_LENA_PPM, NX_IMAGE_LOAD_GRAYSCALE);
         }
 
         virtual void TearDown() {
+                nx_image_free(img_);
                 nx_image_free(lena_);
         }
 
+        struct NXImage *img_;
         struct NXImage *lena_;
         struct NXImagePyr *pyr0_;
 };
@@ -117,6 +126,26 @@ TEST_F(NXImagePyrTest, ImagePyrNewScaledFree) {
                 EXPECT_TRUE(NULL != pyr0_->levels[i].img);
                 EXPECT_EQ(static_cast<int>(TEST_WIDTH0 / pow(TEST_SCALE_F, i)), pyr0_->levels[i].img->width);
                 EXPECT_EQ(static_cast<int>(TEST_HEIGHT0 / pow(TEST_SCALE_F, i)), pyr0_->levels[i].img->height);
+                EXPECT_EQ(NX_IMAGE_GRAYSCALE, pyr0_->levels[i].img->type);
+        }
+
+        nx_image_pyr_free(pyr0_);
+}
+
+TEST_F(NXImagePyrTest, ImagePyrComputeFast) {
+        pyr0_ = nx_image_pyr_new_fast(img_->width, img_->height, TEST_N_LEVELS, TEST_SIGMA0);
+        nx_image_pyr_compute(pyr0_, img_);
+
+        EXPECT_TRUE(NULL != pyr0_);
+        EXPECT_TRUE(NULL != pyr0_->levels);
+        EXPECT_TRUE(NULL != pyr0_->work_img);
+        EXPECT_EQ(img_->width, pyr0_->info.fast.width0);
+        EXPECT_EQ(img_->height, pyr0_->info.fast.height0);
+        EXPECT_EQ(TEST_N_LEVELS, pyr0_->n_levels);
+        for (int i = 0; i < TEST_N_LEVELS; ++i) {
+                EXPECT_TRUE(NULL != pyr0_->levels[i].img);
+                EXPECT_EQ(img_->width / (1 << i), pyr0_->levels[i].img->width);
+                EXPECT_EQ(img_->height / (1 << i), pyr0_->levels[i].img->height);
                 EXPECT_EQ(NX_IMAGE_GRAYSCALE, pyr0_->levels[i].img->type);
         }
 

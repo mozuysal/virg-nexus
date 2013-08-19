@@ -90,7 +90,7 @@ TEST_F(NXFastDetectorTest, FastDetectorDetect) {
 
 TEST_F(NXFastDetectorTest, FastDetectorDetectPyr) {
         det_ = nx_fast_detector_new(TEST_MAX_N_KEYS, 0);
-        nx_fast_detector_detect_pyr(det_, pyr_);
+        nx_fast_detector_detect_pyr(det_, pyr_, -1);
         EXPECT_GE(TEST_MAX_N_KEYS, det_->n_keys);
         EXPECT_LT(0, det_->n_keys);
         nx_fast_detector_free(det_);

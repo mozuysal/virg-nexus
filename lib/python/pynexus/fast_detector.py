@@ -57,7 +57,7 @@ detect.argtypes = [Ptr, image.Ptr]
 
 detect_pyr = _nexus.nx_fast_detector_detect_pyr
 detect_pyr.restype = None
-detect_pyr.argtypes = [Ptr, image_pyr.Ptr]
+detect_pyr.argtypes = [Ptr, image_pyr.Ptr, _c_int]
 
 adapt_threshold = _nexus.nx_fast_detector_adapt_threshold
 adapt_threshold.restype = None

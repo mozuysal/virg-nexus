@@ -3,7 +3,7 @@ import ctypes as _C
 import pynexus as _NX
 import pynexus.brief_extractor as _BE
 
-import NXImagePyr
+from pynexus.wrappers.nximagepyr import NXImagePyr
 
 __all__ = [ "NXBriefExtractor" ]
 
@@ -53,7 +53,7 @@ class NXBriefExtractor(object):
 
     @pyr_level_offset.setter
     def pyr_level_offset(self, value):
-        return self.__ptr.contents.pyr_level_offset = value
+        self.__ptr.contents.pyr_level_offset = value
 
     def set_offsets(self, offsets):
         i = 0
@@ -67,6 +67,7 @@ class NXBriefExtractor(object):
 
     def resize(self, n_octets, radius):
         _BE.resize(self.__ptr, n_octets, radius)
+        self.desc_type = _NX.uchar * self.n_octets
 
     def randomize(self):
         _BE.randomize(self.__ptr)
@@ -77,7 +78,7 @@ class NXBriefExtractor(object):
     def check_point_pyr(self, pyr, x, y, level):
         pyr_ptr = NXImagePyr.ptr_of(pyr)
         res = _BE.check_point_pyr(self.__ptr, pyr_ptr, x, y, level)
-        if res == NX_True:
+        if res == _NX.TRUE:
             return True
         else:
             return False
@@ -91,7 +92,7 @@ class NXBriefExtractor(object):
             return False
 
     def new_desc_buffer(self):
-        return _NX.uchar * self.n_octets * 8
+        return self.desc_type()
 
     @staticmethod
     def ptr_of(be):

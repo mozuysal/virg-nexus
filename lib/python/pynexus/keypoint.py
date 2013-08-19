@@ -25,4 +25,16 @@ class Struct(_C.Structure):
         s = "<pynexus.keypoint.Struct: ({}, {}) scale: {}, sigma: {}, ori: {}, score: {}>"
         return s.format(self.x, self.y, self.scale, self.sigma, self.ori, self.score)
 
+    @staticmethod
+    def clone_keys(n_keys, keys):
+        if n_keys <= 0:
+            return None
+
+        key_array = Struct * n_keys
+        cpy = key_array()
+        _C.memmove(cpy, keys, n_keys * _C.sizeof(Struct))
+
+        return cpy
+
+
 Ptr = _POINTER(Struct)

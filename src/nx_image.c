@@ -451,8 +451,8 @@ void nx_image_smooth_s(struct NXImage *dest, const struct NXImage *src,
         nx_kernel_sym_gaussian_s(nk, kernel, sigma_y);
         for (int x = 0; x < dest->width; ++x) {
                 uchar *dest_col = dest->data + x;
-                nx_filter_copy_to_buffer_uc(dest->width, buffer, dest_col, dest->row_stride, nky / 2, NX_BORDER_MIRROR);
-                nx_convolve_sym_s_uc(dest->width, buffer, nk, kernel);
+                nx_filter_copy_to_buffer_uc(dest->height, buffer, dest_col, dest->row_stride, nky / 2, NX_BORDER_MIRROR);
+                nx_convolve_sym_s_uc(dest->height, buffer, nk, kernel);
                 for (int y = 0; y < dest->height; ++y)
                         dest_col[y*dest->row_stride] = buffer[y];
         }

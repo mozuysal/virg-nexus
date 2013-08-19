@@ -79,7 +79,7 @@ class NXImage(object):
         h = self.height
         stride = self.row_stride
         if (x < 0) or (x >= w) or (y < 0) or (y >= h):
-            return None
+            raise IndexError('get_pixel: Coordinate {},{} is out of bounds for {}x{} image!'.format(x, y, self.width, self.height))
         else:
             return self.__ptr.contents.data[stride*y+x]
 
@@ -88,7 +88,7 @@ class NXImage(object):
         h = self.height
         stride = self.row_stride
         if (x < 0) or (x >= w) or (y < 0) or (y >= h):
-            return
+            raise IndexError('set_pixel: Coordinate {},{} is out of bounds for {}x{} image!'.format(x, y, self.width, self.height))
 
         value = _NX.uchar(value)
         self.__ptr.contents.data[stride*y+x] = value

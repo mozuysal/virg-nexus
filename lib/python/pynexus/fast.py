@@ -21,7 +21,7 @@ score_keypoints.argtypes = [_c_int, keypoint.Ptr, image.Ptr, _c_int]
 
 detect_keypoints_pyr = _nexus.nx_fast_detect_keypoints_pyr
 detect_keypoints_pyr.restype = _c_int
-detect_keypoints_pyr.argtypes = [_c_int, keypoint.Ptr, _c_int, keypoint.Ptr, image_pyr.Ptr, _c_int]
+detect_keypoints_pyr.argtypes = [_c_int, keypoint.Ptr, _c_int, keypoint.Ptr, image_pyr.Ptr, _c_int, _c_int]
 
 suppress_keypoints = _nexus.nx_fast_suppress_keypoints
 suppress_keypoints.restype = _c_int

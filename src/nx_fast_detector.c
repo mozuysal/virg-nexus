@@ -63,7 +63,8 @@ void nx_fast_score_keypoints(int n_keys, struct NXKeypoint *keys,
 
 int nx_fast_detect_keypoints_pyr(int n_keys_supp_max, struct NXKeypoint *keys_supp,
                                  int n_keys_max, struct NXKeypoint *keys,
-                                 const struct NXImagePyr *pyr, int threshold)
+                                 const struct NXImagePyr *pyr, int threshold,
+                                 int n_pyr_key_levels)
 {
         NX_ASSERT(n_keys_supp_max >= 0);
         NX_ASSERT(n_keys_max >= 0);
@@ -76,10 +77,14 @@ int nx_fast_detect_keypoints_pyr(int n_keys_supp_max, struct NXKeypoint *keys_su
                 return 0;
         }
 
+        if (n_pyr_key_levels <= 0 || n_pyr_key_levels > pyr->n_levels) {
+                n_pyr_key_levels = pyr->n_levels;
+        }
+
         int n_keys_supp = 0;
         int n_level_keys_max = n_keys_supp_max;
         struct NXKeypoint *level_keys = keys_supp;
-        for (int i = pyr->n_levels-1; i >= 0 ; --i) {
+        for (int i = n_pyr_key_levels-1; i >= 0 ; --i) {
                 int n_level_keys = nx_fast_detect_keypoints(n_keys_max,
                                                             keys,
                                                             pyr->levels[i].img,
@@ -178,7 +183,7 @@ struct NXFastDetector *nx_fast_detector_alloc()
         struct NXFastDetector *detector = NX_NEW(1, struct NXFastDetector);
 
         detector->max_n_keys = 0;
-        detector->threshold = 255;
+        detector->threshold = 15;
 
         detector->n_keys = 0;
         detector->keys = NULL;
@@ -218,7 +223,6 @@ void nx_fast_detector_resize(struct NXFastDetector *detector, int max_n_keys, in
         NX_ASSERT(max_n_keys > 0);
 
         detector->max_n_keys = max_n_keys;
-        detector->threshold = 15;
 
         detector->n_keys = 0;
         detector->keys = NX_NEW(max_n_keys, struct NXKeypoint);
@@ -292,15 +296,19 @@ void nx_fast_detector_detect(struct NXFastDetector *detector, const struct NXIma
                                                          img, detector->ic_data);
 }
 
-void nx_fast_detector_detect_pyr(struct NXFastDetector *detector, const struct NXImagePyr *pyr)
+void nx_fast_detector_detect_pyr(struct NXFastDetector *detector, const struct NXImagePyr *pyr, int n_pyr_key_levels)
 {
         NX_ASSERT_PTR(detector);
         NX_ASSERT_PTR(pyr);
 
+        if (n_pyr_key_levels <= 0 || n_pyr_key_levels > pyr->n_levels) {
+                n_pyr_key_levels = pyr->n_levels;
+        }
+
         int n_keys_supp = 0;
         int n_level_keys_max = detector->max_n_keys;
         struct NXKeypoint *level_keys = detector->keys;
-        for (int i = pyr->n_levels-1; i >= 0 ; --i) {
+        for (int i = n_pyr_key_levels-1; i >= 0 ; --i) {
                 int n_level_keys = nx_fast_detect_keypoints(detector->n_work,
                                                             detector->keys_work,
                                                             pyr->levels[i].img,

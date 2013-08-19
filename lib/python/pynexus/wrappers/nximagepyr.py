@@ -47,17 +47,31 @@ class NXImagePyrLevel(object):
         self.__pyr_ptr = NXImagePyr.ptr_of(pyr)
         self.level_id = level_id
 
+    def __str__(self):
+        return self.img.contents.__str__() + ' scale = {}'.format(self.scale)
+
     def __len__(self):
         img = self.img
         if img:
             return img.__len__()
         return 0
 
+    def __next__(self):
+        next_level_id = self.level_id + 1
+        if self.__pyr_ptr.contents.n_levels > next_level_id:
+            self.level_id = next_level_id
+            return self
+        else:
+            raise StopIteration
+
+    def next(self):
+        return self.__next__()
+
     def __safe_get_prop(self, prop_name):
         if self.__pyr_ptr.contents.n_levels > self.level_id:
             return getattr(self.__pyr_ptr.contents.levels[self.level_id], prop_name)
         else:
-            return None
+            raise IndexError('level index {} is no more valid for this pyramid!'.format(self.level_id))
 
     @property
     def img(self):
@@ -88,6 +102,12 @@ class NXImagePyr(object):
     def __len__(self):
         return self.n_levels
 
+    def __getitem__(self, index):
+        return self.level(index)
+
+    def __iter__(self):
+        return NXImagePyrLevel(self, -1)
+
     def __str__(self):
         return "<NXImagePyr: {} Levels>".format(self.n_levels)
 
@@ -115,7 +135,7 @@ class NXImagePyr(object):
         if (level_id >= 0) and (level_id < self.n_levels):
             return NXImagePyrLevel(self, level_id)
         else:
-            return None
+            raise IndexError('level: level index {} is out of bounds for {} level pyramid!'.format(level_id, self.n_levels))
 
     def resize_fast(self, width, height, n_levels, sigma0 = None):
         if sigma0 is None:
