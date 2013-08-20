@@ -94,6 +94,14 @@ class NXBriefExtractor(object):
     def new_desc_buffer(self):
         return self.desc_type()
 
+    def compute_pyr_for_keys(self, pyr, n_keys, keys):
+        desc_map = {}
+        for key in keys:
+            desc = self.new_desc_buffer()
+            if self.compute_pyr(pyr, key.x, key.y, key.level, desc):
+                desc_map[key.id] = desc
+        return desc_map
+
     @staticmethod
     def ptr_of(be):
         if isinstance(be, NXBriefExtractor):
