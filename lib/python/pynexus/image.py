@@ -79,6 +79,10 @@ wrap = _nexus.nx_image_wrap
 wrap.argtypes = [Ptr, _POINTER(_NX.uchar), _c_int, _c_int, _c_int, Type, _NX.Bool]
 wrap.restype = None
 
+sub_rect_of = _nexus.nx_image_sub_rect_of
+sub_rect_of.restype = None
+sub_rect_of.argtypes = [Ptr, Ptr, _c_int, _c_int, _c_int, _c_int]
+
 swap = _nexus.nx_image_swap
 swap.argtypes = [Ptr, Ptr]
 swap.restype = None

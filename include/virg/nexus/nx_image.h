@@ -70,6 +70,8 @@ void nx_image_set_zero(struct NXImage *img);
 void nx_image_wrap(struct NXImage *img, uchar *data, int width, int height,
                    int row_stride, enum NXImageType type, NXBool own_memory);
 
+void nx_image_sub_rect_of(struct NXImage *sub_rect, struct NXImage *img, int tl_x, int tl_y, int rect_width, int rect_height);
+
 void nx_image_swap(struct NXImage *img0, struct NXImage *img1);
 
 void nx_image_convert(struct NXImage *dest, const struct NXImage *src);

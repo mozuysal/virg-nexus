@@ -145,6 +145,19 @@ void nx_image_set_zero(struct NXImage *img)
         nx_mem_block_set_zero(img->mem);
 }
 
+void nx_image_sub_rect_of(struct NXImage *sub_rect, struct NXImage *img, int tl_x, int tl_y, int rect_width, int rect_height)
+{
+        NX_ASSERT_PTR(img);
+        NX_ASSERT_PTR(sub_rect);
+        NX_ASSERT(tl_x > 0);
+        NX_ASSERT(tl_y > 0);
+        NX_ASSERT(tl_x + rect_width <= img->width);
+        NX_ASSERT(tl_y + rect_height <= img->height);
+
+        nx_image_wrap(sub_rect, img->data + tl_y*img->row_stride + tl_x*img->n_channels,
+                      rect_width, rect_height, img->row_stride, img->type, NX_FALSE);
+}
+
 void nx_image_wrap(struct NXImage *img, uchar *data, int width, int height, int row_stride, enum NXImageType type, NXBool own_memory)
 {
         NX_ASSERT_PTR(img);

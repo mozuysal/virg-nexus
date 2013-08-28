@@ -96,7 +96,8 @@ class NXBriefExtractor(object):
 
     def compute_pyr_for_keys(self, pyr, n_keys, keys):
         desc_map = {}
-        for key in keys:
+        for i in xrange(n_keys):
+            key = keys[i]
             desc = self.new_desc_buffer()
             if self.compute_pyr(pyr, key.x, key.y, key.level, desc):
                 desc_map[key.id] = desc
@@ -112,3 +113,29 @@ class NXBriefExtractor(object):
     @staticmethod
     def descriptor_distance(n_octets, desc0, desc1):
         return _BE.descriptor_distance(n_octets, desc0, desc1)
+
+    @staticmethod
+    def match_brute_force(desc, desc_map):
+        n_octets = len(desc)
+
+        index = None
+        best_dist = n_octets * 16
+
+        for desc_id in desc_map:
+            dist = NXBriefExtractor.descriptor_distance(n_octets, desc, desc_map[desc_id])
+            if dist < best_dist:
+                best_dist = dist
+                index = desc_id
+
+        return (index, best_dist)
+
+    @staticmethod
+    def match_all_brute_force(desc_map0, desc_map1):
+        matches = {}
+
+        for desc_id0 in desc_map0:
+            desc0 = desc_map0[desc_id0]
+            matches[desc_id0] = NXBriefExtractor.match_brute_force(desc0, desc_map1)
+
+        return matches
+

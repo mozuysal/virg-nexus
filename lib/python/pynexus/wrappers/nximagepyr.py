@@ -157,17 +157,21 @@ class NXImagePyr(object):
 
     def compute(self, img):
         ptr = _NXImg.ptr_of(img)
+        if not (ptr.contents.type == _NXImg.GRAYSCALE): raise TypeError('Image must be grayscale!')
         _Pyr.compute(self.__ptr, ptr)
 
     def compute_fast(self, img, n_levels, sigma0 = None):
+        if not (_NXImg.ptr_of(img).contents.type == _NXImg.GRAYSCALE): raise TypeError('Image must be grayscale!')
         self.resize_fast(img.width, img.height, n_levels, sigma0)
         self.compute(img)
 
     def compute_fine(self, img, n_octaves, n_octave_steps, sigma0 = None):
+        if not (_NXImg.ptr_of(img).contents.type == _NXImg.GRAYSCALE): raise TypeError('Image must be grayscale!')
         self.resize_fine(img.width, img.height, n_octaves, n_octave_steps, sigma0)
         self.compute(img)
 
     def compute_scaled(self, img, n_levels, scale_f, sigma0 = None):
+        if not (_NXImg.ptr_of(img).contents.type == _NXImg.GRAYSCALE): raise TypeError('Image must be grayscale!')
         self.resize_scaled(img.width, img.height, n_levels, scale_f, sigma0)
         self.compute(img)
 

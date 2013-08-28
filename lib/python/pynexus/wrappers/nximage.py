@@ -74,11 +74,15 @@ class NXImage(object):
     def n_channels(self):
         return self.__ptr.contents.n_channels
 
+    @property
+    def data(self):
+        return self.__ptr.contents.data
+
     def get_pixel(self, x, y):
         w = self.width
         h = self.height
         stride = self.row_stride
-        if (x < 0) or (x >= w) or (y < 0) or (y >= h):
+        if not NXImage.is_inside(self, x, y):
             raise IndexError('get_pixel: Coordinate {},{} is out of bounds for {}x{} image!'.format(x, y, self.width, self.height))
         else:
             return self.__ptr.contents.data[stride*y+x]
@@ -87,7 +91,7 @@ class NXImage(object):
         w = self.width
         h = self.height
         stride = self.row_stride
-        if (x < 0) or (x >= w) or (y < 0) or (y >= h):
+        if not NXImage.is_inside(self, x, y):
             raise IndexError('set_pixel: Coordinate {},{} is out of bounds for {}x{} image!'.format(x, y, self.width, self.height))
 
         value = _NX.uchar(value)
@@ -125,6 +129,22 @@ class NXImage(object):
     def copy_of(self, img):
         ptr = NXImage.ptr_of(img)
         _Img.copy(self.__ptr, ptr)
+
+    def sub_rect(self, x, y, width, height):
+        if not NXImage.is_rect_inside(self, x, y, width, height):
+            raise IndexError('Sub-rectangle ({},{})-({}x{}) is out of image bounds ({}x{})!'.format(x, y, width, height,
+                                                                                                    self.width, self.height))
+
+        sub = NXImage()
+        _Img.sub_rect_of(sub.ptr, self.ptr, x, y, width, height)
+        return sub
+
+    def sub_rect_of(self, img, x, y, width, height):
+        ptr = NXImage.ptr_of(img)
+        if not NXImage.is_rect_inside(ptr, x, y, width, height):
+            raise IndexError('Sub-rectangle ({},{})-({}x{}) is out of image bounds ({}x{})!'.format(x, y, width, height,
+                                                                                                    ptr.contents.width, ptr.contents.height))
+        _Img.sub_rect_of(self.ptr, ptr, x, y, width, height)
 
     def swap(self, img):
         ptr = NXImage.ptr_of(img)
@@ -221,4 +241,24 @@ class NXImage(object):
             return img
         else:
             return None
+
+    @staticmethod
+    def is_inside(img, x, y):
+        ptr = NXImage.ptr_of(img)
+        w = ptr.contents.width
+        h = ptr.contents.height
+        if (x < 0) or (x >= w) or (y < 0) or (y >= h):
+            return False
+
+        return True
+
+    @staticmethod
+    def is_rect_inside(img, x, y, width, height):
+        ptr = NXImage.ptr_of(img)
+        w = ptr.contents.width
+        h = ptr.contents.height
+        if (x < 0) or (x + width > w) or (y < 0) or (y + height > h):
+            return False
+
+        return True
 
