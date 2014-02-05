@@ -12,8 +12,7 @@ from pynexus.image_warp import WHITE as _NX_FLOAT_IMAGE_BG_MODE_WHITE
 
 from pynexus.wrappers.nximage import *
 
-__all__ = [ "NXFloatImage", "NX_FLOAT_IMAGE_BG_MODE_BLACK", "NX_FLOAT_IMAGE_BG_MODE_REPEAT", "NX_FLOAT_IMAGE_BG_MODE_MIRROR",
-            "NX_FLOAT_IMAGE_BG_MODE_NOISE", "NX_FLOAT_IMAGE_BG_MODE_WHITE" ]
+__all__ = [ "NXFloatImage" ]
 
 _POINTER = _C.POINTER
 _c_ubyte = _C.c_ubyte
