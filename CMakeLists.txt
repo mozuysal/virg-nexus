@@ -41,6 +41,7 @@ set(virg_nexus_HEADERS
   include/virg/nexus/nx_spline.h
   include/virg/nexus/nx_transform_2d.h
   include/virg/nexus/nx_io.h
+  include/virg/nexus/nx_filter.h
   include/virg/nexus/nx_image.h
   include/virg/nexus/nx_image_warp.h
   include/virg/nexus/nx_image_pyr.h
