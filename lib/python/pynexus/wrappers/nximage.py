@@ -105,6 +105,9 @@ class NXImage(object):
     def resize(self, w, h, image_type):
         _Img.resize(self.__ptr, w, h, NXImage.n_channels_by_type(image_type)*w, image_type)
 
+    def release(self):
+        _Img.release(self.__ptr)
+
     def save_pnm(self, filename):
         res = _Img.save_pnm(self.__ptr, filename)
         if res == _NX.OK:
