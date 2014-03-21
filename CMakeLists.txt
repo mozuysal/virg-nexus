@@ -27,6 +27,7 @@ set(virg_nexus_SOURCES
   src/fast/fast_9.c
   src/fast/fast_nonmax.c
   src/nx_fast_detector.c
+  src/nx_keypoint_vector.c
   src/nx_brief_extractor.c
 )
 
@@ -39,6 +40,7 @@ set(virg_nexus_HEADERS
   include/virg/nexus/nx_mem_block.h
   include/virg/nexus/nx_uniform_sampler.h
   include/virg/nexus/nx_math.h
+  include/virg/nexus/nx_vector_gen.h
   include/virg/nexus/nx_spline.h
   include/virg/nexus/nx_transform_2d.h
   include/virg/nexus/nx_io.h
@@ -50,6 +52,7 @@ set(virg_nexus_HEADERS
   include/virg/nexus/nx_float_image.h
   include/virg/nexus/nx_colorspace.h
   include/virg/nexus/nx_keypoint.h
+  include/virg/nexus/nx_keypoint_vector.h
   include/virg/nexus/nx_fast_detector.h
   include/virg/nexus/nx_brief_extractor.h
 )

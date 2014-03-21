@@ -15,6 +15,7 @@
 
 #include "virg/nexus/nx_config.h"
 #include "virg/nexus/nx_keypoint.h"
+#include "virg/nexus/nx_keypoint_vector.h"
 #include "virg/nexus/nx_image.h"
 #include "virg/nexus/nx_image_pyr.h"
 
@@ -38,15 +39,10 @@ struct NXFastDetectorICData;
 
 struct NXFastDetector
 {
-        int max_n_keys;
         int threshold;
 
-        int n_keys;
-        struct NXKeypoint *keys;
-
-        int n_work;
-        struct NXKeypoint *keys_work;
-        struct NXMemBlock *mem;
+        struct NXKeypointVector *keys_work;
+        size_t work_multiplier;
 
         NXBool compute_ori;
         struct NXFastDetectorICData *ic_data;
@@ -54,19 +50,15 @@ struct NXFastDetector
 
 struct NXFastDetector *nx_fast_detector_alloc();
 
-struct NXFastDetector *nx_fast_detector_new(int max_n_keys, int initial_work_size);
-
 void nx_fast_detector_free(struct NXFastDetector *detector);
 
-void nx_fast_detector_resize(struct NXFastDetector *detector, int max_n_keys, int initial_work_size);
+int nx_fast_detector_detect(struct NXFastDetector *detector, int max_n_keys, struct NXKeypoint* keys, const struct NXImage *img);
 
-void nx_fast_detector_detect(struct NXFastDetector *detector, const struct NXImage *img);
-
-void nx_fast_detector_detect_pyr(struct NXFastDetector *detector, const struct NXImagePyr *pyr, int n_pyr_key_levels);
+int nx_fast_detector_detect_pyr(struct NXFastDetector *detector, int max_n_keys, struct NXKeypoint* keys, const struct NXImagePyr *pyr, int n_pyr_key_levels);
 
 void nx_fast_detector_set_ori_param(struct NXFastDetector *detector, NXBool compute_ori_p, int patch_radius);
 
-void nx_fast_detector_adapt_threshold(struct NXFastDetector *detector);
+void nx_fast_detector_adapt_threshold(struct NXFastDetector *detector, int n_keys, int max_n_keys);
 
 __NX_END_DECL
 

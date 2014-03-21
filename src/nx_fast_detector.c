@@ -182,15 +182,10 @@ struct NXFastDetector *nx_fast_detector_alloc()
 {
         struct NXFastDetector *detector = NX_NEW(1, struct NXFastDetector);
 
-        detector->max_n_keys = 0;
         detector->threshold = 15;
 
-        detector->n_keys = 0;
-        detector->keys = NULL;
-
-        detector->n_work = 0;
-        detector->keys_work = NULL;
-        detector->mem = nx_mem_block_alloc();
+        detector->keys_work = nx_keypoint_vector_alloc();
+        detector->work_multiplier = NX_FAST_DETECTOR_WORK_MULTIPLIER;
 
         detector->compute_ori = NX_FALSE;
         detector->ic_data = NULL;
@@ -198,41 +193,13 @@ struct NXFastDetector *nx_fast_detector_alloc()
         return detector;
 }
 
-struct NXFastDetector *nx_fast_detector_new(int max_n_keys, int initial_work_size)
-{
-        NX_ASSERT(max_n_keys > 0);
-
-        struct NXFastDetector *detector = nx_fast_detector_alloc();
-        nx_fast_detector_resize(detector, max_n_keys, initial_work_size);
-        return detector;
-}
-
 void nx_fast_detector_free(struct NXFastDetector *detector)
 {
         if (detector) {
-                nx_free(detector->keys);
-                nx_mem_block_free(detector->mem);
+                nx_keypoint_vector_free(detector->keys_work);
                 nx_fast_detector_ic_data_free(detector->ic_data);
                 nx_free(detector);
         }
-}
-
-void nx_fast_detector_resize(struct NXFastDetector *detector, int max_n_keys, int initial_work_size)
-{
-        NX_ASSERT_PTR(detector);
-        NX_ASSERT(max_n_keys > 0);
-
-        detector->max_n_keys = max_n_keys;
-
-        detector->n_keys = 0;
-        detector->keys = NX_NEW(max_n_keys, struct NXKeypoint);
-
-        if (initial_work_size <= 0)
-                initial_work_size = max_n_keys * NX_FAST_DETECTOR_WORK_MULTIPLIER;
-
-        detector->n_work = initial_work_size;
-        nx_mem_block_resize(detector->mem, detector->n_work * sizeof(struct NXKeypoint));
-        detector->keys_work = (struct NXKeypoint *)detector->mem->ptr;
 }
 
 static float nx_keypoint_ori_ic(const uchar *center, int n_offsets, const int *offsets, const int *offset_table)
@@ -274,52 +241,61 @@ static void nx_fast_detector_compute_keypoint_ori_ic(int n_keys, struct NXKeypoi
         nx_free(img_offsets);
 }
 
-void nx_fast_detector_detect(struct NXFastDetector *detector, const struct NXImage *img)
+int nx_fast_detector_detect(struct NXFastDetector *detector, int max_n_keys, struct NXKeypoint* keys, const struct NXImage *img)
 {
         NX_ASSERT_PTR(detector);
         NX_ASSERT_PTR(img);
+        NX_ASSERT_PTR(keys);
 
-        int n_keys = nx_fast_detect_keypoints(detector->n_work,
-                                              detector->keys_work,
+        size_t work_size = max_n_keys * detector->work_multiplier;
+        nx_keypoint_vector_resize(detector->keys_work, work_size);
+
+        int n_keys = nx_fast_detect_keypoints(detector->keys_work->size,
+                                              detector->keys_work->data,
                                               img, detector->threshold);
 
-        nx_fast_score_keypoints(n_keys, detector->keys_work,
+        nx_fast_score_keypoints(n_keys, detector->keys_work->data,
                                 img, detector->threshold);
 
 
-        detector->n_keys = nx_fast_suppress_keypoints(detector->max_n_keys,
-                                                      detector->keys,
-                                                      n_keys, detector->keys_work);
+        n_keys = nx_fast_suppress_keypoints(max_n_keys, keys,
+                                            n_keys, detector->keys_work->data);
 
         if (detector->compute_ori)
-                nx_fast_detector_compute_keypoint_ori_ic(detector->n_keys, detector->keys,
+                nx_fast_detector_compute_keypoint_ori_ic(n_keys, keys,
                                                          img, detector->ic_data);
+
+        return n_keys;
 }
 
-void nx_fast_detector_detect_pyr(struct NXFastDetector *detector, const struct NXImagePyr *pyr, int n_pyr_key_levels)
+int nx_fast_detector_detect_pyr(struct NXFastDetector *detector, int max_n_keys, struct NXKeypoint* keys, const struct NXImagePyr *pyr, int n_pyr_key_levels)
 {
         NX_ASSERT_PTR(detector);
         NX_ASSERT_PTR(pyr);
+        NX_ASSERT_PTR(keys);
+
+        size_t work_size = max_n_keys * detector->work_multiplier;
+        nx_keypoint_vector_resize(detector->keys_work, work_size);
 
         if (n_pyr_key_levels <= 0 || n_pyr_key_levels > pyr->n_levels) {
                 n_pyr_key_levels = pyr->n_levels;
         }
 
         int n_keys_supp = 0;
-        int n_level_keys_max = detector->max_n_keys;
-        struct NXKeypoint *level_keys = detector->keys;
+        int n_level_keys_max = max_n_keys;
+        struct NXKeypoint *level_keys = keys;
         for (int i = n_pyr_key_levels-1; i >= 0 ; --i) {
-                int n_level_keys = nx_fast_detect_keypoints(detector->n_work,
-                                                            detector->keys_work,
+                int n_level_keys = nx_fast_detect_keypoints(detector->keys_work->size,
+                                                            detector->keys_work->data,
                                                             pyr->levels[i].img,
                                                             detector->threshold);
 
-                nx_fast_score_keypoints(n_level_keys, detector->keys_work,
+                nx_fast_score_keypoints(n_level_keys, detector->keys_work->data,
                                         pyr->levels[i].img, detector->threshold);
 
 
                 n_level_keys = nx_fast_suppress_keypoints(n_level_keys_max, level_keys,
-                                                          n_level_keys, detector->keys_work);
+                                                          n_level_keys, detector->keys_work->data);
 
                 if (detector->compute_ori)
                         nx_fast_detector_compute_keypoint_ori_ic(n_level_keys, level_keys,
@@ -341,22 +317,22 @@ void nx_fast_detector_detect_pyr(struct NXFastDetector *detector, const struct N
                         break;
         }
 
-        detector->n_keys = n_keys_supp;
+        return n_keys_supp;
 }
 
-void nx_fast_detector_adapt_threshold(struct NXFastDetector *detector)
+void nx_fast_detector_adapt_threshold(struct NXFastDetector *detector, int n_keys, int max_n_keys)
 {
         NX_ASSERT_PTR(detector);
 
-        int lim_high      = (1014 * detector->max_n_keys) >> 10; // n > ~0.99*max
-        int lim_low       = ( 921 * detector->max_n_keys) >> 10; // n > ~0.90*max
-        int lim_very_low  = ( 716 * detector->max_n_keys) >> 10; // n > ~0.70*max
+        int lim_high      = (1014 * max_n_keys) >> 10; // n > ~0.99*max
+        int lim_low       = ( 921 * max_n_keys) >> 10; // n > ~0.90*max
+        int lim_very_low  = ( 716 * max_n_keys) >> 10; // n > ~0.70*max
 
-        if( detector->n_keys >= lim_high ) {
+        if( n_keys >= lim_high ) {
             detector->threshold = nx_min_i(250, detector->threshold + 3);
-        } else if( detector->n_keys <= lim_very_low ) {
+        } else if( n_keys <= lim_very_low ) {
             detector->threshold = nx_max_i(5, detector->threshold - 3);
-        } else if( detector->n_keys <= lim_low ) {
+        } else if( n_keys <= lim_low ) {
             detector->threshold = nx_max_i(5, detector->threshold - 1);
         }
 
