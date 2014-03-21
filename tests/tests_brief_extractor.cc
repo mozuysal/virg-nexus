@@ -23,6 +23,7 @@
 #include "virg/nexus/nx_alloc.h"
 #include "virg/nexus/nx_image.h"
 #include "virg/nexus/nx_image_pyr.h"
+#include "virg/nexus/nx_image_pyr_builder.h"
 #include "virg/nexus/nx_brief_extractor.h"
 #include "virg/nexus/nx_uniform_sampler.h"
 
@@ -84,22 +85,24 @@ protected:
                 nx_image_xload_pnm(lena_, TEST_DATA_LENA_PPM, NX_IMAGE_LOAD_GRAYSCALE);
 
                 desc_ = NX_NEW_UC(TEST_N_OCTETS);
+                builder_ = nx_image_pyr_builder_alloc();
         }
 
         virtual void TearDown() {
+                nx_image_pyr_builder_free(builder_);
                 nx_free(desc_);
                 nx_image_free(lena_);
                 nx_uniform_sampler_instance_free();
         }
 
         void SetUpPyramid0() {
-                pyr0_ = nx_image_pyr_new_fast(lena_->width, lena_->height, TEST_N_LEVELS, TEST_SIGMA0);
-                nx_image_pyr_compute(pyr0_, lena_);
+                nx_image_pyr_builder_set_fast(builder_, TEST_N_LEVELS, TEST_SIGMA0);
+                pyr0_ = nx_image_pyr_builder_build0(builder_, lena_);
         }
 
         void SetUpPyramid1() {
-                pyr1_ = nx_image_pyr_new_fine(lena_->width, lena_->height, TEST_OCTAVES, TEST_STEPS, TEST_SIGMA0);
-                nx_image_pyr_compute(pyr1_, lena_);
+                nx_image_pyr_builder_set_fine(builder_, TEST_OCTAVES, TEST_STEPS, TEST_SIGMA0);
+                pyr1_ = nx_image_pyr_builder_build0(builder_, lena_);
         }
 
         void TearDownPyramids() {
@@ -110,6 +113,7 @@ protected:
         struct NXImage *lena_;
         struct NXImagePyr *pyr0_;
         struct NXImagePyr *pyr1_;
+        struct NXImagePyrBuilder *builder_;
 
         uchar *desc_;
 
@@ -218,8 +222,8 @@ TEST_F(NXBriefExtractorTest, BriefExtractorComputePyrArtificial) {
                 memcpy(img->data + i*img->row_stride,
                        TEST_IMAGE_DATA + i*TEST_IMAGE_W,
                        TEST_IMAGE_W * sizeof(uchar));
-        pyr0_ = nx_image_pyr_new_fast(TEST_IMAGE_W, TEST_IMAGE_H, 1, 0);
-        nx_image_pyr_compute(pyr0_, img);
+        nx_image_pyr_builder_set_fast(builder_, 1, 0);
+        pyr0_ = nx_image_pyr_builder_build0(builder_, img);
         be_->pyr_level_offset = 0;
 
         EXPECT_TRUE(nx_brief_extractor_check_point_pyr(be_, pyr0_, 1, 1, 0));

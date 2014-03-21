@@ -22,6 +22,7 @@
 
 #include "virg/nexus/nx_image.h"
 #include "virg/nexus/nx_image_pyr.h"
+#include "virg/nexus/nx_image_pyr_builder.h"
 #include "virg/nexus/nx_fast_detector.h"
 
 using std::pow;
@@ -43,17 +44,19 @@ protected:
                 lena_ = nx_image_alloc();
                 nx_image_xload_pnm(lena_, TEST_DATA_LENA_PPM, NX_IMAGE_LOAD_GRAYSCALE);
 
-                pyr_ = nx_image_pyr_new_fast(lena_->width, lena_->height, TEST_N_LEVELS, TEST_SIGMA0);
-                nx_image_pyr_compute(pyr_, lena_);
+                builder_ = nx_image_pyr_builder_new_fast(TEST_N_LEVELS, TEST_SIGMA0);
+                pyr_ = nx_image_pyr_builder_build0(builder_, lena_);
         }
 
         virtual void TearDown() {
                 nx_image_pyr_free(pyr_);
+                nx_image_pyr_builder_free(builder_);
                 nx_image_free(lena_);
         }
 
         struct NXImage *lena_;
         struct NXImagePyr *pyr_;
+        struct NXImagePyrBuilder *builder_;
 
         struct NXFastDetector *det_;
 };

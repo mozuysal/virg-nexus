@@ -22,6 +22,7 @@
 
 #include "virg/nexus/nx_image.h"
 #include "virg/nexus/nx_image_pyr.h"
+#include "virg/nexus/nx_image_pyr_builder.h"
 
 using std::pow;
 
@@ -62,25 +63,30 @@ protected:
         struct NXImage *img_;
         struct NXImage *lena_;
         struct NXImagePyr *pyr0_;
+        struct NXImagePyrBuilder *builder0_;
 };
 
 TEST_F(NXImagePyrTest, ImagePyrAllocFree) {
         pyr0_ = nx_image_pyr_alloc();
         EXPECT_TRUE(NULL != pyr0_);
-        EXPECT_TRUE(NULL != pyr0_->work_img);
         EXPECT_EQ(0, pyr0_->n_levels);
         nx_image_pyr_free(pyr0_);
 }
 
+TEST_F(NXImagePyrTest, ImagePyrBuilderAllocFree) {
+        builder0_ = nx_image_pyr_builder_alloc();
+        EXPECT_TRUE(NULL != builder0_);
+        EXPECT_TRUE(NULL != builder0_->work_img);
+        nx_image_pyr_builder_free(builder0_);
+}
+
 TEST_F(NXImagePyrTest, ImagePyrNewFastFree) {
-        pyr0_ = nx_image_pyr_new_fast(TEST_WIDTH0, TEST_HEIGHT0, TEST_N_LEVELS, TEST_SIGMA0);
+        builder0_ = nx_image_pyr_builder_new_fast(TEST_N_LEVELS, TEST_SIGMA0);
+        pyr0_ = nx_image_pyr_alloc();
+        nx_image_pyr_builder_init_levels(builder0_, pyr0_, TEST_WIDTH0, TEST_HEIGHT0);
         EXPECT_TRUE(NULL != pyr0_);
         EXPECT_TRUE(NULL != pyr0_->levels);
-        EXPECT_TRUE(NULL != pyr0_->work_img);
-        EXPECT_EQ(TEST_WIDTH0, pyr0_->info.fast.width0);
-        EXPECT_EQ(TEST_HEIGHT0, pyr0_->info.fast.height0);
         EXPECT_EQ(TEST_N_LEVELS, pyr0_->n_levels);
-        EXPECT_EQ(TEST_SIGMA0, pyr0_->info.fast.sigma0);
         for (int i = 0; i < TEST_N_LEVELS; ++i) {
                 EXPECT_TRUE(NULL != pyr0_->levels[i].img);
                 EXPECT_EQ(TEST_WIDTH0 / (1 << i), pyr0_->levels[i].img->width);
@@ -89,18 +95,15 @@ TEST_F(NXImagePyrTest, ImagePyrNewFastFree) {
         }
 
         nx_image_pyr_free(pyr0_);
+        nx_image_pyr_builder_free(builder0_);
 }
 
 TEST_F(NXImagePyrTest, ImagePyrNewFineFree) {
-        pyr0_ = nx_image_pyr_new_fine(TEST_WIDTH0, TEST_HEIGHT0, TEST_OCTAVES, TEST_STEPS, TEST_SIGMA0);
+        builder0_ = nx_image_pyr_builder_new_fine(TEST_OCTAVES, TEST_STEPS, TEST_SIGMA0);
+        pyr0_ = nx_image_pyr_alloc();
+        nx_image_pyr_builder_init_levels(builder0_, pyr0_, TEST_WIDTH0, TEST_HEIGHT0);
         EXPECT_TRUE(NULL != pyr0_);
         EXPECT_TRUE(NULL != pyr0_->levels);
-        EXPECT_TRUE(NULL != pyr0_->work_img);
-        EXPECT_EQ(TEST_WIDTH0, pyr0_->info.fine.width0);
-        EXPECT_EQ(TEST_HEIGHT0, pyr0_->info.fine.height0);
-        EXPECT_EQ(TEST_OCTAVES, pyr0_->info.fine.n_octaves);
-        EXPECT_EQ(TEST_STEPS, pyr0_->info.fine.n_octave_steps);
-        EXPECT_EQ(TEST_SIGMA0, pyr0_->info.fine.sigma0);
         EXPECT_EQ(TEST_OCTAVES*TEST_STEPS, pyr0_->n_levels);
         for (int i = 0; i < TEST_N_LEVELS; ++i) {
                 EXPECT_TRUE(NULL != pyr0_->levels[i].img);
@@ -110,17 +113,15 @@ TEST_F(NXImagePyrTest, ImagePyrNewFineFree) {
         }
 
         nx_image_pyr_free(pyr0_);
+        nx_image_pyr_builder_free(builder0_);
 }
 
 TEST_F(NXImagePyrTest, ImagePyrNewScaledFree) {
-        pyr0_ = nx_image_pyr_new_scaled(TEST_WIDTH0, TEST_HEIGHT0, TEST_N_LEVELS, TEST_SCALE_F, TEST_SIGMA0);
+        builder0_ = nx_image_pyr_builder_new_scaled(TEST_N_LEVELS, TEST_SCALE_F, TEST_SIGMA0);
+        pyr0_ = nx_image_pyr_alloc();
+        nx_image_pyr_builder_init_levels(builder0_, pyr0_, TEST_WIDTH0, TEST_HEIGHT0);
         EXPECT_TRUE(NULL != pyr0_);
         EXPECT_TRUE(NULL != pyr0_->levels);
-        EXPECT_TRUE(NULL != pyr0_->work_img);
-        EXPECT_EQ(TEST_WIDTH0, pyr0_->info.scaled.width0);
-        EXPECT_EQ(TEST_HEIGHT0, pyr0_->info.scaled.height0);
-        EXPECT_EQ(TEST_SCALE_F, pyr0_->info.scaled.scale_factor);
-        EXPECT_EQ(TEST_SIGMA0, pyr0_->info.scaled.sigma0);
         EXPECT_EQ(TEST_N_LEVELS, pyr0_->n_levels);
         for (int i = 0; i < TEST_N_LEVELS; ++i) {
                 EXPECT_TRUE(NULL != pyr0_->levels[i].img);
@@ -130,17 +131,16 @@ TEST_F(NXImagePyrTest, ImagePyrNewScaledFree) {
         }
 
         nx_image_pyr_free(pyr0_);
+        nx_image_pyr_builder_free(builder0_);
 }
 
+
 TEST_F(NXImagePyrTest, ImagePyrComputeFast) {
-        pyr0_ = nx_image_pyr_new_fast(img_->width, img_->height, TEST_N_LEVELS, TEST_SIGMA0);
-        nx_image_pyr_compute(pyr0_, img_);
+        builder0_ = nx_image_pyr_builder_new_fast(TEST_N_LEVELS, TEST_SIGMA0);
+        pyr0_ = nx_image_pyr_builder_build0(builder0_, img_);
 
         EXPECT_TRUE(NULL != pyr0_);
         EXPECT_TRUE(NULL != pyr0_->levels);
-        EXPECT_TRUE(NULL != pyr0_->work_img);
-        EXPECT_EQ(img_->width, pyr0_->info.fast.width0);
-        EXPECT_EQ(img_->height, pyr0_->info.fast.height0);
         EXPECT_EQ(TEST_N_LEVELS, pyr0_->n_levels);
         for (int i = 0; i < TEST_N_LEVELS; ++i) {
                 EXPECT_TRUE(NULL != pyr0_->levels[i].img);
@@ -150,17 +150,15 @@ TEST_F(NXImagePyrTest, ImagePyrComputeFast) {
         }
 
         nx_image_pyr_free(pyr0_);
+        nx_image_pyr_builder_free(builder0_);
 }
 
 TEST_F(NXImagePyrTest, ImagePyrComputeFastLena) {
-        pyr0_ = nx_image_pyr_new_fast(lena_->width, lena_->height, TEST_N_LEVELS, TEST_SIGMA0);
-        nx_image_pyr_compute(pyr0_, lena_);
+        builder0_ = nx_image_pyr_builder_new_fast(TEST_N_LEVELS, TEST_SIGMA0);
+        pyr0_ = nx_image_pyr_builder_build0(builder0_, lena_);
 
         EXPECT_TRUE(NULL != pyr0_);
         EXPECT_TRUE(NULL != pyr0_->levels);
-        EXPECT_TRUE(NULL != pyr0_->work_img);
-        EXPECT_EQ(lena_->width, pyr0_->info.fast.width0);
-        EXPECT_EQ(lena_->height, pyr0_->info.fast.height0);
         EXPECT_EQ(TEST_N_LEVELS, pyr0_->n_levels);
         for (int i = 0; i < TEST_N_LEVELS; ++i) {
                 EXPECT_TRUE(NULL != pyr0_->levels[i].img);
@@ -170,20 +168,15 @@ TEST_F(NXImagePyrTest, ImagePyrComputeFastLena) {
         }
 
         nx_image_pyr_free(pyr0_);
+        nx_image_pyr_builder_free(builder0_);
 }
 
 TEST_F(NXImagePyrTest, ImagePyrComputeFineLena) {
-        pyr0_ = nx_image_pyr_new_fine(lena_->width, lena_->height, TEST_OCTAVES, TEST_STEPS, TEST_SIGMA0);
-        nx_image_pyr_compute(pyr0_, lena_);
+        builder0_ = nx_image_pyr_builder_new_fine(TEST_OCTAVES, TEST_STEPS, TEST_SIGMA0);
+        pyr0_ = nx_image_pyr_builder_build0(builder0_, lena_);
 
         EXPECT_TRUE(NULL != pyr0_);
         EXPECT_TRUE(NULL != pyr0_->levels);
-        EXPECT_TRUE(NULL != pyr0_->work_img);
-        EXPECT_EQ(lena_->width, pyr0_->info.fine.width0);
-        EXPECT_EQ(lena_->height, pyr0_->info.fine.height0);
-        EXPECT_EQ(TEST_OCTAVES, pyr0_->info.fine.n_octaves);
-        EXPECT_EQ(TEST_STEPS, pyr0_->info.fine.n_octave_steps);
-        EXPECT_EQ(TEST_SIGMA0, pyr0_->info.fine.sigma0);
         EXPECT_EQ(TEST_OCTAVES*TEST_STEPS, pyr0_->n_levels);
         for (int i = 0; i < TEST_N_LEVELS; ++i) {
                 EXPECT_TRUE(NULL != pyr0_->levels[i].img);
@@ -193,19 +186,15 @@ TEST_F(NXImagePyrTest, ImagePyrComputeFineLena) {
         }
 
         nx_image_pyr_free(pyr0_);
+        nx_image_pyr_builder_free(builder0_);
 }
 
 TEST_F(NXImagePyrTest, ImagePyrComputeScaledFree) {
-        pyr0_ = nx_image_pyr_new_scaled(lena_->width, lena_->height, TEST_N_LEVELS, TEST_SCALE_F, TEST_SIGMA0);
-        nx_image_pyr_compute(pyr0_, lena_);
+        builder0_ = nx_image_pyr_builder_new_scaled(TEST_N_LEVELS, TEST_SCALE_F, TEST_SIGMA0);
+        pyr0_ = nx_image_pyr_builder_build0(builder0_, lena_);
 
         EXPECT_TRUE(NULL != pyr0_);
         EXPECT_TRUE(NULL != pyr0_->levels);
-        EXPECT_TRUE(NULL != pyr0_->work_img);
-        EXPECT_EQ(lena_->width, pyr0_->info.scaled.width0);
-        EXPECT_EQ(lena_->height, pyr0_->info.scaled.height0);
-        EXPECT_EQ(TEST_SCALE_F, pyr0_->info.scaled.scale_factor);
-        EXPECT_EQ(TEST_SIGMA0, pyr0_->info.scaled.sigma0);
         EXPECT_EQ(TEST_N_LEVELS, pyr0_->n_levels);
         for (int i = 0; i < TEST_N_LEVELS; ++i) {
                 EXPECT_TRUE(NULL != pyr0_->levels[i].img);
@@ -215,6 +204,7 @@ TEST_F(NXImagePyrTest, ImagePyrComputeScaledFree) {
         }
 
         nx_image_pyr_free(pyr0_);
+        nx_image_pyr_builder_free(builder0_);
 }
 
 } // namespace
