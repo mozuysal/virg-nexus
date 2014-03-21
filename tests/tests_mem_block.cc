@@ -46,7 +46,7 @@ protected:
         for (int i = 0; i < N_TEST_DATA; ++i) {
             m0_->ptr[i] = g_test_data[i];
         }
-        nx_mem_block_wrap(m1_, &g_test_data[0], N_TEST_DATA, NX_FALSE);
+        nx_mem_block_wrap(m1_, &g_test_data[0], N_TEST_DATA, N_TEST_DATA, NX_FALSE);
     }
 
     virtual void TearDown()

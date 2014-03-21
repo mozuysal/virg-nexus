@@ -47,15 +47,15 @@ void nx_mem_block_free(struct NXMemBlock *mem)
         }
 }
 
-void nx_mem_block_resize(struct NXMemBlock *mem, size_t new_sz)
+void nx_mem_block_reserve(struct NXMemBlock *mem, size_t new_capacity)
 {
         NX_ASSERT_PTR(mem);
 
-        if (new_sz > mem->capacity) {
+        if (new_capacity > mem->capacity) {
                 if (mem->own_memory) {
-                        mem->ptr = (uchar *)nx_frealloc(mem->ptr, new_sz * sizeof(uchar));
+                        mem->ptr = (uchar *)nx_frealloc(mem->ptr, new_capacity * sizeof(uchar));
                 } else {
-                        uchar *new_ptr = NX_NEW_UC(new_sz);
+                        uchar *new_ptr = NX_NEW_UC(new_capacity);
                         if (mem->size > 0)
                                 memcpy(new_ptr, mem->ptr, mem->size * sizeof(uchar));
                         /* else */
@@ -64,10 +64,16 @@ void nx_mem_block_resize(struct NXMemBlock *mem, size_t new_sz)
                         mem->own_memory = NX_TRUE;
                 }
 
-                mem->capacity = new_sz;
+                mem->capacity = new_capacity;
         }
+}
 
-       mem->size = new_sz;
+void nx_mem_block_resize(struct NXMemBlock *mem, size_t new_sz)
+{
+        NX_ASSERT_PTR(mem);
+
+        nx_mem_block_reserve(mem, new_sz);
+        mem->size = new_sz;
 }
 
 void nx_mem_block_release(struct NXMemBlock *mem)
@@ -84,7 +90,7 @@ void nx_mem_block_release(struct NXMemBlock *mem)
         mem->own_memory = NX_FALSE;
 }
 
-void nx_mem_block_wrap(struct NXMemBlock *mem, uchar* ptr, size_t sz, NXBool own_memory)
+void nx_mem_block_wrap(struct NXMemBlock *mem, uchar* ptr, size_t sz, size_t capacity, NXBool own_memory)
 {
         NX_ASSERT_PTR(mem);
         NX_ASSERT_PTR(ptr);
@@ -93,7 +99,7 @@ void nx_mem_block_wrap(struct NXMemBlock *mem, uchar* ptr, size_t sz, NXBool own
 
         mem->ptr = ptr;
         mem->size = sz;
-        mem->capacity = sz;
+        mem->capacity = capacity;
         mem->own_memory = own_memory;
 }
 

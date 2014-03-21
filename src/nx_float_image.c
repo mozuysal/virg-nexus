@@ -145,7 +145,7 @@ void nx_float_image_wrap(struct NXFloatImage *fimg, float *data, int width, int 
         NX_ASSERT(row_stride >= width*n_channels);
 
         size_t sz = row_stride * height * sizeof(float);
-        nx_mem_block_wrap(fimg->mem, (uchar *)data, sz, own_memory);
+        nx_mem_block_wrap(fimg->mem, (uchar *)data, sz, sz, own_memory);
 
         fimg->width = width;
         fimg->height = height;
