@@ -107,6 +107,8 @@ void NX_VECTOR_FUNC(copy)(struct NX_VECTOR_NAME *dest, const struct NX_VECTOR_NA
 
 NX_VECTOR_ITEM *NX_VECTOR_FUNC(push_back)(struct NX_VECTOR_NAME *v)
 {
-        nx_mem_block_resize(v->mem, v->size + 1);
+        if (v->size >= v->capacity)
+                NX_VECTOR_FUNC(reserve)(v, v->size * 2);
+        NX_VECTOR_FUNC(resize)(v, v->size+1);
         return v->data + v->size-1;
 }
