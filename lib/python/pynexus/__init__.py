@@ -1,7 +1,13 @@
 import ctypes as _C
-import ctypes.util as _C_util
+from sys import platform as _platform
 
-_nexus_lib = _C_util.find_library('virg-nexus')
+if _platform == "linux" or _platform == "linux2":
+    _nexus_lib = 'libvirg-nexus.so'
+elif _platform == "darwin":
+    _nexus_lib = 'libvirg-nexus.dylib'
+elif _platform == "win32":
+    _nexus_lib = 'virg-nexus.dll'
+
 _nexus = _C.cdll.LoadLibrary(_nexus_lib)
 
 Bool = _C.c_int
