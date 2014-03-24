@@ -20,6 +20,9 @@ class Struct(_C.Structure):
                 ('data', keypoint.Ptr),
                 ('mem', memblock.Ptr)]
 
+    def __len__(self):
+        return self.size
+
     def __str__(self):
         return "<NXKeypointVector: {} / {}>".format(self.size, self.capacity);
 

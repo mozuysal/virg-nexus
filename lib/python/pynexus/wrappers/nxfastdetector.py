@@ -37,14 +37,18 @@ class NXFastDetector(object):
     def threshold(self, value):
         self.__ptr.contents.threshold = value
 
-    def detect(self, max_n_keys, keys, img):
+    def detect(self, keys, img, max_n_keys = None):
         img_ptr = _NXImg.ptr_of(img)
-        n_keys = _FD.detect(self.__ptr, max_n_keys, keys, img_ptr)
+        if max_n_keys is None:
+            max_n_keys = len(keys)
+        n_keys = _FD.detect(self.__ptr, max_n_keys, _KeyVector.key_ptr_of(keys), img_ptr)
         return n_keys
 
-    def detect_pyr(self, max_n_keys, keys, pyr, n_pyr_key_levels = -1):
+    def detect_pyr(self, keys, pyr, max_n_keys = None, n_pyr_key_levels = -1):
         pyr_ptr = _NXPyr.ptr_of(pyr)
-        n_keys = _FD.detect_pyr(self.__ptr, max_n_keys, keys, pyr_ptr, n_pyr_key_levels)
+        if max_n_keys is None:
+            max_n_keys = len(keys)
+        n_keys = _FD.detect_pyr(self.__ptr, max_n_keys, _KeyVector.key_ptr_of(keys), pyr_ptr, n_pyr_key_levels)
         return n_keys
 
     def set_ori_param(self, compute_p, radius):
