@@ -22,6 +22,7 @@
 
 #include "virg/nexus/nx_alloc.h"
 #include "virg/nexus/nx_image.h"
+#include "virg/nexus/nx_image_io.h"
 #include "virg/nexus/nx_image_pyr.h"
 #include "virg/nexus/nx_image_pyr_builder.h"
 #include "virg/nexus/nx_fast_detector.h"

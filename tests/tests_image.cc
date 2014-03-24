@@ -19,6 +19,7 @@
 #include "gtest/gtest.h"
 
 #include "virg/nexus/nx_image.h"
+#include "virg/nexus/nx_image_io.h"
 
 using namespace std;
 

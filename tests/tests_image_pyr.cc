@@ -21,6 +21,7 @@
 #include "test_data.hh"
 
 #include "virg/nexus/nx_image.h"
+#include "virg/nexus/nx_image_io.h"
 #include "virg/nexus/nx_image_pyr.h"
 #include "virg/nexus/nx_image_pyr_builder.h"
 

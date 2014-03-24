@@ -26,12 +26,6 @@ enum NXImageType {
         NX_IMAGE_RGBA
 };
 
-enum NXImageLoadMode {
-        NX_IMAGE_LOAD_AS_IS = -1,
-        NX_IMAGE_LOAD_GRAYSCALE = 0,
-        NX_IMAGE_LOAD_RGBA
-};
-
 struct NXImage
 {
         int width;
@@ -100,14 +94,6 @@ void nx_image_transform_affine_prm(struct NXImage *dest, const struct NXImage *s
                                    enum NXImageWarpBackgroundMode bg_mode);
 
 uchar nx_image_sample_bilinear(const struct NXImage *img, float xs, float ys);
-
-void nx_image_xsave_pnm(const struct NXImage *img, const char *filename);
-
-void nx_image_xload_pnm(struct NXImage *img, const char *filename, enum NXImageLoadMode mode);
-
-NXResult nx_image_save_pnm(const struct NXImage *img, const char *filename);
-
-NXResult nx_image_load_pnm(struct NXImage *img, const char *filename, enum NXImageLoadMode mode);
 
 #define NX_IMAGE_ASSERT_GRAYSCALE(img) \
         do {                               \

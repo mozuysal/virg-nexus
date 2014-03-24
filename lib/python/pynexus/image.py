@@ -19,7 +19,6 @@ Type = _C.c_int
 LoadMode = _C.c_int
 
 (GRAYSCALE, RGBA) = (0, 1)
-(LOAD_AS_IS, LOAD_GRAYSCALE, LOAD_RGBA) = (-1, 0, 1)
 
 class Struct(_C.Structure):
     _fields_ = [("width", _c_int),
@@ -130,19 +129,3 @@ transform_affine_prm.argtypes = [Ptr, Ptr, _c_float, _c_float, _c_float, _c_floa
 sample_bilinear = _nexus.nx_image_sample_bilinear
 sample_bilinear.restype = _NX.uchar
 sample_bilinear.argtypes = [Ptr, _c_float, _c_float]
-
-xsave_pnm = _nexus.nx_image_xsave_pnm
-xsave_pnm.argtypes = [Ptr, _c_char_p]
-xsave_pnm.restype = None
-
-xload_pnm = _nexus.nx_image_xload_pnm
-xload_pnm.argtypes = [Ptr, _c_char_p, LoadMode]
-xload_pnm.restype = None
-
-save_pnm = _nexus.nx_image_save_pnm
-xsave_pnm.argtypes = [Ptr, _c_char_p]
-xsave_pnm.restype = _NX.Result
-
-load_pnm = _nexus.nx_image_load_pnm
-xload_pnm.argtypes = [Ptr, _c_char_p, LoadMode]
-xload_pnm.restype = _NX.Result

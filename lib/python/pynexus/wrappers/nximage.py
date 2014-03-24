@@ -2,6 +2,7 @@ import ctypes as _C
 
 import pynexus as _NX
 import pynexus.image as _Img
+import pynexus.image_io as _ImgIO
 
 from pynexus.image_warp import BLACK as _NX_IMAGE_BG_MODE_BLACK
 from pynexus.image_warp import REPEAT as _NX_IMAGE_BG_MODE_REPEAT
@@ -26,9 +27,9 @@ class NXImage(object):
     GRAYSCALE = _Img.GRAYSCALE
     RGBA = _Img.RGBA
 
-    LOAD_AS_IS = _Img.LOAD_AS_IS
-    LOAD_GRAYSCALE = _Img.LOAD_GRAYSCALE
-    LOAD_RGBA = _Img.LOAD_RGBA
+    LOAD_AS_IS = _ImgIO.LOAD_AS_IS
+    LOAD_GRAYSCALE = _ImgIO.LOAD_GRAYSCALE
+    LOAD_RGBA = _ImgIO.LOAD_RGBA
 
     BG_MODE_BLACK = _NX_IMAGE_BG_MODE_BLACK
     BG_MODE_REPEAT = _NX_IMAGE_BG_MODE_REPEAT
@@ -109,7 +110,7 @@ class NXImage(object):
         _Img.release(self.__ptr)
 
     def save_pnm(self, filename):
-        res = _Img.save_pnm(self.__ptr, filename)
+        res = _ImgIO.save_pnm(self.__ptr, filename)
         if res == _NX.OK:
             return True
         else:
@@ -118,7 +119,7 @@ class NXImage(object):
     def load_pnm(self, filename, load_mode = None):
         if load_mode is None:
             load_mode = NX_IMAGE_LOAD_AS_IS
-        res = _Img.load_pnm(self.__ptr, filename, load_mode)
+        res = _ImgIO.load_pnm(self.__ptr, filename, load_mode)
         if res == _NX.OK:
             return True
         else:
