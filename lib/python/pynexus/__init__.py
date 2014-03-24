@@ -1,6 +1,8 @@
 import ctypes as _C
+import ctypes.util as _C_util
 
-_nexus = _C.cdll.LoadLibrary("libvirg-nexus.so")
+_nexus_lib = _C_util.find_library('virg-nexus')
+_nexus = _C.cdll.LoadLibrary(_nexus_lib)
 
 Bool = _C.c_int
 Result = _C.c_int
