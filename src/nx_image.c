@@ -634,7 +634,7 @@ NXResult nx_image_save_pnm(const struct NXImage *img, const char *filename)
         return res;
 }
 
-static void read_pnm_data(struct NXImage *img, enum NXImageType img_type,
+static NXResult read_pnm_data(struct NXImage *img, enum NXImageType img_type,
                           FILE *pnm, int pnm_width, int pnm_height, enum NXImageType pnm_type)
 {
         int n_ch = nx_image_n_channels(img_type);
@@ -644,14 +644,16 @@ static void read_pnm_data(struct NXImage *img, enum NXImageType img_type,
                 if (img_type == NX_IMAGE_GRAYSCALE) {
                         for (int y = 0; y < img->height; ++y) {
                                 uchar* row = img->data + y * img->row_stride;
-                                fread((void*)row, sizeof(uchar), img->width, pnm);
+                                if (fread((void*)row, sizeof(uchar), img->width, pnm) != img->width)
+                                        return NX_FAIL;
                         }
                 } else {
                         for (int y = 0; y < img->height; ++y) {
                                 uchar* row = img->data + y * img->row_stride;
                                 for(int x = 0; x < img->width; ++x) {
                                         uchar value;
-                                        fread((void*)&value, sizeof(uchar), 1, pnm);
+                                        if (fread((void*)&value, sizeof(uchar), 1, pnm) != 1)
+                                                return NX_FAIL;
                                         row[4*x] = value;
                                         row[4*x+1] = value;
                                         row[4*x+2] = value;
@@ -665,7 +667,8 @@ static void read_pnm_data(struct NXImage *img, enum NXImageType img_type,
                                 uchar* row = img->data + y * img->row_stride;
                                 for (int x = 0; x < img->width; ++x) {
                                         uchar value[3];
-                                        fread((void*)&value, sizeof(uchar), 3, pnm);
+                                        if (fread((void*)&value, sizeof(uchar), 3, pnm) != 3)
+                                                return NX_FAIL;
                                         row[x] = nx_rgb_to_gray(value[0], value[1], value[2]);
                                 }
                         }
@@ -673,12 +676,15 @@ static void read_pnm_data(struct NXImage *img, enum NXImageType img_type,
                         for (int y = 0; y < img->height; ++y) {
                                 uchar* row = img->data + y * img->row_stride;
                                 for (int x = 0; x < img->width; ++x) {
-                                        fread((void*)(row + 4*x), sizeof(uchar), 3, pnm);
+                                        if (fread((void*)(row + 4*x), sizeof(uchar), 3, pnm) != 3)
+                                                return NX_FAIL;
                                         row[4*x+3] = 255;
                                 }
                         }
                 }
         }
+
+        return NX_OK;
 }
 
 void nx_image_xload_pnm(struct NXImage *img, const char *filename,
@@ -715,7 +721,9 @@ void nx_image_xload_pnm(struct NXImage *img, const char *filename,
 
         // Skip a new line
         char buffer[256];
-        fgets(buffer, sizeof(buffer), pnm);
+        if (fgets(buffer, sizeof(buffer), pnm) == NULL) {
+                nx_io_fatal_exit(NX_LOG_TAG, "Error reading from %s", filename);
+        }
 
         enum NXImageType img_type;
         switch (mode) {
@@ -731,7 +739,8 @@ void nx_image_xload_pnm(struct NXImage *img, const char *filename,
                 break;
         }
 
-        read_pnm_data(img, img_type, pnm, pnm_width, pnm_height, pnm_type);
+        if (read_pnm_data(img, img_type, pnm, pnm_width, pnm_height, pnm_type) != NX_OK)
+                nx_io_fatal_exit(NX_LOG_TAG, "Error reading PNM data from %s", filename);
 
         nx_xfclose(pnm, filename);
 }
@@ -779,7 +788,12 @@ NXResult nx_image_load_pnm(struct NXImage *img, const char *filename,
 
         // Skip a new line
         char buffer[256];
-        fgets(buffer, sizeof(buffer), pnm);
+        if (fgets(buffer, sizeof(buffer), pnm) == NULL) {
+                nx_io_error(NX_LOG_TAG, "Error reading from %s", filename);
+                fclose(pnm);
+                return NX_FAIL;
+        }
+
 
         enum NXImageType img_type;
         switch (mode) {
@@ -795,8 +809,11 @@ NXResult nx_image_load_pnm(struct NXImage *img, const char *filename,
                 break;
         }
 
-        read_pnm_data(img, img_type, pnm, pnm_width, pnm_height, pnm_type);
+        NXResult res_read = read_pnm_data(img, img_type, pnm, pnm_width, pnm_height, pnm_type);
+        NXResult res_close = nx_fclose(pnm, filename);
 
-        NXResult res = nx_fclose(pnm, filename);
-        return res;
+        if (res_read == NX_OK)
+                return res_close;
+        else
+                return res_read;
 }

@@ -30,10 +30,6 @@ void nx_image_warp_affine_bilinear(int dest_w, int dest_h, uchar *dest, int dest
                                    int src_w, int src_h, const uchar *src, int src_stride,
                                    const float *t_dest2src, enum NXImageWarpBackgroundMode bg_mode);
 
-void nx_image_warp_affine_spline(int dest_w, int dest_h, uchar *dest, int dest_stride,
-                                 int src_w, int src_h, const float *src_coeff, int src_stride,
-                                 const float *t_dest2src, enum NXImageWarpBackgroundMode bg_mode);
-
 __NX_END_DECL
 
 #endif

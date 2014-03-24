@@ -16,7 +16,6 @@
 
 #include "virg/nexus/nx_assert.h"
 #include "virg/nexus/nx_message.h"
-#include "virg/nexus/nx_spline.h"
 #include "virg/nexus/nx_uniform_sampler.h"
 
 void nx_image_warp_affine_bilinear(int dest_w, int dest_h, uchar *dest, int dest_stride,
@@ -117,78 +116,6 @@ void nx_image_warp_affine_bilinear(int dest_w, int dest_h, uchar *dest, int dest
                         const uchar *p1 = src + idy[1]*src_stride;
                         int I = vp*(up*p0[idx[0]] + u*p0[idx[1]])
                                 + v*(up*p1[idx[0]] + u*p1[idx[1]]);
-
-                        if (I < 0)
-                                I = 0;
-                        else if (I > 255)
-                                I = 255;
-
-                        drow[x] = I;
-                }
-        }
-}
-
-void nx_image_warp_affine_spline(int dest_w, int dest_h, uchar *dest, int dest_stride,
-                                 int src_w, int src_h, const float *src_coeff, int src_stride,
-                                 const float *t_dest2src, enum NXImageWarpBackgroundMode bg_mode)
-{
-        const int LAST_X = src_w - 3;
-        const int LAST_Y = src_h - 3;
-
-        uchar bg_fixed = 0;
-        if (bg_mode == NX_IMAGE_WARP_WHITE)
-                bg_fixed = 255;
-
-        const float *t = t_dest2src;
-        for (int y = 0; y < dest_h; ++y) {
-                uchar *drow = dest + y*dest_stride;
-
-                float xp = y*t[3] + t[6];
-                float yp = y*t[4] + t[7];
-                for (int x = 0; x < dest_w; ++x, xp += t[0], yp += t[1]) {
-                        int xpi = xp;
-                        int ypi = yp;
-
-                        float xpp = xp;
-                        float ypp = yp;
-
-                        switch (bg_mode) {
-                        case NX_IMAGE_WARP_BLACK:
-                        case NX_IMAGE_WARP_WHITE:
-                                if (xpi < 0 || xpi >= LAST_X
-                                    || ypi < 0 || ypi >= LAST_Y) {
-                                        drow[x] = bg_fixed;
-                                        continue;
-                                }
-                                break;
-                        case NX_IMAGE_WARP_NOISE:
-                                if (xpi < 0 || xpi >= LAST_X
-                                    || ypi < 0 || ypi >= LAST_Y) {
-                                        drow[x] = 255.0f * NX_UNIFORM_SAMPLE_S;
-                                        continue;
-                                }
-                                break;
-                        case NX_IMAGE_WARP_REPEAT:
-                                if (xpi < 0) {
-                                        xpp = 0.0f;
-                                } else if (xpi >= LAST_X) {
-                                        xpp = LAST_X;
-                                }
-
-                                if (ypi < 0) {
-                                        ypp = 0.0f;
-                                } else if (ypi >= LAST_Y) {
-                                        ypp = LAST_Y;
-                                }
-                                break;
-                        default:
-                        case NX_IMAGE_WARP_MIRROR:
-                                break;
-                        }
-
-                        int I = nx_spline_interp_2d(xpp, ypp,
-                                                    src_w, src_h,
-                                                    src_coeff, src_stride);
 
                         if (I < 0)
                                 I = 0;

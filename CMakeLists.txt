@@ -14,7 +14,6 @@ set(virg_nexus_SOURCES
   src/SFMT/SFMT.c
   src/nx_uniform_sampler.c
   src/nx_math.c
-  src/nx_spline.c
   src/nx_transform_2d.c
   src/nx_io.c
   src/nx_filter.c
@@ -22,7 +21,6 @@ set(virg_nexus_SOURCES
   src/nx_image_warp.c
   src/nx_image_pyr.c
   src/nx_image_pyr_builder.c
-  src/nx_float_image.c
   src/nx_colorspace.c
   src/fast/fast_9.c
   src/fast/fast_nonmax.c
@@ -41,7 +39,6 @@ set(virg_nexus_HEADERS
   include/virg/nexus/nx_uniform_sampler.h
   include/virg/nexus/nx_math.h
   include/virg/nexus/nx_vector_gen.h
-  include/virg/nexus/nx_spline.h
   include/virg/nexus/nx_transform_2d.h
   include/virg/nexus/nx_io.h
   include/virg/nexus/nx_filter.h
@@ -49,7 +46,6 @@ set(virg_nexus_HEADERS
   include/virg/nexus/nx_image_warp.h
   include/virg/nexus/nx_image_pyr.h
   include/virg/nexus/nx_image_pyr_builder.h
-  include/virg/nexus/nx_float_image.h
   include/virg/nexus/nx_colorspace.h
   include/virg/nexus/nx_keypoint.h
   include/virg/nexus/nx_keypoint_vector.h
@@ -171,7 +167,6 @@ set(test_SOURCES
   tests/tests_filter.cc
   tests/tests_image.cc
   tests/tests_image_pyr.cc
-  tests/tests_float_image.cc
   tests/tests_fast_detector.cc
   tests/tests_brief_extractor.cc
 )
