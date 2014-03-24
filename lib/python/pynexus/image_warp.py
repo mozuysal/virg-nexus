@@ -25,7 +25,3 @@ affine_bilinear = _nexus.nx_image_warp_affine_bilinear
 affine_bilinear.restype = None
 affine_bilinear.argtypes = [_c_int, _c_int, _POINTER(_NX.uchar), _c_int, _c_int, _c_int, _POINTER(_NX.uchar), _c_int, _POINTER(_c_float), BackgroundMode]
 
-affine_spline = _nexus.nx_image_warp_affine_spline
-affine_spline.restype = None
-affine_spline.argtypes = [_c_int, _c_int, _POINTER(_NX.uchar), _c_int, _c_int, _c_int, _POINTER(_c_float), _c_int, _POINTER(_c_float), BackgroundMode]
-
