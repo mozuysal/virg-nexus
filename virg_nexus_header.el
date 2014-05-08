@@ -9,7 +9,7 @@
                     " *\n"
                     " * This file is part of the IYTE Visual Intelligence Research Group Software Library\n"
                     " *\n"
-                    " * Copyright (C) " (format-time-string "%Y") " Izmir Institute of Technology. All rights reserved.\n"
+                    " * Copyright (C) " (format-time-string "%Y") " Mustafa Ozuysal. All rights reserved.\n"
                     " *\n"
                     " * @author " user-full-name "\n"))
           (when (boundp 'user-mail-address)

@@ -3,7 +3,7 @@
  *
  * This file is part of the IYTE Visual Intelligence Research Group Software Library
  *
- * Copyright (C) 2014 Izmir Institute of Technology. All rights reserved.
+ * Copyright (C) 2014 Mustafa Ozuysal. All rights reserved.
  *
  * @author Mustafa Ozuysal
  *
