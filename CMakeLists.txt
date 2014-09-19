@@ -65,6 +65,7 @@ add_library(virg-nexus STATIC ${virg_nexus_SOURCES})
 set_target_properties(virg-nexus PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 
 add_library(virg-nexus-shared SHARED ${virg_nexus_SOURCES})
+target_link_libraries(virg-nexus-shared -lm)
 set_target_properties(virg-nexus-shared PROPERTIES OUTPUT_NAME virg-nexus)
 set_target_properties(virg-nexus-shared PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 
