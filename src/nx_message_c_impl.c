@@ -12,20 +12,65 @@
  */
 #include "virg/nexus/nx_message.h"
 
+#define _POSIX_SOURCE
+#include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <execinfo.h>
 
+#include "virg/nexus/nx_types.h"
+
 #define MESSAGE_STREAM stderr
 
-#define PRINT_HEADER(type) \
+#define NX_INFO_COLOR_CODE "\x1b[37m"
+#define NX_LOG_COLOR_CODE "\x1b[36m"
+#define NX_WARNING_COLOR_CODE "\x1b[33m"
+#define NX_ERROR_COLOR_CODE "\x1b[31;1m"
+#define NX_FATAL_COLOR_CODE "\x1b[35;1m"
+
+#define NX_RESET_COLOR_CODE "\x1b[0m"
+
+enum MessageType {
+        NX_MT_Info = 0,
+        NX_MT_Log,
+        NX_MT_Warning,
+        NX_MT_Error,
+        NX_MT_Fatal
+};
+
+#define PRINT_HEADER(type)                                              \
+        NXBool is_color_term = is_color_terminal();                     \
         do {                                                            \
-                fprintf(MESSAGE_STREAM, MESSAGE_HEADER_FORMAT, (type), tag);   \
+                if (is_color_term) {                                    \
+                        switch(type) {                                  \
+                        case NX_MT_Info: start_color_output(NX_INFO_COLOR_CODE); break; \
+                        case NX_MT_Log: start_color_output(NX_LOG_COLOR_CODE); break; \
+                        case NX_MT_Warning: start_color_output(NX_WARNING_COLOR_CODE); break; \
+                        case NX_MT_Error: start_color_output(NX_ERROR_COLOR_CODE); break; \
+                        case NX_MT_Fatal: start_color_output(NX_FATAL_COLOR_CODE); break; \
+                        }                                               \
+                }                                                       \
+                const char *type_string;                                \
+                switch(type) {                                          \
+                case NX_MT_Info: type_string = "info"; break;           \
+                case NX_MT_Log: type_string = "log"; break;             \
+                case NX_MT_Warning: type_string = "warning"; break;     \
+                case NX_MT_Error: type_string = "error"; break;         \
+                case NX_MT_Fatal: type_string = "fatal"; break;         \
+                }                                                       \
+                fprintf(MESSAGE_STREAM, MESSAGE_HEADER_FORMAT, type_string, tag); \
+        } while(0)
+
+#define PRINT_FOOTER()                          \
+        do {                                    \
+                if (is_color_term)              \
+                        stop_color_output();    \
+                fprintf(MESSAGE_STREAM, "\n");  \
         } while(0)
 
 static __NX_NO_RETURN void default_fatal_func(const char* tag, const char* msg, va_list prm);
 
-static const char *MESSAGE_HEADER_FORMAT = "[%-7s][%s] ";
+static const char *MESSAGE_HEADER_FORMAT = "[nx%s][%s] ";
 
 static enum NXMessageVerbosity g_message_verbosity = NX_MESSAGE_NORMAL;
 static __NX_NO_RETURN_PTR NXFatalFuncP g_fatal_func = default_fatal_func;
@@ -47,12 +92,28 @@ static inline void print_call_stack()
     free(bt_symbols);
 }
 
+static inline NXBool is_color_terminal()
+{
+        return isatty(fileno(MESSAGE_STREAM)) != 0;
+}
+
+static inline void start_color_output(const char* color_code)
+{
+        fprintf(MESSAGE_STREAM, "%s", color_code);
+}
+
+static inline void stop_color_output()
+{
+        fprintf(MESSAGE_STREAM, NX_RESET_COLOR_CODE);
+}
+
 void default_fatal_func(const char* tag, const char* msg, va_list prm)
 {
-    PRINT_HEADER("fatal");
+    PRINT_HEADER(NX_MT_Fatal);
     vfprintf(stderr, msg, prm);
-    fprintf(stderr, "\n\n");
+    PRINT_FOOTER();
 
+    fprintf(stderr, "Call Stack:\n");
     print_call_stack();
 
     exit(NX_EXIT_FATAL);
@@ -101,35 +162,35 @@ void nx_fatal(const char *tag, const char *msg, ...)
 void nx_vinfo(const char *tag, const char *msg, va_list prm)
 {
     if (g_message_verbosity > NX_MESSAGE_NORMAL) {
-        PRINT_HEADER("info");
+        PRINT_HEADER(NX_MT_Info);
         vfprintf(MESSAGE_STREAM, msg, prm);
-        fprintf(MESSAGE_STREAM, "\n");
+        PRINT_FOOTER();
     }
 }
 
 void nx_vlog(const char *tag, const char *msg, va_list prm)
 {
     if (g_message_verbosity > NX_MESSAGE_CAUTIOUS) {
-        PRINT_HEADER("log");
+        PRINT_HEADER(NX_MT_Log);
         vfprintf(MESSAGE_STREAM, msg, prm);
-        fprintf(MESSAGE_STREAM, "\n");
+        PRINT_FOOTER();
     }
 }
 
 void nx_vwarning(const char *tag, const char *msg, va_list prm)
 {
     if (g_message_verbosity > NX_MESSAGE_SILENT) {
-        PRINT_HEADER("warning");
+        PRINT_HEADER(NX_MT_Warning);
         vfprintf(MESSAGE_STREAM, msg, prm);
-        fprintf(MESSAGE_STREAM, "\n");
+        PRINT_FOOTER();
     }
 }
 
 void nx_verror(const char *tag, const char *msg, va_list prm)
 {
-    PRINT_HEADER("error");
+    PRINT_HEADER(NX_MT_Error);
     vfprintf(MESSAGE_STREAM, msg, prm);
-    fprintf(MESSAGE_STREAM, "\n");
+    PRINT_FOOTER();
 }
 
 void nx_vfatal(const char *tag, const char *msg, va_list prm)
