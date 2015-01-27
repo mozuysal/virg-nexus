@@ -34,6 +34,8 @@ void nx_affine_warp_processor_free(struct NXAffineWarpProcessor *wp);
 void nx_affine_warp_processor_warp(struct NXAffineWarpProcessor *wp, const struct NXImage *img, struct NXAffineWarpParam param);
 
 const struct NXImage *nx_affine_warp_processor_warp_result(struct NXAffineWarpProcessor *wp);
+const double *nx_affine_warp_processor_forward_transform(struct NXAffineWarpProcessor *wp);
+const double *nx_affine_warp_processor_inverse_transform(struct NXAffineWarpProcessor *wp);
 
 void nx_affine_warp_processor_set_bg_fixed(struct NXAffineWarpProcessor *wp, uchar bg_color);
 void nx_affine_warp_processor_set_bg_repeat(struct NXAffineWarpProcessor *wp);

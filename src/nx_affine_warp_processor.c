@@ -46,6 +46,8 @@ enum NXAWPBgMode {
 
 struct NXAffineWarpProcessor
 {
+        const struct NXImage *image;
+
         struct NXImage *skew_rotation_buffer;
         struct NXImage *subsample_buffer;
         struct NXImage *result_buffer;
@@ -64,9 +66,9 @@ static inline void nx_affine_warp_processor_update_inverse_transform(struct NXAf
 static inline void nx_affine_warp_processor_update_forward_transform(struct NXAffineWarpProcessor *wp, const double *center_in, const double *center_out, double scale_x, double scale_y, double angle);
 static inline void nx_affine_warp_processor_transformed_buffer_size(struct NXAffineWarpProcessor *wp, int *width, int *height,
                                                                     double scale_x, double scale_y, double angle, const double *current_t);
-static inline void nx_affine_warp_processor_resize_buffers(struct NXAffineWarpProcessor *wp, const struct NXImage *img,
+static inline void nx_affine_warp_processor_resize_buffers(struct NXAffineWarpProcessor *wp,
                                                            double scale, double planar_angle, double tilt, double tilt_angle);
-static inline void nx_affine_warp_processor_resize_skew_rotation_buffer(struct NXAffineWarpProcessor *wp, const struct NXImage *img, double tilt_angle);
+static inline void nx_affine_warp_processor_resize_skew_rotation_buffer(struct NXAffineWarpProcessor *wp, double tilt_angle);
 static inline void nx_affine_warp_processor_resize_subsample_buffer(struct NXAffineWarpProcessor *wp, double tilt);
 static inline void nx_affine_warp_processor_resize_result_buffer(struct NXAffineWarpProcessor *wp, double scale, double planar_angle);
 static inline void nx_affine_warp_processor_resize_buffer(struct NXAffineWarpProcessor *wp, const struct NXImage *in_buffer,
@@ -93,6 +95,7 @@ static inline void fill_warp_buffer_bg(const struct NXImage* image,
 struct NXAffineWarpProcessor *nx_affine_warp_processor_new()
 {
         struct NXAffineWarpProcessor *wp = NX_NEW(1, struct NXAffineWarpProcessor);
+        wp->image = NULL;
         wp->skew_rotation_buffer = nx_image_alloc();
         wp->subsample_buffer = nx_image_alloc();
         wp->result_buffer = nx_image_alloc();
@@ -123,7 +126,8 @@ void nx_affine_warp_processor_warp(struct NXAffineWarpProcessor *wp, const struc
         NX_ASSERT_PTR(img->data);
         NX_IMAGE_ASSERT_GRAYSCALE(img);
 
-        nx_affine_warp_processor_resize_buffers(wp, img, param.scale, param.planar_angle, param.tilt, param.tilt_angle);
+        wp->image = img;
+        nx_affine_warp_processor_resize_buffers(wp, param.scale, param.planar_angle, param.tilt, param.tilt_angle);
 
         compute_skew_rotation_buffer(img, wp->skew_rotation_buffer, param.tilt_angle, param.tilt);
         compute_subsample_buffer(wp->skew_rotation_buffer, wp->subsample_buffer, param.tilt, param.scale);
@@ -139,6 +143,18 @@ const struct NXImage *nx_affine_warp_processor_warp_result(struct NXAffineWarpPr
 {
         NX_ASSERT_PTR(wp);
         return wp->result_buffer;
+}
+
+const double *nx_affine_warp_processor_forward_transform(struct NXAffineWarpProcessor *wp)
+{
+        NX_ASSERT_PTR(wp);
+        return &wp->forward_t[0];
+}
+
+const double *nx_affine_warp_processor_inverse_transform(struct NXAffineWarpProcessor *wp)
+{
+        NX_ASSERT_PTR(wp);
+        return &wp->inverse_t[0];
 }
 
 void nx_affine_warp_processor_set_bg_fixed(struct NXAffineWarpProcessor *wp, uchar bg_color)
@@ -168,8 +184,8 @@ void nx_affine_warp_processor_set_post_blur_sigma(struct NXAffineWarpProcessor *
 
 static inline void transform_set_identity(double *t)
 {
-        t[0] = 1.0; t[1] = 0.0; t[4] = 0.0;
-        t[2] = 0.0; t[3] = 1.0; t[5] = 0.0;
+        t[0] = 1.0; t[2] = 0.0; t[4] = 0.0;
+        t[1] = 0.0; t[3] = 1.0; t[5] = 0.0;
 }
 
 static inline void transform_apply(const double *t, double *p)
@@ -183,12 +199,19 @@ static inline void transform_apply(const double *t, double *p)
 
 static inline void transform_combine(double *r, const double *t0, const double *t1)
 {
-        r[0] = t0[0]*t1[0] + t0[2]*t1[1];
-        r[1] = t0[1]*t1[0] + t0[3]*t1[1];
-        r[2] = t0[0]*t1[2] + t0[2]*t1[3];
-        r[3] = t0[1]*t1[2] + t0[3]*t1[3];
-        r[4] = t0[0]*t1[4] + t0[2]*t1[5] + t0[4];
-        r[5] = t0[1]*t1[4] + t0[3]*t1[5] + t0[5];
+        double r0 = t0[0]*t1[0] + t0[2]*t1[1];
+        double r1 = t0[1]*t1[0] + t0[3]*t1[1];
+        double r2 = t0[0]*t1[2] + t0[2]*t1[3];
+        double r3 = t0[1]*t1[2] + t0[3]*t1[3];
+        double r4 = t0[0]*t1[4] + t0[2]*t1[5] + t0[4];
+        double r5 = t0[1]*t1[4] + t0[3]*t1[5] + t0[5];
+
+        r[0] = r0;
+        r[1] = r1;
+        r[2] = r2;
+        r[3] = r3;
+        r[4] = r4;
+        r[5] = r5;
 }
 
 void nx_affine_warp_processor_reset_transforms(struct NXAffineWarpProcessor *wp)
@@ -288,19 +311,24 @@ void nx_affine_warp_processor_transformed_buffer_size(struct NXAffineWarpProcess
         *height = (int)rh;
 }
 
-void nx_affine_warp_processor_resize_buffers(struct NXAffineWarpProcessor *wp, const struct NXImage *img,
+void nx_affine_warp_processor_resize_buffers(struct NXAffineWarpProcessor *wp,
                                              double scale, double planar_angle, double tilt, double tilt_angle)
 {
         nx_affine_warp_processor_reset_transforms(wp);
 
-        nx_affine_warp_processor_resize_skew_rotation_buffer(wp, img, tilt_angle);
+        nx_affine_warp_processor_resize_skew_rotation_buffer(wp, tilt_angle);
         nx_affine_warp_processor_resize_subsample_buffer(wp, tilt);
         nx_affine_warp_processor_resize_result_buffer(wp, scale, planar_angle);
+
+        /* fprintf(stderr, "Buffer sizes\n%d %d\n%d %d\n%d %d\n", */
+                /* wp->skew_rotation_buffer->width, wp->skew_rotation_buffer->height, */
+                /* wp->subsample_buffer->width, wp->subsample_buffer->height, */
+                /* wp->result_buffer->width, wp->result_buffer->height); */
 }
 
-void nx_affine_warp_processor_resize_skew_rotation_buffer(struct NXAffineWarpProcessor *wp, const struct NXImage *img, double tilt_angle)
+void nx_affine_warp_processor_resize_skew_rotation_buffer(struct NXAffineWarpProcessor *wp, double tilt_angle)
 {
-        nx_affine_warp_processor_resize_buffer(wp, img, wp->skew_rotation_buffer, 1.0, 1.0, tilt_angle);
+        nx_affine_warp_processor_resize_buffer(wp, wp->image, wp->skew_rotation_buffer, 1.0, 1.0, tilt_angle);
 }
 
 void nx_affine_warp_processor_resize_subsample_buffer(struct NXAffineWarpProcessor *wp, double tilt)
@@ -318,8 +346,8 @@ void nx_affine_warp_processor_resize_buffer(struct NXAffineWarpProcessor *wp, co
 {
         int wi = in_buffer->width;
         int hi = in_buffer->height;
-        int wo = wi;
-        int ho = hi;
+        int wo = wp->image->width;
+        int ho = wp->image->height;
 
         nx_affine_warp_processor_transformed_buffer_size(wp, &wo, &ho, scale_x, scale_y, angle, wp->forward_t);
         nx_image_resize(out_buffer, wo, ho, -1, NX_IMAGE_GRAYSCALE);
