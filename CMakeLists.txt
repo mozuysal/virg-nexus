@@ -115,7 +115,16 @@ set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${VIRG_NEXUS_FLAGS_RELWITHDEBINFO} -std=c++0
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
 
 configure_file(virg-nexus.pc.in ${CMAKE_SOURCE_DIR}/lib/pkgconfig/virg-nexus.pc @ONLY)
+# ------------------------------------- FFI --------------------------------------
+# set(ffi_dir src/ffi)
 
+# find_package(Java)
+# include(UseJava)
+
+# set(ffi_java_dir ${ffi_dir}/java/)
+# set(ffi_java_src ${ffi_java_dir}/
+
+# add_jar()
 # -------------------------- install target ----------------------------
 install(TARGETS virg-nexus ARCHIVE DESTINATION lib)
 install(TARGETS virg-nexus-shared LIBRARY DESTINATION lib)
