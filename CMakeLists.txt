@@ -16,6 +16,9 @@ set(virg_nexus_SOURCES
   src/nx_math.c
   src/nx_transform_2d.c
   src/nx_io.c
+  src/nx_options.c
+  src/nx_json_options.c
+  src/jsmn/jsmn.c
   src/nx_filter.c
   src/nx_image.c
   src/nx_image_io_pnm.c
@@ -43,6 +46,8 @@ set(virg_nexus_HEADERS
   include/virg/nexus/nx_vector_gen.h
   include/virg/nexus/nx_transform_2d.h
   include/virg/nexus/nx_io.h
+  include/virg/nexus/nx_options.h
+  include/virg/nexus/nx_json_options.h
   include/virg/nexus/nx_filter.h
   include/virg/nexus/nx_image.h
   include/virg/nexus/nx_image_io.h
@@ -100,9 +105,9 @@ if (VIRG_NEXUS_ANDROID)
   endif (VIRG_NEXUS_USE_SIMD)
 endif(VIRG_NEXUS_ANDROID)
 
-set(VIRG_NEXUS_FLAGS_DEBUG          "-Wall -pedantic -g -rdynamic ${VIRG_NEXUS_FLAGS_PLATFORM} ${VIRG_NEXUS_FLAGS_SIMD}")
-set(VIRG_NEXUS_FLAGS_RELEASE        "-Wall -pedantic -O2 -DNDEBUG ${VIRG_NEXUS_FLAGS_PLATFORM} ${VIRG_NEXUS_FLAGS_SIMD}")
-set(VIRG_NEXUS_FLAGS_RELWITHDEBINFO "-Wall -pedantic -O2 -DNDEBUG -g -rdynamic ${VIRG_NEXUS_FLAGS_PLATFORM} ${VIRG_NEXUS_FLAGS_SIMD}")
+set(VIRG_NEXUS_FLAGS_DEBUG          "-Wall -pedantic -g -rdynamic -DJSMN_PARENT_LINKS=1 ${VIRG_NEXUS_FLAGS_PLATFORM} ${VIRG_NEXUS_FLAGS_SIMD}")
+set(VIRG_NEXUS_FLAGS_RELEASE        "-Wall -pedantic -O2 -DNDEBUG -DJSMN_PARENT_LINKS=1 ${VIRG_NEXUS_FLAGS_PLATFORM} ${VIRG_NEXUS_FLAGS_SIMD}")
+set(VIRG_NEXUS_FLAGS_RELWITHDEBINFO "-Wall -pedantic -O2 -DNDEBUG -g -rdynamic -DJSMN_PARENT_LINKS=1 ${VIRG_NEXUS_FLAGS_PLATFORM} ${VIRG_NEXUS_FLAGS_SIMD}")
 
 set(CMAKE_C_FLAGS_DEBUG          "${VIRG_NEXUS_FLAGS_DEBUG} -std=c99")
 set(CMAKE_C_FLAGS_RELEASE        "${VIRG_NEXUS_FLAGS_RELEASE} -std=c99")
