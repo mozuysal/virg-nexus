@@ -19,7 +19,7 @@
 #include "virg/nexus/nx_math.h"
 #include "virg/nexus/nx_mem_block.h"
 
-#define NX_FAST_DETECTOR_WORK_MULTIPLIER 5
+#define NX_FAST_DETECTOR_WORK_MULTIPLIER 10
 
 extern void fast9_detect(struct NXKeypoint *ret_corners, const unsigned char *im, int xsize, int ysize, int stride, int b, int *ret_num_corners);
 extern void fast9_score (const unsigned char *i, int stride, struct NXKeypoint *corners, int num_corners, int b);
