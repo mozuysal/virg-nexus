@@ -351,6 +351,7 @@ void nx_affine_warp_processor_resize_buffer(struct NXAffineWarpProcessor *wp, co
 
         nx_affine_warp_processor_transformed_buffer_size(wp, &wo, &ho, scale_x, scale_y, angle, wp->forward_t);
         nx_image_resize(out_buffer, wo, ho, -1, NX_IMAGE_GRAYSCALE);
+        nx_image_set_zero(out_buffer);
 
         double center_in[2] = { wi/2.0, hi/2.0 };
         double center_out[2] = { wo/2.0, ho/2.0 };
