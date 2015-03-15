@@ -19,6 +19,7 @@
 #include "virg/nexus/nx_alloc.h"
 #include "virg/nexus/nx_io.h"
 #include "virg/nexus/nx_math.h"
+#include "virg/nexus/nx_mat234.h"
 #include "virg/nexus/nx_mem_block.h"
 #include "virg/nexus/nx_colorspace.h"
 #include "virg/nexus/nx_filter.h"
@@ -487,7 +488,7 @@ void nx_image_transform_affine(struct NXImage *dest, const struct NXImage *src,
 
 
         float t_dest2src[9];
-        nx_mat3_inv_sd(t_dest2src, t_src2dest);
+        nx_sdmat3_inv(t_dest2src, t_src2dest);
 
         float nrm_f = 1.0f / t_dest2src[8];
         for (int i = 0; i < 9; ++i)

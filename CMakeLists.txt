@@ -14,6 +14,7 @@ set(virg_nexus_SOURCES
   src/SFMT/SFMT.c
   src/nx_uniform_sampler.c
   src/nx_math.c
+  src/nx_svd.c
   src/nx_transform_2d.c
   src/nx_io.c
   src/nx_options.c
@@ -24,6 +25,7 @@ set(virg_nexus_SOURCES
   src/nx_image_io_pnm.c
   src/nx_image_warp.c
   src/nx_affine_warp_processor.c
+  src/nx_homography.c
   src/nx_image_pyr.c
   src/nx_image_pyr_builder.c
   src/nx_colorspace.c
@@ -43,6 +45,8 @@ set(virg_nexus_HEADERS
   include/virg/nexus/nx_mem_block.h
   include/virg/nexus/nx_uniform_sampler.h
   include/virg/nexus/nx_math.h
+  include/virg/nexus/nx_svd.h
+  include/virg/nexus/nx_mat234.h
   include/virg/nexus/nx_vector_gen.h
   include/virg/nexus/nx_transform_2d.h
   include/virg/nexus/nx_io.h
@@ -55,6 +59,7 @@ set(virg_nexus_HEADERS
   include/virg/nexus/nx_image_io_pnm.h
   include/virg/nexus/nx_image_warp.h
   include/virg/nexus/nx_affine_warp_processor.h
+  include/virg/nexus/nx_homography.h
   include/virg/nexus/nx_image_pyr.h
   include/virg/nexus/nx_image_pyr_builder.h
   include/virg/nexus/nx_colorspace.h
