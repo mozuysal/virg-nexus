@@ -53,13 +53,13 @@ void nx_mem_block_reserve(struct NXMemBlock *mem, size_t new_capacity)
 
         if (new_capacity > mem->capacity) {
                 if (mem->own_memory) {
-                        mem->ptr = (uchar *)nx_frealloc(mem->ptr, new_capacity * sizeof(uchar));
+                        mem->ptr = (char *)nx_frealloc(mem->ptr, new_capacity * sizeof(char));
                 } else {
-                        uchar *new_ptr = NX_NEW_UC(new_capacity);
+                        char *new_ptr = NX_NEW_C(new_capacity);
                         if (mem->size > 0)
-                                memcpy(new_ptr, mem->ptr, mem->size * sizeof(uchar));
+                                memcpy(new_ptr, mem->ptr, mem->size * sizeof(char));
                         /* else */
-                                /* memset(new_ptr, 0, new_sz * sizeof(uchar)); */
+                                /* memset(new_ptr, 0, new_sz * sizeof(char)); */
                         mem->ptr = new_ptr;
                         mem->own_memory = NX_TRUE;
                 }
@@ -90,7 +90,7 @@ void nx_mem_block_release(struct NXMemBlock *mem)
         mem->own_memory = NX_FALSE;
 }
 
-void nx_mem_block_wrap(struct NXMemBlock *mem, uchar* ptr, size_t sz, size_t capacity, NXBool own_memory)
+void nx_mem_block_wrap(struct NXMemBlock *mem, char* ptr, size_t sz, size_t capacity, NXBool own_memory)
 {
         NX_ASSERT_PTR(mem);
         NX_ASSERT_PTR(ptr);
@@ -108,7 +108,7 @@ void nx_mem_block_swap(struct NXMemBlock *mem0, struct NXMemBlock *mem1)
         NX_ASSERT_PTR(mem0);
         NX_ASSERT_PTR(mem1);
 
-        uchar *t_ptr;
+        char *t_ptr;
         size_t t_sz;
         NXBool t_om;
 
@@ -135,7 +135,7 @@ void nx_mem_block_copy(struct NXMemBlock *dest, const struct NXMemBlock *src)
         nx_mem_block_resize(dest, src->size);
 
         if (src->ptr) {
-                memcpy(dest->ptr, src->ptr, dest->size * sizeof(uchar));
+                memcpy(dest->ptr, src->ptr, dest->size * sizeof(char));
         }
 }
 
@@ -144,7 +144,7 @@ void nx_mem_block_set_zero(struct NXMemBlock *mem)
         NX_ASSERT_PTR(mem);
 
         if (mem->ptr) {
-                memset(mem->ptr, 0, mem->size * sizeof(uchar));
+                memset(mem->ptr, 0, mem->size * sizeof(char));
         }
 }
 

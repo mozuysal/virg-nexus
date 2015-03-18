@@ -25,8 +25,8 @@ using namespace std;
 namespace {
 
 #define N_TEST_DATA 12
-static const uchar TEST_GROUND_TRUTH[N_TEST_DATA] = { 123, 234, 12, 125, 122, 176, 156, 87, 45, 93, 20, 23 };
-static uchar g_test_data[N_TEST_DATA];
+static const char TEST_GROUND_TRUTH[N_TEST_DATA] = { 123, 23, 12, 125, -122, -17, 16, 87, -45, 93, 20, 23 };
+static char g_test_data[N_TEST_DATA];
 
 class NXMemBlockTest : public ::testing::Test {
 protected:

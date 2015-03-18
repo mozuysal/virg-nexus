@@ -15,11 +15,14 @@ set(virg_nexus_SOURCES
   src/nx_uniform_sampler.c
   src/nx_math.c
   src/nx_svd.c
+  src/nx_string.c
   src/nx_transform_2d.c
   src/nx_io.c
+  src/nx_array.c
   src/nx_options.c
   src/nx_json_options.c
   src/jsmn/jsmn.c
+  src/nx_plotter.c
   src/nx_filter.c
   src/nx_image.c
   src/nx_image_io_pnm.c
@@ -47,11 +50,14 @@ set(virg_nexus_HEADERS
   include/virg/nexus/nx_math.h
   include/virg/nexus/nx_svd.h
   include/virg/nexus/nx_mat234.h
+  include/virg/nexus/nx_string.h
   include/virg/nexus/nx_vector_gen.h
   include/virg/nexus/nx_transform_2d.h
   include/virg/nexus/nx_io.h
+  include/virg/nexus/nx_array.h
   include/virg/nexus/nx_options.h
   include/virg/nexus/nx_json_options.h
+  include/virg/nexus/nx_plotter.h
   include/virg/nexus/nx_filter.h
   include/virg/nexus/nx_image.h
   include/virg/nexus/nx_image_io.h

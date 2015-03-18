@@ -97,7 +97,7 @@ void nx_image_resize(struct NXImage *img, int width, int height, int row_stride,
         img->height = height;
         img->type = type;
         img->n_channels = n_ch;
-        img->data = img->mem->ptr;
+        img->data = (uchar *)img->mem->ptr;
         img->row_stride = row_stride;
 }
 
@@ -135,7 +135,7 @@ void nx_image_copy(struct NXImage *dest, const struct NXImage *src)
         dest->height = src->height;
         dest->type = src->type;
         dest->n_channels = src->n_channels;
-        dest->data = dest->mem->ptr;
+        dest->data = (uchar *)dest->mem->ptr;
         dest->row_stride = src->row_stride;
 }
 
@@ -172,7 +172,7 @@ void nx_image_wrap(struct NXImage *img, uchar *data, int width, int height, int 
         img->height = height;
         img->type = type;
         img->n_channels = nx_image_n_channels(type);
-        img->data = img->mem->ptr;
+        img->data = (uchar *)img->mem->ptr;
         img->row_stride = row_stride;
 }
 
@@ -182,8 +182,8 @@ void nx_image_swap(struct NXImage *img0, struct NXImage *img1)
         NX_ASSERT_PTR(img1);
 
         nx_mem_block_swap(img0->mem, img1->mem);
-        img0->data = img0->mem->ptr;
-        img1->data = img1->mem->ptr;
+        img0->data = (uchar *)img0->mem->ptr;
+        img1->data = (uchar *)img1->mem->ptr;
 
         int tmpi;
         tmpi = img0->width; img1->width = img0->width; img1->width = tmpi;
