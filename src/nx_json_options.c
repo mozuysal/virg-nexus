@@ -17,12 +17,12 @@
 
 #include "virg/nexus/nx_assert.h"
 #include "virg/nexus/nx_alloc.h"
+#include "virg/nexus/nx_string.h"
 #include "virg/nexus/nx_message.h"
 #include "virg/nexus/nx_io.h"
 
 #include "jsmn/jsmn.h"
 
-#define LOG_TAG "NXJSONOptions"
 #define JOPTION_MAP_SIZE 128
 
 #define JOUT_NEWLINE "\n"
@@ -39,13 +39,6 @@
 #define READER_INITIAL_N_TOKENS 256
 
 #define TOKEN_LENGTH(t) ((t)->end - (t)->start)
-
-#define STRDUP(dest,src) do {                           \
-                if ((dest) != NULL)                     \
-                        nx_free(dest);                  \
-                (dest) = NX_NEW_C(strlen(src)+1);       \
-                strcpy((dest), (src));                  \
-        } while(0)
 
 struct NXJSONReader {
         jsmn_parser parser;
@@ -249,7 +242,7 @@ static const char *get_option_info(const char *fmt, enum NXJOptionType *type, NX
                 }
         }
 
-        nx_fatal(LOG_TAG, "Unexpected character processing option format '%s'", fmt);
+        nx_fatal(NX_LOG_TAG, "Unexpected character processing option format '%s'", fmt);
         return NULL;
 }
 
@@ -285,7 +278,7 @@ void nx_json_options_vadd(struct NXJSONOptions *jopt, const char *opt_format, va
 void nx_json_options_add_data(struct NXJSONOptions *jopt, struct NXJOptionData *jdata)
 {
         if (nx_json_options_find_in_map(jopt, jdata->name) != NULL)
-                nx_fatal(LOG_TAG, "Can not add duplicate JSON option '%s'", jdata->name);
+                nx_fatal(NX_LOG_TAG, "Can not add duplicate JSON option '%s'", jdata->name);
 
         nx_json_options_add_data_to_list(jopt, jdata);
         nx_json_options_add_data_to_map(jopt, jdata);
@@ -346,10 +339,10 @@ NXBool nx_json_options_get_bool(struct NXJSONOptions *jopt, const char *opt_name
 
         struct NXJOptionData *jdata = nx_json_options_find_in_map(jopt, opt_name);
         if (!jdata)
-                nx_fatal(LOG_TAG, "Can not find option: %s", opt_name);
+                nx_fatal(NX_LOG_TAG, "Can not find option: %s", opt_name);
 
         if (jdata->type != NX_JOT_Bool)
-                nx_fatal(LOG_TAG, "Error fetching option %s as boolean", opt_name);
+                nx_fatal(NX_LOG_TAG, "Error fetching option %s as boolean", opt_name);
 
         return jdata->value.b;
 }
@@ -361,10 +354,10 @@ int nx_json_options_get_int(struct NXJSONOptions *jopt, const char *opt_name)
 
         struct NXJOptionData *jdata = nx_json_options_find_in_map(jopt, opt_name);
         if (!jdata)
-                nx_fatal(LOG_TAG, "Can not find option: %s", opt_name);
+                nx_fatal(NX_LOG_TAG, "Can not find option: %s", opt_name);
 
         if (jdata->type != NX_JOT_Int)
-                nx_fatal(LOG_TAG, "Error fetching option %s as int", opt_name);
+                nx_fatal(NX_LOG_TAG, "Error fetching option %s as int", opt_name);
 
         return jdata->value.i;
 }
@@ -376,10 +369,10 @@ double nx_json_options_get_double(struct NXJSONOptions *jopt, const char *opt_na
 
         struct NXJOptionData *jdata = nx_json_options_find_in_map(jopt, opt_name);
         if (!jdata)
-                nx_fatal(LOG_TAG, "Can not find option: %s", opt_name);
+                nx_fatal(NX_LOG_TAG, "Can not find option: %s", opt_name);
 
         if (jdata->type != NX_JOT_Double)
-                nx_fatal(LOG_TAG, "Error fetching option %s as double", opt_name);
+                nx_fatal(NX_LOG_TAG, "Error fetching option %s as double", opt_name);
 
         return jdata->value.d;
 }
@@ -391,10 +384,10 @@ const char *nx_json_options_get_string(struct NXJSONOptions *jopt, const char *o
 
         struct NXJOptionData *jdata = nx_json_options_find_in_map(jopt, opt_name);
         if (!jdata)
-                nx_fatal(LOG_TAG, "Can not find option: %s", opt_name);
+                nx_fatal(NX_LOG_TAG, "Can not find option: %s", opt_name);
 
         if (jdata->type != NX_JOT_String)
-                nx_fatal(LOG_TAG, "Error fetching option %s as string", opt_name);
+                nx_fatal(NX_LOG_TAG, "Error fetching option %s as string", opt_name);
 
         return jdata->value.s;
 }
@@ -406,10 +399,10 @@ void nx_json_options_set_bool(struct NXJSONOptions *jopt, const char *opt_name, 
 
         struct NXJOptionData *jdata = nx_json_options_find_in_map(jopt, opt_name);
         if (!jdata)
-                nx_fatal(LOG_TAG, "Can not find option: %s", opt_name);
+                nx_fatal(NX_LOG_TAG, "Can not find option: %s", opt_name);
 
         if (jdata->type != NX_JOT_Bool)
-                nx_fatal(LOG_TAG, "Error fetching option %s as boolean", opt_name);
+                nx_fatal(NX_LOG_TAG, "Error fetching option %s as boolean", opt_name);
 
         jdata->value.b = value;
         jdata->is_set = NX_TRUE;
@@ -422,10 +415,10 @@ void nx_json_options_set_int(struct NXJSONOptions *jopt, const char *opt_name, i
 
         struct NXJOptionData *jdata = nx_json_options_find_in_map(jopt, opt_name);
         if (!jdata)
-                nx_fatal(LOG_TAG, "Can not find option: %s", opt_name);
+                nx_fatal(NX_LOG_TAG, "Can not find option: %s", opt_name);
 
         if (jdata->type != NX_JOT_Int)
-                nx_fatal(LOG_TAG, "Error fetching option %s as int", opt_name);
+                nx_fatal(NX_LOG_TAG, "Error fetching option %s as int", opt_name);
 
         jdata->value.i = value;
         jdata->is_set = NX_TRUE;
@@ -438,10 +431,10 @@ void nx_json_options_set_double(struct NXJSONOptions *jopt, const char *opt_name
 
         struct NXJOptionData *jdata = nx_json_options_find_in_map(jopt, opt_name);
         if (!jdata)
-                nx_fatal(LOG_TAG, "Can not find option: %s", opt_name);
+                nx_fatal(NX_LOG_TAG, "Can not find option: %s", opt_name);
 
         if (jdata->type != NX_JOT_Double)
-                nx_fatal(LOG_TAG, "Error fetching option %s as double", opt_name);
+                nx_fatal(NX_LOG_TAG, "Error fetching option %s as double", opt_name);
 
         jdata->value.d = value;
         jdata->is_set = NX_TRUE;
@@ -454,12 +447,12 @@ void nx_json_options_set_string(struct NXJSONOptions *jopt, const char *opt_name
 
         struct NXJOptionData *jdata = nx_json_options_find_in_map(jopt, opt_name);
         if (!jdata)
-                nx_fatal(LOG_TAG, "Can not find option: %s", opt_name);
+                nx_fatal(NX_LOG_TAG, "Can not find option: %s", opt_name);
 
         if (jdata->type != NX_JOT_String)
-                nx_fatal(LOG_TAG, "Error fetching option %s as string", opt_name);
+                nx_fatal(NX_LOG_TAG, "Error fetching option %s as string", opt_name);
 
-        STRDUP(jdata->value.s, value);
+        nx_strredup(&jdata->value.s, value);
         jdata->is_set = NX_TRUE;
 }
 
@@ -470,10 +463,10 @@ void nx_json_options_set_bool_array(struct NXJSONOptions *jopt, const char *opt_
 
         struct NXJOptionData *jdata = nx_json_options_find_in_map(jopt, opt_name);
         if (!jdata)
-                nx_fatal(LOG_TAG, "Can not find option: %s", opt_name);
+                nx_fatal(NX_LOG_TAG, "Can not find option: %s", opt_name);
 
         if (jdata->type != NX_JOT_Bool_Array)
-                nx_fatal(LOG_TAG, "Error fetching option %s as Boolean array", opt_name);
+                nx_fatal(NX_LOG_TAG, "Error fetching option %s as Boolean array", opt_name);
 
         nx_joption_data_realloc_value(jdata, length);
         for (size_t i = 0; i < length; ++i)
@@ -487,10 +480,10 @@ void nx_json_options_set_int_array(struct NXJSONOptions *jopt, const char *opt_n
 
         struct NXJOptionData *jdata = nx_json_options_find_in_map(jopt, opt_name);
         if (!jdata)
-                nx_fatal(LOG_TAG, "Can not find option: %s", opt_name);
+                nx_fatal(NX_LOG_TAG, "Can not find option: %s", opt_name);
 
         if (jdata->type != NX_JOT_Int_Array)
-                nx_fatal(LOG_TAG, "Error fetching option %s as int array", opt_name);
+                nx_fatal(NX_LOG_TAG, "Error fetching option %s as int array", opt_name);
 
         nx_joption_data_realloc_value(jdata, length);
         for (size_t i = 0; i < length; ++i)
@@ -504,10 +497,10 @@ void nx_json_options_set_double_array(struct NXJSONOptions *jopt, const char *op
 
         struct NXJOptionData *jdata = nx_json_options_find_in_map(jopt, opt_name);
         if (!jdata)
-                nx_fatal(LOG_TAG, "Can not find option: %s", opt_name);
+                nx_fatal(NX_LOG_TAG, "Can not find option: %s", opt_name);
 
         if (jdata->type != NX_JOT_Double_Array)
-                nx_fatal(LOG_TAG, "Error fetching option %s as double array", opt_name);
+                nx_fatal(NX_LOG_TAG, "Error fetching option %s as double array", opt_name);
 
         nx_joption_data_realloc_value(jdata, length);
         for (size_t i = 0; i < length; ++i)
@@ -521,14 +514,14 @@ void nx_json_options_set_string_array(struct NXJSONOptions *jopt, const char *op
 
         struct NXJOptionData *jdata = nx_json_options_find_in_map(jopt, opt_name);
         if (!jdata)
-                nx_fatal(LOG_TAG, "Can not find option: %s", opt_name);
+                nx_fatal(NX_LOG_TAG, "Can not find option: %s", opt_name);
 
         if (jdata->type != NX_JOT_String_Array)
-                nx_fatal(LOG_TAG, "Error fetching option %s as string array", opt_name);
+                nx_fatal(NX_LOG_TAG, "Error fetching option %s as string array", opt_name);
 
         nx_joption_data_realloc_value(jdata, length);
         for (size_t i = 0; i < length; ++i)
-                STRDUP(jdata->value.sa[i], value[i]);
+                nx_strredup(&jdata->value.sa[i], value[i]);
 }
 
 NXBool *nx_json_options_get_bool_array(struct NXJSONOptions *jopt, const char *opt_name, size_t *length)
@@ -538,10 +531,10 @@ NXBool *nx_json_options_get_bool_array(struct NXJSONOptions *jopt, const char *o
 
         struct NXJOptionData *jdata = nx_json_options_find_in_map(jopt, opt_name);
         if (!jdata)
-                nx_fatal(LOG_TAG, "Can not find option: %s", opt_name);
+                nx_fatal(NX_LOG_TAG, "Can not find option: %s", opt_name);
 
         if (jdata->type != NX_JOT_Bool_Array)
-                nx_fatal(LOG_TAG, "Error fetching option %s as Boolean array", opt_name);
+                nx_fatal(NX_LOG_TAG, "Error fetching option %s as Boolean array", opt_name);
 
         *length = jdata->array_length;
 
@@ -555,10 +548,10 @@ int *nx_json_options_get_int_array(struct NXJSONOptions *jopt, const char *opt_n
 
         struct NXJOptionData *jdata = nx_json_options_find_in_map(jopt, opt_name);
         if (!jdata)
-                nx_fatal(LOG_TAG, "Can not find option: %s", opt_name);
+                nx_fatal(NX_LOG_TAG, "Can not find option: %s", opt_name);
 
         if (jdata->type != NX_JOT_Int_Array)
-                nx_fatal(LOG_TAG, "Error fetching option %s as int array", opt_name);
+                nx_fatal(NX_LOG_TAG, "Error fetching option %s as int array", opt_name);
 
         *length = jdata->array_length;
 
@@ -572,10 +565,10 @@ double *nx_json_options_get_double_array(struct NXJSONOptions *jopt, const char 
 
         struct NXJOptionData *jdata = nx_json_options_find_in_map(jopt, opt_name);
         if (!jdata)
-                nx_fatal(LOG_TAG, "Can not find option: %s", opt_name);
+                nx_fatal(NX_LOG_TAG, "Can not find option: %s", opt_name);
 
         if (jdata->type != NX_JOT_Double_Array)
-                nx_fatal(LOG_TAG, "Error fetching option %s as double array", opt_name);
+                nx_fatal(NX_LOG_TAG, "Error fetching option %s as double array", opt_name);
 
         *length = jdata->array_length;
 
@@ -589,10 +582,10 @@ char **nx_json_options_get_string_array(struct NXJSONOptions *jopt, const char *
 
         struct NXJOptionData *jdata = nx_json_options_find_in_map(jopt, opt_name);
         if (!jdata)
-                nx_fatal(LOG_TAG, "Can not find option: %s", opt_name);
+                nx_fatal(NX_LOG_TAG, "Can not find option: %s", opt_name);
 
         if (jdata->type != NX_JOT_String_Array)
-                nx_fatal(LOG_TAG, "Error fetching option %s as string array", opt_name);
+                nx_fatal(NX_LOG_TAG, "Error fetching option %s as string array", opt_name);
 
         *length = jdata->array_length;
 
@@ -606,7 +599,7 @@ NXBool nx_json_options_is_set(struct NXJSONOptions *jopt, const char *opt_name)
 
         const struct NXJOptionData *jdata = nx_json_options_find_in_map(jopt, opt_name);
         if (!jdata)
-                nx_fatal(LOG_TAG, "Can not find option: %s", opt_name);
+                nx_fatal(NX_LOG_TAG, "Can not find option: %s", opt_name);
 
         return jdata->is_set;
 }
@@ -653,7 +646,7 @@ static inline char *get_option_name(const struct NXJSONReader *jreader, const js
         char *token_str = get_token_string(jreader, t);
 
         if (t->type != JSMN_STRING)
-                nx_fatal(LOG_TAG, "Expecting option name as string at position %d in the JSON stream, got %s!", t->start, token_str);
+                nx_fatal(NX_LOG_TAG, "Expecting option name as string at position %d in the JSON stream, got %s!", t->start, token_str);
 
         return token_str;
 }
@@ -664,11 +657,11 @@ void nx_json_options_parse_reader_tokens(struct NXJSONOptions *jopt, const struc
         int n_tokens = jreader->n_tokens;
 
         if (n_tokens == 0)
-                nx_fatal(LOG_TAG, "Empty JSON while trying to parse JSON options");
+                nx_fatal(NX_LOG_TAG, "Empty JSON while trying to parse JSON options");
 
         const jsmntok_t *top_token = tokens + 0;
         if (top_token->type != JSMN_OBJECT)
-                nx_fatal(LOG_TAG, "Top JSON field must be an object");
+                nx_fatal(NX_LOG_TAG, "Top JSON field must be an object");
 
         int tid = 1;
         while (tid < jreader->n_tokens) {
@@ -678,7 +671,7 @@ void nx_json_options_parse_reader_tokens(struct NXJSONOptions *jopt, const struc
 
                 struct NXJOptionData *jdata = nx_json_options_find_in_map(jopt, opt_name);
                 if (jdata == NULL) {
-                        nx_warning(LOG_TAG, "Skipping unknown JSON option %s", opt_name);
+                        nx_warning(NX_LOG_TAG, "Skipping unknown JSON option %s", opt_name);
                         int val_tid = ++tid;
                         tid += tokens[val_tid].size+1;
                 } else {
@@ -697,7 +690,7 @@ void nx_json_options_parse(struct NXJSONOptions *jopt, FILE *stream)
 
         struct NXJSONReader *jreader = nx_json_reader_new();
         if (!nx_json_reader_parse_stream(jreader, stream))
-                nx_fatal(LOG_TAG, "Error reading JSON options!");
+                nx_fatal(NX_LOG_TAG, "Error reading JSON options!");
 
         struct NXJOptionData *jdata = jopt->jopt_list.head;
         while (jdata != NULL) {
@@ -711,7 +704,7 @@ void nx_json_options_parse(struct NXJSONOptions *jopt, FILE *stream)
         while (jdata != NULL) {
                 if (!jdata->is_set) {
                         if (jdata->is_required)
-                                nx_fatal(LOG_TAG, "Missing required JSON option '%s'", jdata->name);
+                                nx_fatal(NX_LOG_TAG, "Missing required JSON option '%s'", jdata->name);
                         else
                                 nx_joption_data_set_from_default_value(jdata);
                 }
@@ -745,7 +738,7 @@ struct NXJOptionMapNode *nx_joption_map_node_new(const char *key, struct NXJOpti
 {
         struct NXJOptionMapNode *node = NX_NEW(1, struct NXJOptionMapNode);
         node->key = NULL;
-        STRDUP(node->key, key);
+        nx_strredup(&node->key, key);
         node->data = jdata;
         node->next = NULL;
 
@@ -770,7 +763,7 @@ struct NXJOptionData *nx_joption_data_alloc()
 struct NXJOptionData *nx_joption_data_new(const char *name, NXBool is_required)
 {
         struct NXJOptionData *jdata = nx_joption_data_alloc();
-        STRDUP(jdata->name, name);
+        nx_strredup(&jdata->name, name);
         jdata->is_required = is_required;
         return jdata;
 }
@@ -806,8 +799,8 @@ struct NXJOptionData *nx_joption_data_new_string(const char *name, NXBool is_req
 {
         struct NXJOptionData *jdata = nx_joption_data_new(name, is_required);
         jdata->type = NX_JOT_String;
-        STRDUP(jdata->value.s, def_val);
-        STRDUP(jdata->default_value.s, def_val);
+        nx_strredup(&jdata->value.s, def_val);
+        nx_strredup(&jdata->default_value.s, def_val);
         return jdata;
 }
 
@@ -950,7 +943,7 @@ void nx_joption_data_set_from_default_value(struct NXJOptionData *jdata)
         case NX_JOT_Bool: jdata->value.b = jdata->default_value.b; break;
         case NX_JOT_Int: jdata->value.i = jdata->default_value.i; break;
         case NX_JOT_Double: jdata->value.d = jdata->default_value.d; break;
-        case NX_JOT_String: STRDUP(jdata->value.s, jdata->default_value.s); break;
+        case NX_JOT_String: nx_strredup(&jdata->value.s, jdata->default_value.s); break;
         default:
                 nx_joption_data_free_value(jdata);
                 break;
@@ -965,15 +958,15 @@ void nx_joption_data_set_from_primitive_token(struct NXJOptionData *jdata, const
         parse_token_as_bool(token_text, &is_bool, &bool_value);
 
         if (jdata->type == NX_JOT_Bool && !is_bool)
-                nx_fatal(LOG_TAG, "Expecting Boolean value for JSON option %s", jdata->name);
+                nx_fatal(NX_LOG_TAG, "Expecting Boolean value for JSON option %s", jdata->name);
         else if (jdata->type != NX_JOT_Bool && is_bool)
-                nx_fatal(LOG_TAG, "Expecting numeric value for JSON option %s", jdata->name);
+                nx_fatal(NX_LOG_TAG, "Expecting numeric value for JSON option %s", jdata->name);
 
         switch (jdata->type) {
         case NX_JOT_Bool: jdata->value.b = bool_value; break;
         case NX_JOT_Int: jdata->value.i = atol(token_text); break;
         case NX_JOT_Double: jdata->value.d = atof(token_text); break;
-        default: nx_fatal(LOG_TAG, "Invalid JSON option data to be set from primitive token");
+        default: nx_fatal(NX_LOG_TAG, "Invalid JSON option data to be set from primitive token");
         }
 }
 
@@ -984,15 +977,15 @@ void nx_joption_data_set_array_element_from_primitive_token(struct NXJOptionData
         parse_token_as_bool(token_text, &is_bool, &bool_value);
 
         if (jdata->type == NX_JOT_Bool_Array && !is_bool)
-                nx_fatal(LOG_TAG, "Expecting Boolean element for JSON option %s", jdata->name);
+                nx_fatal(NX_LOG_TAG, "Expecting Boolean element for JSON option %s", jdata->name);
         else if (jdata->type != NX_JOT_Bool_Array && is_bool)
-                nx_fatal(LOG_TAG, "Expecting numeric element for JSON option %s", jdata->name);
+                nx_fatal(NX_LOG_TAG, "Expecting numeric element for JSON option %s", jdata->name);
 
         switch (jdata->type) {
         case NX_JOT_Bool_Array: jdata->value.ba[elem_id] = bool_value; break;
         case NX_JOT_Int_Array: jdata->value.ia[elem_id] = atol(token_text); break;
         case NX_JOT_Double_Array: jdata->value.da[elem_id] = atof(token_text); break;
-        default: nx_fatal(LOG_TAG, "Invalid JSON option data array element to be set from primitive token");
+        default: nx_fatal(NX_LOG_TAG, "Invalid JSON option data array element to be set from primitive token");
         }
 }
 
@@ -1003,19 +996,19 @@ void nx_joption_data_set_from_simple_token(struct NXJOptionData *jdata, const st
         char *token_text = get_token_string(jreader, t_val);
 
         if (jdata->type == NX_JOT_String && t_val->type != JSMN_STRING)
-                nx_fatal(LOG_TAG, "Expecting string value for JSON option %s", jdata->name);
+                nx_fatal(NX_LOG_TAG, "Expecting string value for JSON option %s", jdata->name);
         else if (jdata->type != NX_JOT_String && t_val->type != JSMN_PRIMITIVE)
-                nx_fatal(LOG_TAG, "Expecting primitive value for JSON option %s", jdata->name);
+                nx_fatal(NX_LOG_TAG, "Expecting primitive value for JSON option %s", jdata->name);
 
         switch (jdata->type) {
-        case NX_JOT_String: STRDUP(jdata->value.s, token_text); break;
+        case NX_JOT_String: nx_strredup(&jdata->value.s, token_text); break;
         case NX_JOT_Bool:
         case NX_JOT_Int:
         case NX_JOT_Double:
                 nx_joption_data_set_from_primitive_token(jdata, token_text);
                 break;
         default:
-                nx_fatal(LOG_TAG, "Invalid JSON option data to be set from simple token");
+                nx_fatal(NX_LOG_TAG, "Invalid JSON option data to be set from simple token");
         }
 
         nx_free(token_text);
@@ -1026,7 +1019,7 @@ static void nx_joption_data_set_from_array(struct NXJOptionData *jdata, const st
         const jsmntok_t *t_val = jreader->tokens + token_id;
 
         if (t_val->type != JSMN_ARRAY)
-                nx_fatal(LOG_TAG, "Expecting array value for JSON option %s", jdata->name);
+                nx_fatal(NX_LOG_TAG, "Expecting array value for JSON option %s", jdata->name);
 
         int n_elem = t_val->size;
         nx_joption_data_realloc_value(jdata, n_elem);
@@ -1035,12 +1028,12 @@ static void nx_joption_data_set_from_array(struct NXJOptionData *jdata, const st
                 const jsmntok_t *t_elem = t_val + i + 1;
                 char *elem_text = get_token_string(jreader, t_elem);
                 if (jdata->type == NX_JOT_String_Array && t_elem->type != JSMN_STRING)
-                        nx_fatal(LOG_TAG, "Expecting string element for JSON option %s", jdata->name);
+                        nx_fatal(NX_LOG_TAG, "Expecting string element for JSON option %s", jdata->name);
                 else if (jdata->type != NX_JOT_String_Array && t_elem->type != JSMN_PRIMITIVE)
-                        nx_fatal(LOG_TAG, "Expecting primitive element for JSON option %s", jdata->name);
+                        nx_fatal(NX_LOG_TAG, "Expecting primitive element for JSON option %s", jdata->name);
 
                 switch (jdata->type) {
-                case NX_JOT_String_Array: STRDUP(jdata->value.sa[i], elem_text); break;
+                case NX_JOT_String_Array: nx_strredup(&jdata->value.sa[i], elem_text); break;
                 case NX_JOT_Bool_Array:
                 case NX_JOT_Int_Array:
                 case NX_JOT_Double_Array:
@@ -1109,7 +1102,7 @@ void nx_json_reader_read_stream(struct NXJSONReader* reader, FILE* stream)
                         if (feof(stream))
                                 break;
                         else
-                                nx_fatal(LOG_TAG, "Error reading from JSON stream!");
+                                nx_fatal(NX_LOG_TAG, "Error reading from JSON stream!");
                 }
 
                 size_t line_sz = strlen(line_buffer);
@@ -1146,10 +1139,10 @@ NXBool nx_json_reader_parse_stream(struct NXJSONReader* reader, FILE* stream)
                 if (r == JSMN_ERROR_NOMEM) {
                         nx_json_reader_resize_tokens(reader);
                 } else if (r == JSMN_ERROR_PART) {
-                        nx_error(LOG_TAG, "Incomplete JSON stream!");
+                        nx_error(NX_LOG_TAG, "Incomplete JSON stream!");
                         return NX_FALSE;
                 } else if (r == JSMN_ERROR_INVAL) {
-                        nx_error(LOG_TAG, "Error parsing JSON stream!");
+                        nx_error(NX_LOG_TAG, "Error parsing JSON stream!");
                         return NX_FALSE;
                 } else {
                         reader->n_tokens = (int)r;

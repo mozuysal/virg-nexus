@@ -20,16 +20,9 @@
 #include "virg/nexus/nx_assert.h"
 #include "virg/nexus/nx_alloc.h"
 #include "virg/nexus/nx_message.h"
+#include "virg/nexus/nx_string.h"
 
-#define LOG_TAG "NXOptions"
 #define OPTION_MAP_SIZE 32
-
-#define STRDUP(dest,src) do {                           \
-                if ((dest) != NULL)                     \
-                        nx_free(dest);                  \
-                (dest) = NX_NEW_C(strlen(src)+1);       \
-                strcpy((dest), (src));                  \
-        } while(0)
 
 enum NXOptionType {
         NX_OT_Bool,
@@ -224,7 +217,7 @@ void nx_options_vadd(struct NXOptions *opt, const char *opt_format, va_list prm)
                         nx_options_add_rest(opt, opt_help, is_required);
                         break;
                 default:
-                        nx_fatal(LOG_TAG, "Unknown option character '%c'", c);
+                        nx_fatal(NX_LOG_TAG, "Unknown option character '%c'", c);
                         break;
                 }
         }
@@ -237,14 +230,14 @@ static inline void nx_options_check_required(struct NXOptions *opt)
                 if (!it->is_set) {
                         if (it->is_required) {
                                 nx_options_print_usage(opt, stderr);
-                                nx_fatal(LOG_TAG, "Missing required option '%s'!",
+                                nx_fatal(NX_LOG_TAG, "Missing required option '%s'!",
                                          name_short_name_join(it->name, it->short_name));
                         } else {
                                 switch (it->type) {
                                 case NX_OT_Bool: it->value.b = it->default_value.b; break;
                                 case NX_OT_Int: it->value.i = it->default_value.i; break;
                                 case NX_OT_Double: it->value.d = it->default_value.d; break;
-                                case NX_OT_String: STRDUP(it->value.s, it->default_value.s); break;
+                                case NX_OT_String: nx_strredup(&it->value.s, it->default_value.s); break;
                                 default:
                                         break;
                                 }
@@ -255,7 +248,7 @@ static inline void nx_options_check_required(struct NXOptions *opt)
 
         if (opt->rest && !opt->rest->is_set) {
                 if (opt->rest->is_required) {
-                        nx_fatal(LOG_TAG, "Missing required argument <%s>!",
+                        nx_fatal(NX_LOG_TAG, "Missing required argument <%s>!",
                                  opt->rest->help);
                 } else {
                         nx_options_free_rest_data(opt->rest);
@@ -283,7 +276,7 @@ static void nx_options_set_rest_from_args(struct NXOptions *opt, int argc, char*
         int j = 0;
         for (int i = 0; i < argc; ++i) {
                 if (!is_processed[i]) {
-                        STRDUP(opt->rest->value.r[j], argv[i]);
+                        nx_strredup(&opt->rest->value.r[j], argv[i]);
                         ++j;
                 }
         }
@@ -302,7 +295,7 @@ void nx_options_set_from_args(struct NXOptions *opt, int argc, char *argv[])
         for (int i = 0; i < argc; ++i)
                 is_processed[i] = NX_FALSE;
 
-        STRDUP(opt->prog_name, argv[0]);
+        nx_strredup(&opt->prog_name, argv[0]);
         is_processed[0] = NX_TRUE;
 
         for (int i = 1; i < argc; ++i) {
@@ -316,7 +309,7 @@ void nx_options_set_from_args(struct NXOptions *opt, int argc, char *argv[])
                 char *arg_value;
                 if (needs_param) {
                         if (i == argc-1)
-                                nx_fatal(LOG_TAG, "Option %s expects a value following the option switch", argv[i]);
+                                nx_fatal(NX_LOG_TAG, "Option %s expects a value following the option switch", argv[i]);
                         is_processed[i] = NX_TRUE;
                         arg_value = argv[++i];
                 }
@@ -332,7 +325,7 @@ void nx_options_set_from_args(struct NXOptions *opt, int argc, char *argv[])
                         opt_data->value.d = atof(arg_value);
                         break;
                 case NX_OT_String:
-                        STRDUP(opt_data->value.s, arg_value);
+                        nx_strredup(&opt_data->value.s, arg_value);
                         break;
                 case NX_OT_Rest:
                         break;
@@ -351,7 +344,7 @@ void nx_options_set_from_args(struct NXOptions *opt, int argc, char *argv[])
         } else {
                 for (int i = 0; i < argc; ++i)
                         if (!is_processed[i])
-                                nx_warning(LOG_TAG, "Unused command-line argument '%s'", argv[i]);
+                                nx_warning(NX_LOG_TAG, "Unused command-line argument '%s'", argv[i]);
 
         }
 
@@ -366,7 +359,7 @@ NXBool nx_options_is_set(const struct NXOptions *opt, const char *opt_name)
 
         struct NXOptionData *opt_data = nx_options_find_in_map(opt, opt_name);
         if (!opt_data)
-                nx_fatal(LOG_TAG, "Can not find option: %s", opt_name);
+                nx_fatal(NX_LOG_TAG, "Can not find option: %s", opt_name);
 
         return opt_data->is_set;
 }
@@ -377,10 +370,10 @@ NXBool nx_options_get_bool(const struct NXOptions *opt, const char *opt_name)
 
         struct NXOptionData *opt_data = nx_options_find_in_map(opt, opt_name);
         if (!opt_data)
-                nx_fatal(LOG_TAG, "Can not find boolean option: %s", opt_name);
+                nx_fatal(NX_LOG_TAG, "Can not find boolean option: %s", opt_name);
 
         if (opt_data->type != NX_OT_Bool)
-                nx_fatal(LOG_TAG, "Error fetching option %s as boolean", opt_name);
+                nx_fatal(NX_LOG_TAG, "Error fetching option %s as boolean", opt_name);
 
         return opt_data->value.b;
 }
@@ -391,10 +384,10 @@ int nx_options_get_int(const struct NXOptions *opt, const char *opt_name)
 
         struct NXOptionData *opt_data = nx_options_find_in_map(opt, opt_name);
         if (!opt_data)
-                nx_fatal(LOG_TAG, "Can not find int option: %s", opt_name);
+                nx_fatal(NX_LOG_TAG, "Can not find int option: %s", opt_name);
 
         if (opt_data->type != NX_OT_Int)
-                nx_fatal(LOG_TAG, "Error fetching option %s as int", opt_name);
+                nx_fatal(NX_LOG_TAG, "Error fetching option %s as int", opt_name);
 
         return opt_data->value.i;
 }
@@ -405,10 +398,10 @@ double nx_options_get_double(const struct NXOptions *opt, const char *opt_name)
 
         struct NXOptionData *opt_data = nx_options_find_in_map(opt, opt_name);
         if (!opt_data)
-                nx_fatal(LOG_TAG, "Can not find double option: %s", opt_name);
+                nx_fatal(NX_LOG_TAG, "Can not find double option: %s", opt_name);
 
         if (opt_data->type != NX_OT_Double)
-                nx_fatal(LOG_TAG, "Error fetching option %s as double", opt_name);
+                nx_fatal(NX_LOG_TAG, "Error fetching option %s as double", opt_name);
 
         return opt_data->value.d;
 }
@@ -419,10 +412,10 @@ const char *nx_options_get_string(const struct NXOptions *opt, const char *opt_n
 
         struct NXOptionData *opt_data = nx_options_find_in_map(opt, opt_name);
         if (!opt_data)
-                nx_fatal(LOG_TAG, "Can not find string option: %s", opt_name);
+                nx_fatal(NX_LOG_TAG, "Can not find string option: %s", opt_name);
 
         if (opt_data->type != NX_OT_String)
-                nx_fatal(LOG_TAG, "Error fetching option %s as string", opt_name);
+                nx_fatal(NX_LOG_TAG, "Error fetching option %s as string", opt_name);
 
         return opt_data->value.s;
 }
@@ -498,14 +491,14 @@ void nx_options_set_usage_header(struct NXOptions *opt, const char *header)
 {
         NX_ASSERT_PTR(opt);
 
-        STRDUP(opt->usage_header, header);
+        nx_strredup(&opt->usage_header, header);
 }
 
 void nx_options_set_usage_footer(struct NXOptions *opt, const char *footer)
 {
         NX_ASSERT_PTR(opt);
 
-        STRDUP(opt->usage_footer, footer);
+        nx_strredup(&opt->usage_footer, footer);
 }
 
 int compute_name_column_size(const struct NXOptions *opt, NXBool process_rest)
@@ -551,9 +544,9 @@ char *name_short_name_join(const char *name, const char *short_name)
                 strcpy(name_col + nsz + 2, short_name);
                 name_col[colsz-1] = '\0';
         } else if (has_name) {
-                STRDUP(name_col, name);
+                nx_strredup(&name_col, name);
         } else {
-                STRDUP(name_col, short_name);
+                nx_strredup(&name_col, short_name);
         }
 
         return name_col;
@@ -623,8 +616,8 @@ void nx_options_add_string(struct NXOptions *opt, const char *opt_names, const c
 {
         struct NXOptionData *opt_data = nx_option_data_new(opt_names, opt_help, is_required);
         opt_data->type = NX_OT_String;
-        STRDUP(opt_data->value.s, default_value);
-        STRDUP(opt_data->default_value.s, default_value);
+        nx_strredup(&opt_data->value.s, default_value);
+        nx_strredup(&opt_data->default_value.s, default_value);
 
         nx_option_data_add(opt_data, opt);
 }
@@ -730,7 +723,7 @@ struct NXOptionMapNode *nx_option_map_node_new(const char *key, struct NXOptionD
 {
         struct NXOptionMapNode *node = NX_NEW(1, struct NXOptionMapNode);
         node->key = NULL;
-        STRDUP(node->key, key);
+        nx_strredup(&node->key, key);
         node->data = data;
         node->next = NULL;
 
@@ -786,7 +779,7 @@ struct NXOptionData *nx_option_data_new(const char *opt_names, const char *opt_h
         nx_option_data_set_names(opt_data, opt_names);
         opt_data->is_required = is_required;
         opt_data->is_set = NX_FALSE;
-        STRDUP(opt_data->help, opt_help);
+        nx_strredup(&opt_data->help, opt_help);
 
         opt_data->next = NULL;
 
@@ -814,7 +807,7 @@ void nx_option_data_add(struct NXOptionData *opt_data, struct NXOptions *opt)
 {
         if (nx_options_find_in_map(opt, opt_data->name) != NULL
             || nx_options_find_in_map(opt, opt_data->short_name) != NULL)
-                nx_fatal(LOG_TAG, "Can not add duplicate option (%s)",
+                nx_fatal(NX_LOG_TAG, "Can not add duplicate option (%s)",
                          name_short_name_join(opt_data->name, opt_data->short_name));
 
         nx_options_add_to_list(opt, opt_data);
@@ -867,19 +860,19 @@ char *nx_option_data_value_string(const struct NXOptionData *opt_data)
 void nx_option_data_set_names(struct NXOptionData *opt_data, const char *opt_names)
 {
         if (opt_names == NULL)
-                nx_fatal(LOG_TAG, "Option names have to be non-NULL");
+                nx_fatal(NX_LOG_TAG, "Option names have to be non-NULL");
 
         char *names[2] = { NULL, NULL };
 
         const char *name_sep = strchr(opt_names, '|');
         if (name_sep == NULL) {
-                STRDUP(names[0], opt_names);
+                nx_strredup(&names[0], opt_names);
         } else {
                 int name0_len = strlen(opt_names) - strlen(name_sep);
-                STRDUP(names[0], opt_names);
+                nx_strredup(&names[0], opt_names);
                 names[0][name0_len] = '\0';
                 name_sep++;
-                STRDUP(names[1], name_sep);
+                nx_strredup(&names[1], name_sep);
         }
 
         for (int i = 0; i < 2; ++i) {
@@ -888,16 +881,16 @@ void nx_option_data_set_names(struct NXOptionData *opt_data, const char *opt_nam
 
                 size_t l = strlen(names[i]);
                 if (l < 2 || names[i][0] != '-')
-                        nx_fatal(LOG_TAG, "Illegal option name \"%s\", option name "
+                        nx_fatal(NX_LOG_TAG, "Illegal option name \"%s\", option name "
                                  "must begin with -, and must include another character", names[i]);
 
                 if (l > 2) {
                         if (names[i][1] != '-')
-                                nx_fatal(LOG_TAG, "Illegal int option name \"%s\", int option names "
+                                nx_fatal(NX_LOG_TAG, "Illegal int option name \"%s\", int option names "
                                          "must begin with --", names[i]);
-                        STRDUP(opt_data->name, names[i]);
+                        nx_strredup(&opt_data->name, names[i]);
                 } else {
-                        STRDUP(opt_data->short_name, names[i]);
+                        nx_strredup(&opt_data->short_name, names[i]);
                 }
 
                 nx_free(names[i]);
