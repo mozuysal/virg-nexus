@@ -21,6 +21,7 @@
 #include "virg/nexus/nx_alloc.h"
 #include "virg/nexus/nx_message.h"
 #include "virg/nexus/nx_string.h"
+#include "virg/nexus/nx_string_array.h"
 
 #define OPTION_MAP_SIZE 32
 
@@ -267,6 +268,7 @@ static void nx_options_set_rest_from_args(struct NXOptions *opt, int argc, char*
                         ++n_rest_arg;
         }
 
+        nx_options_free_rest_data(opt->rest);
         opt->rest->value.r = NX_NEW(n_rest_arg+1, char *);
         opt->rest->default_value.i = n_rest_arg;
 
@@ -285,7 +287,7 @@ static void nx_options_set_rest_from_args(struct NXOptions *opt, int argc, char*
                 opt->rest->is_set = NX_TRUE;
 }
 
-void nx_options_set_from_args(struct NXOptions *opt, int argc, char *argv[])
+void nx_options_set_from_args(struct NXOptions *opt, int argc, char **argv)
 {
         NX_ASSERT_PTR(opt);
 

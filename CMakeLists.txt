@@ -200,6 +200,7 @@ set(test_SOURCES
   tests/tests_mem_block.cc
   tests/tests_string.cc
   tests/tests_string_array.cc
+  tests/tests_options.cc
   tests/tests_filter.cc
   tests/tests_svd.cc
   tests/tests_homography.cc

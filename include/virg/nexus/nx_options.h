@@ -30,7 +30,7 @@ void nx_options_free(struct NXOptions *opt);
 void nx_options_add(struct NXOptions *opt, const char *opt_format, ...);
 void nx_options_add_help(struct NXOptions *opt);
 
-void nx_options_set_from_args(struct NXOptions *opt, int argc, char *argv[]);
+void nx_options_set_from_args(struct NXOptions *opt, int argc, char **argv);
 
 NXBool      nx_options_get_bool  (const struct NXOptions *opt, const char *opt_name);
 int         nx_options_get_int   (const struct NXOptions *opt, const char *opt_name);
