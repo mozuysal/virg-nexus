@@ -12,7 +12,6 @@
  */
 #include "virg/nexus/nx_string.h"
 
-#include <stdarg.h>
 #include <string.h>
 #include <stdio.h>
 
@@ -44,15 +43,25 @@ void nx_strredup(char **dest, const char *src)
 
 char *nx_fstr(const char* format, ...)
 {
+        va_list arg_list;
+        va_start(arg_list, format);
+        char *s = nx_vfstr(format, arg_list);
+        va_end(arg_list);
+
+        return s;
+}
+
+char *nx_vfstr(const char* format, va_list args)
+{
         size_t ls = NX_FSTR_INITIAL_LENGTH+1;
         char *s = NX_NEW_C(ls);
 
         int n = 0;
         while (NX_TRUE) {
-                va_list arg_list;
-                va_start(arg_list, format);
-                n = vsnprintf(s, ls, format, arg_list);
-                va_end(arg_list);
+                va_list args_cpy;
+                va_copy(args_cpy, args);
+                n = vsnprintf(s, ls, format, args_cpy);
+                va_end(args_cpy);
 
                 if (n < 0)
                         nx_fatal(NX_LOG_TAG, "Error making string from format %s",

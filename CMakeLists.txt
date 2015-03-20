@@ -19,6 +19,7 @@ set(virg_nexus_SOURCES
   src/nx_transform_2d.c
   src/nx_io.c
   src/nx_array.c
+  src/nx_string_array.c
   src/nx_options.c
   src/nx_json_options.c
   src/jsmn/jsmn.c
@@ -52,6 +53,7 @@ set(virg_nexus_HEADERS
   include/virg/nexus/nx_mat234.h
   include/virg/nexus/nx_string.h
   include/virg/nexus/nx_vector_gen.h
+  include/virg/nexus/nx_string_array.h
   include/virg/nexus/nx_transform_2d.h
   include/virg/nexus/nx_io.h
   include/virg/nexus/nx_array.h
@@ -83,7 +85,7 @@ add_library(virg-nexus STATIC ${virg_nexus_SOURCES})
 set_target_properties(virg-nexus PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 
 add_library(virg-nexus-shared SHARED ${virg_nexus_SOURCES})
-target_link_libraries(virg-nexus-shared -lm)
+target_link_libraries(virg-nexus-shared -lm -llapack)
 set_target_properties(virg-nexus-shared PROPERTIES OUTPUT_NAME virg-nexus)
 set_target_properties(virg-nexus-shared PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 
@@ -120,9 +122,9 @@ set(VIRG_NEXUS_FLAGS_DEBUG          "-Wall -pedantic -g -rdynamic -DJSMN_PARENT_
 set(VIRG_NEXUS_FLAGS_RELEASE        "-Wall -pedantic -O2 -DNDEBUG -DJSMN_PARENT_LINKS=1 ${VIRG_NEXUS_FLAGS_PLATFORM} ${VIRG_NEXUS_FLAGS_SIMD}")
 set(VIRG_NEXUS_FLAGS_RELWITHDEBINFO "-Wall -pedantic -O2 -DNDEBUG -g -rdynamic -DJSMN_PARENT_LINKS=1 ${VIRG_NEXUS_FLAGS_PLATFORM} ${VIRG_NEXUS_FLAGS_SIMD}")
 
-set(CMAKE_C_FLAGS_DEBUG          "${VIRG_NEXUS_FLAGS_DEBUG} -std=c99")
-set(CMAKE_C_FLAGS_RELEASE        "${VIRG_NEXUS_FLAGS_RELEASE} -std=c99")
-set(CMAKE_C_FLAGS_RELWITHDEBINFO "${VIRG_NEXUS_FLAGS_RELWITHDEBINFO} -std=c99")
+set(CMAKE_C_FLAGS_DEBUG          "${VIRG_NEXUS_FLAGS_DEBUG} -std=gnu99")
+set(CMAKE_C_FLAGS_RELEASE        "${VIRG_NEXUS_FLAGS_RELEASE} -std=gnu99")
+set(CMAKE_C_FLAGS_RELWITHDEBINFO "${VIRG_NEXUS_FLAGS_RELWITHDEBINFO} -std=gnu99")
 
 set(CMAKE_CXX_FLAGS_DEBUG          "${VIRG_NEXUS_FLAGS_DEBUG} -std=c++0x")
 set(CMAKE_CXX_FLAGS_RELEASE        "${VIRG_NEXUS_FLAGS_RELEASE} -std=c++0x")
@@ -179,7 +181,7 @@ endif (VIRG_NEXUS_USE_TUNED_LAPACK)
 
 include_directories(${LAPACK_INCLUDE_DIR})
 link_directories(${LAPACK_LIBRARY_DIRS})
-
+set(EXEC_LIBRARIES ${LAPACK_LIBRARIES})
 # --------------------------------- Goggle Test ----------------------------------
 if (CMAKE_USE_PTHREADS_INIT)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGTEST_HAS_PTHREAD=1")
@@ -196,7 +198,11 @@ set_target_properties(gtest PROPERTIES ARCHIVE_OUTPUT_DIRECTORY lib)
 set(test_SOURCES
   tests/tests_main.cc
   tests/tests_mem_block.cc
+  tests/tests_string.cc
+  tests/tests_string_array.cc
   tests/tests_filter.cc
+  tests/tests_svd.cc
+  tests/tests_homography.cc
   tests/tests_image.cc
   tests/tests_image_pyr.cc
   tests/tests_fast_detector.cc

@@ -13,6 +13,8 @@
 #ifndef VIRG_NEXUS_NX_STRING_H
 #define VIRG_NEXUS_NX_STRING_H
 
+#include <stdarg.h>
+
 #include "virg/nexus/nx_config.h"
 
 __NX_BEGIN_DECL
@@ -21,6 +23,7 @@ char *nx_strdup(const char *s);
 void nx_strredup(char ** dest, const char *src);
 
 char *nx_fstr(const char* format, ...) __attribute__((format (printf, 1, 2)));
+char *nx_vfstr(const char* format, va_list args);
 
 __NX_END_DECL
 

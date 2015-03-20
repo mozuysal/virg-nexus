@@ -88,7 +88,7 @@ void NX_VECTOR_FUNC(clear)(struct NX_VECTOR_NAME *v)
 
 void NX_VECTOR_FUNC(wrap)(struct NX_VECTOR_NAME *v, NX_VECTOR_ITEM *items, size_t sz, size_t capacity, NXBool own_memory)
 {
-        nx_mem_block_wrap(v->mem, (uchar*)items, sz*NX_VECTOR_ITEM_SIZE, capacity*NX_VECTOR_ITEM_SIZE, own_memory);
+        nx_mem_block_wrap(v->mem, (char*)items, sz*NX_VECTOR_ITEM_SIZE, capacity*NX_VECTOR_ITEM_SIZE, own_memory);
         _update_vector_fields(v);
 }
 

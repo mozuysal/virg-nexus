@@ -47,6 +47,24 @@ void nx_free(void *ptr);
 #define NX_NEW_S(n)    NX_NEW((n),float)
 #define NX_NEW_D(n)    NX_NEW((n),double)
 
+#define NX_ENSURE_CAPACITY(x, cap, sz) do {                     \
+                if (cap < (sz)) {                               \
+                        cap *= 2;                               \
+                        if (cap < (sz))                         \
+                                cap = (sz);                     \
+                        x = nx_frealloc((x), cap*sizeof(*(x))); \
+                }                                               \
+        } while (0)
+
+#define NX_SHRINK_CAPACITY(x, cap, sz) do {                     \
+                if (cap > 2*(sz)) {                             \
+                        cap /= 2;                               \
+                        if (cap > 2*(sz))                       \
+                                cap = (sz);                     \
+                        x = nx_frealloc((x), cap*sizeof(*(x))); \
+                }                                               \
+        } while (0)
+
 __NX_END_DECL
 
 #endif

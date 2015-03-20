@@ -166,7 +166,7 @@ void nx_image_wrap(struct NXImage *img, uchar *data, int width, int height, int 
         NX_ASSERT(row_stride >= width);
 
         size_t sz = row_stride * height * sizeof(uchar);
-        nx_mem_block_wrap(img->mem, data, sz, sz, own_memory);
+        nx_mem_block_wrap(img->mem, (char *)data, sz, sz, own_memory);
 
         img->width = width;
         img->height = height;
