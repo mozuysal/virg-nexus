@@ -113,7 +113,6 @@ void default_fatal_func(const char* tag, const char* msg, va_list prm)
     vfprintf(stderr, msg, prm);
     PRINT_FOOTER();
 
-    fprintf(stderr, "Call Stack:\n");
     print_call_stack();
 
     exit(NX_EXIT_FATAL);
