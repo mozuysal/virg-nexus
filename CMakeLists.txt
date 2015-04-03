@@ -21,8 +21,10 @@ set(virg_nexus_SOURCES
   src/nx_array.c
   src/nx_string_array.c
   src/nx_options.c
-  src/nx_json_options.c
-  src/jsmn/jsmn.c
+  src/nx_json_lexer.c
+  src/nx_json_parser.c
+  src/nx_json_tree.c
+  src/nx_json_bundle.c
   src/nx_plotter.c
   src/nx_filter.c
   src/nx_image.c
@@ -58,7 +60,10 @@ set(virg_nexus_HEADERS
   include/virg/nexus/nx_io.h
   include/virg/nexus/nx_array.h
   include/virg/nexus/nx_options.h
-  include/virg/nexus/nx_json_options.h
+  include/virg/nexus/nx_json_lexer.h
+  include/virg/nexus/nx_json_parser.h
+  include/virg/nexus/nx_json_tree.h
+  include/virg/nexus/nx_json_bundle.h
   include/virg/nexus/nx_plotter.h
   include/virg/nexus/nx_filter.h
   include/virg/nexus/nx_image.h
@@ -201,7 +206,6 @@ set(test_SOURCES
   tests/tests_string.cc
   tests/tests_string_array.cc
   tests/tests_options.cc
-  tests/tests_json_options.cc
   tests/tests_filter.cc
   tests/tests_svd.cc
   tests/tests_homography.cc
