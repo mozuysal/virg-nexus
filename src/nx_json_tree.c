@@ -250,11 +250,14 @@ int nx_json_node_n_children(struct NXJSONNode *node)
 
 struct NXJSONNode *nx_json_array_get(struct NXJSONNode *jarray, int position, int type)
 {
+        if (!nx_json_node_is(jarray, NX_JNT_ARRAY))
+            return NULL;
+
         struct NXJSONNode *n = jarray->down;
         if (n == NULL)
                 return NULL;
 
-        while (n != NULL && --position > 0)
+        while (n != NULL && position-- > 0)
                 n = n->right;
 
         if (!nx_json_node_is_a(n, type))
@@ -265,12 +268,19 @@ struct NXJSONNode *nx_json_array_get(struct NXJSONNode *jarray, int position, in
 
 struct NXJSONNode *nx_json_object_get(struct NXJSONNode *jobject, const char *name, int type)
 {
+        if (!nx_json_node_is(jobject, NX_JNT_OBJECT))
+            return NULL;
+
         struct NXJSONNode *n = jobject->down;
         if (n == NULL)
                 return NULL;
 
         while (n != NULL && strcmp(n->text, name) != 0)
                 n = n->right;
+
+        if (n == NULL)
+                return NULL;
+        n = n->right;
 
         if (!nx_json_node_is_a(n, type))
                 return NULL;
