@@ -176,9 +176,10 @@ void nx_image_xload_pnm(struct NXImage *img, const char *filename,
         int pnm_width;
         int pnm_height;
         int pnm_levels;
-        if (fscanf(pnm, "%d %d %d ", &pnm_width, &pnm_height, &pnm_levels) != 3) {
+        if (fscanf(pnm, "%d %d %d", &pnm_width, &pnm_height, &pnm_levels) != 3) {
                 nx_io_fatal_exit(NX_LOG_TAG, "Could not read image attributes from %s", filename);
         }
+        c = fgetc(pnm);
 
         enum NXImageType img_type;
         switch (mode) {
