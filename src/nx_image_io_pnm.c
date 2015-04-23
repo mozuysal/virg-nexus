@@ -158,18 +158,26 @@ void nx_image_xload_pnm(struct NXImage *img, const char *filename,
                 pnm_type = NX_IMAGE_RGBA;
         }
 
+        int c = fgetc(pnm);
+        while (c == ' ' || c == '\n' || c == '\t') {
+                c = fgetc(pnm);
+        }
+
+        while (c == '#') {
+                while (c != '\n') {
+                        c = fgetc(pnm);
+                        if (c == EOF)
+                                nx_io_fatal_exit(NX_LOG_TAG, "%s does not contain image data", filename);
+                }
+                c = fgetc(pnm);
+        }
+        ungetc(c, pnm);
+
         int pnm_width;
         int pnm_height;
         int pnm_levels;
-
-        if (fscanf(pnm, "%d %d %d", &pnm_width, &pnm_height, &pnm_levels) != 3) {
+        if (fscanf(pnm, "%d %d %d ", &pnm_width, &pnm_height, &pnm_levels) != 3) {
                 nx_io_fatal_exit(NX_LOG_TAG, "Could not read image attributes from %s", filename);
-        }
-
-        // Skip a new line
-        char buffer[256];
-        if (fgets(buffer, sizeof(buffer), pnm) == NULL) {
-                nx_io_fatal_exit(NX_LOG_TAG, "Error reading from %s", filename);
         }
 
         enum NXImageType img_type;
