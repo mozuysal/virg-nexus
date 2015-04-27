@@ -26,12 +26,13 @@ __NX_NO_RETURN void nx_io_fatal_exit(const char *tag, const char *fmt, ...) __at
 void nx_io_error(const char *tag, const char *fmt, ...) __attribute__((format (printf, 2, 3)));
 
 FILE *nx_xfopen(const char *path, const char *mode);
-
 void nx_xfclose(FILE *stream, const char *stream_label);
 
 FILE *nx_fopen(const char *path, const char *mode);
-
 NXResult nx_fclose(FILE *stream, const char *stream_label);
+
+void nx_xfwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream);
+void nx_xfread(void *ptr, size_t size, size_t nmemb, FILE *stream);
 
 __NX_END_DECL
 

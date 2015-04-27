@@ -84,3 +84,15 @@ NXResult nx_fclose(FILE *stream, const char *stream_label)
 
         return NX_OK;
 }
+
+void nx_xfwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
+{
+        if (fwrite(ptr, size, nmemb, stream) != nmemb)
+                nx_io_fatal_exit(NX_LOG_TAG, "Error writing %zd items to stream", nmemb);
+}
+
+void nx_xfread(void *ptr, size_t size, size_t nmemb, FILE *stream)
+{
+        if (fread(ptr, size, nmemb, stream) != nmemb)
+                nx_io_fatal_exit(NX_LOG_TAG, "Error read %zd items from stream", nmemb);
+}
