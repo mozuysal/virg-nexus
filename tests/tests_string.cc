@@ -37,16 +37,18 @@ protected:
         virtual void SetUp() {
                 p = nx_strdup(TS1);
                 q = NULL;
+                f = tmpfile();
         }
 
         virtual void TearDown() {
                 nx_free(p);
                 nx_free(q);
+                fclose(f);
         }
 
         char *p;
         char *q;
-
+        FILE *f;
 };
 
 TEST_F(NXStringTest, strdup) {
@@ -100,6 +102,46 @@ TEST_F(NXStringTest, fstr) {
         char *fs = nx_fstr(TFS, 2, "png");
         EXPECT_STREQ("filename_002.png", fs);
         nx_free(fs);
+}
+
+TEST_F(NXStringTest, strwrite) {
+        const char *s = "text";
+        int res = nx_strwrite(s, f);
+        EXPECT_TRUE(res == 0);
+}
+
+TEST_F(NXStringTest, strwrite_empty) {
+        const char *s = "";
+        int res = nx_strwrite(s, f);
+        EXPECT_TRUE(res == 0);
+}
+
+TEST_F(NXStringTest, strread) {
+        const char *s = "text";
+        int res = nx_strwrite(s, f);
+        EXPECT_TRUE(res == 0);
+
+        rewind(f);
+        char *scpy = NULL;
+        res = nx_strread(&scpy, 0, f);
+        EXPECT_TRUE(res == 0);
+        EXPECT_STREQ(s, scpy);
+
+        free(scpy);
+}
+
+TEST_F(NXStringTest, strread_empty) {
+        const char *s = "";
+        int res = nx_strwrite(s, f);
+        EXPECT_TRUE(res == 0);
+
+        rewind(f);
+        char *scpy = NULL;
+        res = nx_strread(&scpy, 0, f);
+        EXPECT_TRUE(res == 0);
+        EXPECT_STREQ(s, scpy);
+
+        free(scpy);
 }
 
 } // namespace

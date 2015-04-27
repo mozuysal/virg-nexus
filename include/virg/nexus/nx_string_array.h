@@ -14,6 +14,7 @@
 #define VIRG_NEXUS_NX_STRING_ARRAY_H
 
 #include <stdarg.h>
+#include <stdio.h>
 
 #include "virg/nexus/nx_config.h"
 
@@ -38,6 +39,13 @@ void nx_string_array_vsetf(struct NXStringArray *sa, int id, const char *fmt, va
 void nx_string_array_append(struct NXStringArray *sa, const char *s);
 void nx_string_array_appendf(struct NXStringArray *sa, const char *fmt, ...)  __attribute__((format (printf, 2, 3)));
 void nx_string_array_vappendf(struct NXStringArray *sa, const char *fmt, va_list args);
+
+int nx_string_array_write(const struct NXStringArray *sa, FILE *stream);
+void nx_string_array_xwrite(const struct NXStringArray *sa, FILE *stream);
+int nx_string_array_read(struct NXStringArray *sa, FILE *stream);
+void nx_string_array_xread(struct NXStringArray *sa, FILE *stream);
+struct NXStringArray *nx_string_array_read0(FILE *stream);
+struct NXStringArray *nx_string_array_xread0(FILE *stream);
 
 __NX_END_DECL
 

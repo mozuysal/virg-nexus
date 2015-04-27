@@ -76,19 +76,23 @@ char *nx_vfstr(const char* format, va_list args)
         };
 }
 
-size_t nx_strwrite(const char *s, FILE *stream)
+int nx_strwrite(const char *s, FILE *stream)
 {
         size_t ls = strlen(s);
         if (fwrite(&ls, sizeof(ls), 1, stream) != 1)
-                return 0;
-        return fwrite(s, sizeof(*s), ls, stream);
+                return 1;
+
+        if (fwrite(s, sizeof(*s), ls, stream) != ls)
+                return 1;
+
+        return 0;
 }
 
-size_t nx_strread(char **s, size_t size, FILE *stream)
+int nx_strread(char **s, size_t size, FILE *stream)
 {
         size_t ls = 0;
         if (fread(&ls, sizeof(ls), 1, stream) != 1)
-                return 0;
+                return 1;
 
         if (ls >= size)
                 *s = nx_frealloc(*s, (ls+1)*sizeof(**s));
@@ -97,20 +101,18 @@ size_t nx_strread(char **s, size_t size, FILE *stream)
         (*s)[ls] = '\0';
 
         if (n_read != ls)
-                return 0;
-        else
-                return n_read;
+                return 1;
+
+        return 0;
 }
 
 char *nx_strread0(FILE *stream)
 {
         char *s = NULL;
-        size_t n_read = nx_strread(&s, 0, stream);
-
-        if (n_read == 0) {
+        if (nx_strread(&s, 0, stream) != 0) {
                 if (s != NULL)
                         nx_free(s);
-                return 0;
+                return NULL;
         }
 
         return s;

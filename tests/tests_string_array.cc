@@ -32,13 +32,16 @@ protected:
 
         virtual void SetUp() {
                 sa = nx_string_array_alloc();
+                f = tmpfile();
         }
 
         virtual void TearDown() {
                 nx_string_array_free(sa);
+                fclose(f);
         }
 
         struct NXStringArray *sa;
+        FILE *f;
 };
 
 TEST_F(NXStringArrayTest, alloc) {
@@ -87,6 +90,74 @@ TEST_F(NXStringArrayTest, append) {
         EXPECT_EQ(10, nx_string_array_size(sa));
         for (int i = 0; i < 10; ++i)
                 EXPECT_STREQ("elem", nx_string_array_get(sa, i));
+}
+
+TEST_F(NXStringArrayTest, write) {
+        nx_string_array_resize(sa, 2);
+        nx_string_array_set(sa, 0, "abcd");
+        nx_string_array_set(sa, 1, "efgh");
+
+        int res = nx_string_array_write(sa, f);
+        EXPECT_TRUE(res == 0);
+}
+
+TEST_F(NXStringArrayTest, write_empty) {
+        int res = nx_string_array_write(sa, f);
+        EXPECT_TRUE(res == 0);
+}
+
+TEST_F(NXStringArrayTest, read) {
+        nx_string_array_resize(sa, 2);
+        nx_string_array_set(sa, 0, "abcd");
+        nx_string_array_set(sa, 1, "efgh");
+
+        int res = nx_string_array_write(sa, f);
+        EXPECT_TRUE(res == 0);
+
+        rewind(f);
+        res = nx_string_array_read(sa, f);
+        EXPECT_TRUE(res == 0);
+        EXPECT_EQ(2, nx_string_array_size(sa));
+        EXPECT_STREQ("abcd", nx_string_array_get(sa, 0));
+        EXPECT_STREQ("efgh", nx_string_array_get(sa, 1));
+}
+
+TEST_F(NXStringArrayTest, read_empty) {
+        int res = nx_string_array_write(sa, f);
+        EXPECT_TRUE(res == 0);
+
+        rewind(f);
+        res = nx_string_array_read(sa, f);
+        EXPECT_TRUE(res == 0);
+        EXPECT_EQ(0, nx_string_array_size(sa));
+}
+
+TEST_F(NXStringArrayTest, read0) {
+        nx_string_array_resize(sa, 2);
+        nx_string_array_set(sa, 0, "abcd");
+        nx_string_array_set(sa, 1, "efgh");
+
+        int res = nx_string_array_write(sa, f);
+        EXPECT_TRUE(res == 0);
+
+        rewind(f);
+        struct NXStringArray *sacpy = nx_string_array_read0(f);
+        EXPECT_TRUE(sacpy != NULL);
+        EXPECT_EQ(2, nx_string_array_size(sacpy));
+        EXPECT_STREQ("abcd", nx_string_array_get(sacpy, 0));
+        EXPECT_STREQ("efgh", nx_string_array_get(sacpy, 1));
+        nx_string_array_free(sacpy);
+}
+
+TEST_F(NXStringArrayTest, read0_empty) {
+        int res = nx_string_array_write(sa, f);
+        EXPECT_TRUE(res == 0);
+
+        rewind(f);
+        struct NXStringArray *sacpy = nx_string_array_read0(f);
+        EXPECT_TRUE(sacpy != NULL);
+        EXPECT_EQ(0, nx_string_array_size(sacpy));
+        nx_string_array_free(sacpy);
 }
 
 } // namespace
