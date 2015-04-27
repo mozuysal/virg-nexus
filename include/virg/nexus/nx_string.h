@@ -14,6 +14,7 @@
 #define VIRG_NEXUS_NX_STRING_H
 
 #include <stdarg.h>
+#include <stdio.h>
 
 #include "virg/nexus/nx_config.h"
 
@@ -24,6 +25,10 @@ void nx_strredup(char ** dest, const char *src);
 
 char *nx_fstr(const char* format, ...) __attribute__((format (printf, 1, 2)));
 char *nx_vfstr(const char* format, va_list args);
+
+size_t nx_strwrite(const char *s, FILE *stream);
+size_t nx_strread(char **s, size_t size, FILE *stream);
+char *nx_strread0(FILE *stream);
 
 __NX_END_DECL
 
