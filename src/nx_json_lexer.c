@@ -219,11 +219,11 @@ static void nx_json_lexer_NUMBER(struct NXJSONLexer *jlex, struct NXJSONToken *t
         int len = end-start;
 
         if (jlex->s[start] == '-' && len == 1)
-                NX_JSON_LEXER_ERROR(jlex,"- should be followe dby at least one digit");
+                NX_JSON_LEXER_ERROR(jlex,"%c should be followed by at least one digit", 'c');
         else if (jlex->s[start] == '0' && len > 1)
-                NX_JSON_LEXER_ERROR(jlex,"Multi-digit numbers can not start with 0");
+                NX_JSON_LEXER_ERROR(jlex,"Multi-digit numbers can not start with %d", 0);
         else if (len > 2 && jlex->s[start] == '-' && jlex->s[start+1] == '0')
-                NX_JSON_LEXER_ERROR(jlex,"Multi-digit numbers can not start with -0");
+                NX_JSON_LEXER_ERROR(jlex,"Multi-digit numbers can not start with -%d", 0);
 
         if (jlex->c != '.' && jlex->c != 'e' && jlex->c != 'E') {
                 nx_json_token_fill(t, NX_JTT_INTEGER, len, jlex->s + start);
@@ -233,7 +233,7 @@ static void nx_json_lexer_NUMBER(struct NXJSONLexer *jlex, struct NXJSONToken *t
         if (jlex->c == '.') {
                 nx_json_lexer_consume(jlex);
                 if (!isdigit(jlex->c))
-                        NX_JSON_LEXER_ERROR(jlex,"Floating-point fraction should have at least one digit!");
+                        NX_JSON_LEXER_ERROR(jlex,"Floating-point fraction should have at least one digit%c", '!');
                 while (isdigit(jlex->c))
                         nx_json_lexer_consume(jlex);
         }
@@ -243,7 +243,7 @@ static void nx_json_lexer_NUMBER(struct NXJSONLexer *jlex, struct NXJSONToken *t
                 if (jlex->c == '+' || jlex->c == '-')
                         nx_json_lexer_consume(jlex);
                 if (!isdigit(jlex->c))
-                        NX_JSON_LEXER_ERROR(jlex,"Floating-point exponent should have at least one digit!");
+                        NX_JSON_LEXER_ERROR(jlex,"Floating-point exponent should have at least one digit%c", '!');
                 while (isdigit(jlex->c))
                         nx_json_lexer_consume(jlex);
         }
@@ -279,7 +279,7 @@ static void nx_json_lexer_STRING(struct NXJSONLexer *jlex, struct NXJSONToken *t
         } while (jlex->c != EOF && jlex->c != '"');
 
         if (jlex->c != '"')
-                NX_JSON_LEXER_ERROR(jlex,"Missing closing \" for string");
+                NX_JSON_LEXER_ERROR(jlex,"Missing closing %c for string", '\"');
         nx_json_lexer_consume(jlex);
 
         int end = jlex->p-1; // omit "
