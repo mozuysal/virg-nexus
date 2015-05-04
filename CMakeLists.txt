@@ -35,6 +35,7 @@ set(virg_nexus_SOURCES
   src/nx_image_pyr.c
   src/nx_image_pyr_builder.c
   src/nx_colorspace.c
+  src/nx_keypoint.c
   src/fast/fast_9.c
   src/fast/fast_nonmax.c
   src/nx_fast_detector.c

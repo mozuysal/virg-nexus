@@ -13,6 +13,8 @@
 #ifndef VIRG_NEXUS_NX_KEYPOINT_H
 #define VIRG_NEXUS_NX_KEYPOINT_H
 
+#include <stdio.h>
+
 #include "virg/nexus/nx_config.h"
 
 __NX_BEGIN_DECL
@@ -53,6 +55,12 @@ static inline float nx_keypoint_ys0(struct NXKeypoint *key)
 {
         return key->ys * key->scale;
 }
+
+int nx_keypoint_write(const struct NXKeypoint *key, int n, FILE *stream);
+int nx_keypoint_read(struct NXKeypoint *key, int n, FILE *stream);
+
+void nx_keypoint_xwrite(const struct NXKeypoint *key, int n, FILE *stream);
+void nx_keypoint_xread(struct NXKeypoint *key, int n, FILE *stream);
 
 __NX_END_DECL
 
