@@ -129,7 +129,7 @@ void nx_brief_extractor_randomize_with_seed(struct NXBriefExtractor *be, uint32_
         NX_ASSERT_PTR(be);
         NX_ASSERT_PTR(be->offsets);
 
-        struct NXUniformSampler *sampler = nx_uniform_sampler_new();
+        struct NXUniformSampler *sampler = nx_uniform_sampler_new_with_seed(seed);
 
         int length = be->n_octets * 8;
         int radius = be->radius;
