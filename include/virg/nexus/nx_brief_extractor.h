@@ -34,9 +34,13 @@ struct NXBriefExtractor *nx_brief_extractor_alloc();
 
 struct NXBriefExtractor *nx_brief_extractor_new(int n_octets, int radius);
 
+struct NXBriefExtractor *nx_brief_extractor_new_with_seed(int n_octets, int radius, uint32_t seed);
+
 void nx_brief_extractor_free(struct NXBriefExtractor *be);
 
 void nx_brief_extractor_resize(struct NXBriefExtractor *be, int n_octets, int radius);
+
+void nx_brief_extractor_randomize_with_seed(struct NXBriefExtractor *be, uint32_t seed);
 
 void nx_brief_extractor_randomize(struct NXBriefExtractor *be);
 

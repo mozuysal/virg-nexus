@@ -13,6 +13,7 @@
 #include "virg/nexus/nx_brief_extractor.h"
 
 #include <limits.h>
+#include <time.h>
 
 #include "virg/nexus/nx_assert.h"
 #include "virg/nexus/nx_alloc.h"
@@ -46,6 +47,13 @@ struct NXBriefExtractor *nx_brief_extractor_new(int n_octets, int radius)
 {
         struct NXBriefExtractor *be = nx_brief_extractor_alloc();
         nx_brief_extractor_resize(be, n_octets, radius);
+        return be;
+}
+
+struct NXBriefExtractor *nx_brief_extractor_new_with_seed(int n_octets, int radius, uint32_t seed)
+{
+        struct NXBriefExtractor *be = nx_brief_extractor_new(n_octets, radius);
+        nx_brief_extractor_randomize_with_seed(be, seed);
         return be;
 }
 
@@ -113,17 +121,27 @@ void nx_brief_extractor_randomize(struct NXBriefExtractor *be)
         NX_ASSERT_PTR(be);
         NX_ASSERT_PTR(be->offsets);
 
+        nx_brief_extractor_randomize_with_seed(be, time(NULL));
+}
+
+void nx_brief_extractor_randomize_with_seed(struct NXBriefExtractor *be, uint32_t seed)
+{
+        NX_ASSERT_PTR(be);
+        NX_ASSERT_PTR(be->offsets);
+
+        struct NXUniformSampler *sampler = nx_uniform_sampler_new();
+
         int length = be->n_octets * 8;
         int radius = be->radius;
         for (int i = 0; i < length; ++i) {
                 int x0, y0;
-                x0 = 2*radius*(NX_UNIFORM_SAMPLE_S - 0.5f);
-                y0 = 2*radius*(NX_UNIFORM_SAMPLE_S - 0.5f);
+                x0 = 2*radius*(nx_uniform_sampler_sample_s(sampler) - 0.5f);
+                y0 = 2*radius*(nx_uniform_sampler_sample_s(sampler) - 0.5f);
 
                 int x1, y1, d2;
                 do {
-                        x1 = 2*radius*(NX_UNIFORM_SAMPLE_S - 0.5f);
-                        y1 = 2*radius*(NX_UNIFORM_SAMPLE_S - 0.5f);
+                        x1 = 2*radius*(nx_uniform_sampler_sample_s(sampler) - 0.5f);
+                        y1 = 2*radius*(nx_uniform_sampler_sample_s(sampler) - 0.5f);
 
                         int dx = x1 - x0;
                         int dy = y1 - y0;
@@ -137,6 +155,8 @@ void nx_brief_extractor_randomize(struct NXBriefExtractor *be)
         }
 
         nx_brief_extractor_update_limits(be);
+
+        nx_uniform_sampler_free(sampler);
 }
 
 NXBool nx_brief_extractor_check_point_pyr(struct NXBriefExtractor *be, const struct NXImagePyr *pyr, int x, int y, int level)
