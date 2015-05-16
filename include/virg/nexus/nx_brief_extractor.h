@@ -13,10 +13,15 @@
 #ifndef VIRG_NEXUS_NX_BRIEF_EXTRACTOR_H
 #define VIRG_NEXUS_NX_BRIEF_EXTRACTOR_H
 
+#include <stdio.h>
+
 #include "virg/nexus/nx_config.h"
 #include "virg/nexus/nx_types.h"
 
 __NX_BEGIN_DECL
+
+#define NX_BRIEF_EXTRACTOR_GOOD_SEED_N32_R16 1431142416U
+#define NX_BRIEF_EXTRACTOR_GOOD_SEED_N32_R24 1431228807U
 
 struct NXImagePyr;
 
@@ -51,6 +56,12 @@ NXBool nx_brief_extractor_check_point_pyr(struct NXBriefExtractor *be, const str
 void nx_brief_extractor_compute_pyr(struct NXBriefExtractor *be, const struct NXImagePyr *pyr, int x, int y, int level, uchar *desc);
 
 int nx_brief_extractor_descriptor_distance(int n_octets, const uchar *desc0, const uchar *desc1);
+
+NXResult nx_brief_extractor_write(const struct NXBriefExtractor *be, FILE *stream);
+NXResult nx_brief_extractor_read(struct NXBriefExtractor *be, FILE *stream);
+
+void nx_brief_extractor_xwrite(const struct NXBriefExtractor *be, FILE *stream);
+void nx_brief_extractor_xread(struct NXBriefExtractor *be, FILE *stream);
 
 __NX_END_DECL
 

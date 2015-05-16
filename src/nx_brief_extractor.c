@@ -297,3 +297,62 @@ int nx_brief_extractor_descriptor_distance(int n_octets, const uchar *desc0, con
 
         return dist;
 }
+
+NXResult nx_brief_extractor_write(const struct NXBriefExtractor *be, FILE *stream)
+{
+        NX_ASSERT_PTR(be);
+        NX_ASSERT_PTR(stream);
+
+        if (fwrite(&be->radius, sizeof(be->radius), 1, stream) != 1)
+                return NX_FAIL;
+
+        if (fwrite(&be->n_octets, sizeof(be->n_octets), 1, stream) != 1)
+                return NX_FAIL;
+
+        int n_offsets = be->n_octets*4*8;
+        if (fwrite(be->offsets, sizeof(*be->offsets), n_offsets, stream) != n_offsets)
+                return NX_FAIL;
+
+        if (fwrite(&be->pyr_level_offset, sizeof(be->pyr_level_offset), 1, stream) != 1)
+                return NX_FAIL;
+
+        return NX_OK;
+}
+
+NXResult nx_brief_extractor_read(struct NXBriefExtractor *be, FILE *stream)
+{
+        NX_ASSERT_PTR(be);
+        NX_ASSERT_PTR(stream);
+
+        int radius;
+        if (fread(&radius, sizeof(radius), 1, stream) != 1)
+                return NX_FAIL;
+
+        int n_octets;
+        if (fread(&n_octets, sizeof(n_octets), 1, stream) != 1)
+                return NX_FAIL;
+
+        nx_brief_extractor_resize(be, radius, n_octets);
+
+        int n_offsets = be->n_octets*4*8;
+        if (fread(be->offsets, sizeof(*be->offsets), n_offsets, stream) != n_offsets)
+                return NX_FAIL;
+        nx_brief_extractor_update_limits(be);
+
+        if (fread(&be->pyr_level_offset, sizeof(be->pyr_level_offset), 1, stream) != 1)
+                return NX_FAIL;
+
+        return NX_OK;
+}
+
+void nx_brief_extractor_xwrite(const struct NXBriefExtractor *be, FILE *stream)
+{
+        if (nx_brief_extractor_write(be, stream) != NX_OK)
+                nx_fatal(NX_LOG_TAG, "Error writing BRIEF extractor to stream!");
+}
+
+void nx_brief_extractor_xread(struct NXBriefExtractor *be, FILE *stream)
+{
+        if (nx_brief_extractor_read(be, stream) != NX_OK)
+                nx_fatal(NX_LOG_TAG, "Error reading BRIEF extractor from stream!");
+}
