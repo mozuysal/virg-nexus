@@ -275,8 +275,11 @@ struct NXJSONNode *nx_json_object_get(struct NXJSONNode *jobject, const char *na
         if (n == NULL)
                 return NULL;
 
-        while (n != NULL && strcmp(n->text, name) != 0)
+        while (n != NULL && strcmp(n->text, name) != 0) {
                 n = n->right;
+                if (n != NULL)
+                        n = n->right;
+        }
 
         if (n == NULL)
                 return NULL;
