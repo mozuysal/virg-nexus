@@ -6,5 +6,5 @@ includedir=${prefix}/include
 Name: libvirg-nexus
 Description: IYTE-VIRG Software Library Core Components
 Version: @VERSION@
-Libs: -L${libdir} -lvirg-nexus
+Libs: -L${libdir} -lvirg-nexus -ljpeg
 Cflags: -I${includedir}
