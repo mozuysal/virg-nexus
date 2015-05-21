@@ -30,6 +30,8 @@ set(virg_nexus_SOURCES
   src/nx_filter.c
   src/nx_image.c
   src/nx_image_io_pnm.c
+  src/nx_image_io_jpeg.c
+  src/nx_image_io.c
   src/nx_image_warp.c
   src/nx_affine_warp_processor.c
   src/nx_homography.c
@@ -73,6 +75,7 @@ set(virg_nexus_HEADERS
   include/virg/nexus/nx_image_io.h
   include/virg/nexus/nx_image_io_params.h
   include/virg/nexus/nx_image_io_pnm.h
+  include/virg/nexus/nx_image_io_jpeg.h
   include/virg/nexus/nx_image_warp.h
   include/virg/nexus/nx_affine_warp_processor.h
   include/virg/nexus/nx_homography.h
@@ -174,6 +177,15 @@ if (DOXYGEN_FOUND)
 endif(DOXYGEN_FOUND)
 
 
+# ---------------------------------- jpeg/png ------------------------------------
+include(FindPNG)
+include(FindJPEG)
+
+include_directories(${PNG_INCLUDE_DIR})
+include_directories(${JPEG_INCLUDE_DIR})
+
+link_directories(${PNG_LIBRARY_DIR})
+link_directories(${JPEG_LIBRARY_DIR})
 # --------------------------------- cblas/lapack ----------------------------------
 option(VIRG_NEXUS_USE_TUNED_LAPACK "Use ATLAS generated cblas/lapack version" OFF)
 
@@ -189,7 +201,8 @@ endif (VIRG_NEXUS_USE_TUNED_LAPACK)
 
 include_directories(${LAPACK_INCLUDE_DIR})
 link_directories(${LAPACK_LIBRARY_DIRS})
-set(EXEC_LIBRARIES ${LAPACK_LIBRARIES})
+
+set(EXEC_LIBRARIES  ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LAPACK_LIBRARIES})
 # --------------------------------- Goggle Test ----------------------------------
 if (CMAKE_USE_PTHREADS_INIT)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGTEST_HAS_PTHREAD=1")
