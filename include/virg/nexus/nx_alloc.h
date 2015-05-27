@@ -65,6 +65,26 @@ void nx_free(void *ptr);
                 }                                               \
         } while (0)
 
+#define NX_NEW_ARRAY_STRUCT(sp,arr_name,init_cap) do {                  \
+                sp = nx_fmalloc(sizeof(*sp));                           \
+                sp->size = 0;                                           \
+                sp->capacity = init_cap;                                \
+                sp->arr_name = nx_fmalloc(init_cap*sizeof(*(sp->arr_name))); \
+        } while (0)
+
+#define NX_GROW_ARRAY_STRUCT(sp,arr_name) \
+        NX_ENSURE_CAPACITY(sp->arr_name,sp->capacity,(sp->size)+1)
+
+#define NX_APPEND_TO_ARRAY_STRUCT(sp,arr_name,item) do { \
+                NX_GROW_ARRAY_STRUCT(sp,arr_name);       \
+                (sp)->arr_name[(sp)->size++] = item;     \
+        } while(0)
+
+#define NX_FREE_ARRAY_STRUCT(sp,arr_name) do {    \
+                nx_free(sp->arr_name);            \
+                nx_free(sp);                      \
+        } while (0)
+
 __NX_END_DECL
 
 #endif
