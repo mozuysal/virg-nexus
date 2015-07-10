@@ -26,6 +26,7 @@ set(virg_nexus_SOURCES
   src/nx_json_parser.c
   src/nx_json_tree.c
   src/nx_json_bundle.c
+  src/nx_json_log.c
   src/nx_plotter.c
   src/nx_filter.c
   src/nx_image.c
@@ -69,6 +70,7 @@ set(virg_nexus_HEADERS
   include/virg/nexus/nx_json_parser.h
   include/virg/nexus/nx_json_tree.h
   include/virg/nexus/nx_json_bundle.h
+  include/virg/nexus/nx_json_log.h
   include/virg/nexus/nx_plotter.h
   include/virg/nexus/nx_filter.h
   include/virg/nexus/nx_image.h
