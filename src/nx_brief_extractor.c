@@ -14,6 +14,7 @@
 
 #include <limits.h>
 #include <time.h>
+#include <math.h>
 
 #include "virg/nexus/nx_assert.h"
 #include "virg/nexus/nx_alloc.h"
@@ -190,7 +191,6 @@ void nx_brief_extractor_compute_pyr(struct NXBriefExtractor *be, const struct NX
         NX_ASSERT_PTR(desc);
 
         int sample_level = level + be->pyr_level_offset;
-
         const struct NXImage *img = pyr->levels[sample_level].img;
 
         float key_scale = pyr->levels[level].scale;
@@ -199,40 +199,66 @@ void nx_brief_extractor_compute_pyr(struct NXBriefExtractor *be, const struct NX
 
         const int *offsets = be->offsets;
         for (int i = 0; i < be->n_octets; ++i, ++desc) {
-                int sample_x0 = (x + offsets[0]) * scale_f;
-                int sample_y0 = (y + offsets[1]) * scale_f;
-                int sample_x1 = (x + offsets[2]) * scale_f;
-                int sample_y1 = (y + offsets[3]) * scale_f;
+                *desc = 0;
 
-                uchar I0 = img->data[img->row_stride * sample_y0 + sample_x0];
-                uchar I1 = img->data[img->row_stride * sample_y1 + sample_x1];
-                //printf("Test %2d: I0 = %4d I1 = %4d\n", i*8, ((int)I0)-15, ((int)I1)-15);
-
-                if (I0 > I1)
-                        *desc = 1;
-                else
-                        *desc = 0;
-
-                for (int j = 1; j < 8; ++j) {
-                        offsets += 4;
-
+                for (int j = 0; j < 8; ++j, offsets += 4) {
                         *desc <<= 1;
 
-                        sample_x0 = (x + offsets[0]) * scale_f;
-                        sample_y0 = (y + offsets[1]) * scale_f;
-                        sample_x1 = (x + offsets[2]) * scale_f;
-                        sample_y1 = (y + offsets[3]) * scale_f;
+                        int sample_x0 = (x + offsets[0]) * scale_f;
+                        int sample_y0 = (y + offsets[1]) * scale_f;
+                        int sample_x1 = (x + offsets[2]) * scale_f;
+                        int sample_y1 = (y + offsets[3]) * scale_f;
 
-                        I0 = img->data[img->row_stride * sample_y0 + sample_x0];
-                        I1 = img->data[img->row_stride * sample_y1 + sample_x1];
-                        //printf("Test %2d: I0 = %4d I1 = %4d\n", i*8+j, ((int)I0)-15, ((int)I1)-15);
+                        uchar I0 = img->data[img->row_stride * sample_y0 + sample_x0];
+                        uchar I1 = img->data[img->row_stride * sample_y1 + sample_x1];
 
                         if (I0 > I1)
                                 *desc |= 1;
                 }
-
-                offsets += 4;
         }
+}
+
+NXBool nx_brief_extractor_compute_pyr_at_theta(struct NXBriefExtractor *be, const struct NXImagePyr *pyr, int x, int y, int level, float theta, uchar *desc)
+{
+        NX_ASSERT_PTR(be);
+        NX_ASSERT_PTR(pyr);
+        NX_ASSERT_PTR(desc);
+
+        int sample_level = level + be->pyr_level_offset;
+        const struct NXImage *img = pyr->levels[sample_level].img;
+
+        float key_scale = pyr->levels[level].scale;
+        float sample_scale = pyr->levels[sample_level].scale;
+        float scale_f = key_scale / sample_scale;
+
+        float ct = cos(theta);
+        float st = sin(theta);
+
+        const int *offsets = be->offsets;
+        for (int i = 0; i < be->n_octets; ++i, ++desc) {
+                *desc = 0;
+
+                for (int j = 0; j < 8; ++j, offsets += 4) {
+                        *desc <<= 1;
+
+                        int sample_x0 = (x + ct*offsets[0] + st*offsets[1]) * scale_f;
+                        int sample_y0 = (y - st*offsets[0] + ct*offsets[1]) * scale_f;
+                        int sample_x1 = (x + ct*offsets[2] + st*offsets[3]) * scale_f;
+                        int sample_y1 = (y - st*offsets[2] + ct*offsets[3]) * scale_f;
+
+                        if (sample_x0 < 0 || sample_x0 >= img->width || sample_x1 < 0 || sample_x1 >= img->width
+                            || sample_y0 < 0 || sample_y0 >= img->height || sample_y1 < 0 || sample_y1 >= img->height)
+                                return NX_FALSE;
+
+                        uchar I0 = img->data[img->row_stride * sample_y0 + sample_x0];
+                        uchar I1 = img->data[img->row_stride * sample_y1 + sample_x1];
+
+                        if (I0 > I1)
+                                *desc |= 1;
+                }
+        }
+
+        return NX_TRUE;
 }
 
 // static look-up table for bit counts of all possible values of a byte

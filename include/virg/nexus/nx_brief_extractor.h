@@ -52,8 +52,9 @@ void nx_brief_extractor_randomize(struct NXBriefExtractor *be);
 void nx_brief_extractor_update_limits(struct NXBriefExtractor *be);
 
 NXBool nx_brief_extractor_check_point_pyr(struct NXBriefExtractor *be, const struct NXImagePyr *pyr, int x, int y, int level);
-
 void nx_brief_extractor_compute_pyr(struct NXBriefExtractor *be, const struct NXImagePyr *pyr, int x, int y, int level, uchar *desc);
+
+NXBool nx_brief_extractor_compute_pyr_at_theta(struct NXBriefExtractor *be, const struct NXImagePyr *pyr, int x, int y, int level, float theta, uchar *desc);
 
 int nx_brief_extractor_descriptor_distance(int n_octets, const uchar *desc0, const uchar *desc1);
 
