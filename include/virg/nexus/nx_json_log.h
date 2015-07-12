@@ -25,21 +25,33 @@ __NX_BEGIN_DECL
 #define NX_JLOG_PRETTY_PRINT_LEVEL 1
 
 struct NXJSONNode *nx_json_log_get_stream(int jlog_id);
+void nx_json_log_clear_stream(int jlog_id);
 void nx_json_log_free();
 
+#define NX_JLOG_CLEAR(jlogid) nx_json_log_clear_stream(jlogid)
 #define NX_JLOG(jlogid,key,value) nx_json_object_add(nx_json_log_get_stream(jlogid), (key), (value))
 #define NX_JLOG_TEMPLATE(jlogid,key,value,jbundlefn) nx_json_object_add(nx_json_log_get_stream(jlogid), (key), jbundlefn(value))
 #define NX_JLOG_ARR_TEMPLATE(jlogid,key,n,value,jbundlefn) nx_json_object_add(nx_json_log_get_stream(jlogid), (key), jbundlefn((n),(value)))
-#define NX_JLOG_ADD_TEMPLATE(jlogid,key,value,jbundlefn) nx_json_array_add(nx_json_object_fget(nx_json_log_get_stream(jlogid), (key), NX_JSON_ARRAY), jbundlefn(value))
+#define NX_JLOG_ADD_TEMPLATE(jlogid,key,value,jbundlefn)                \
+        do {                                                            \
+                struct NXJSONNode *_nx_jlog_arr = nx_json_object_get(nx_json_log_get_stream(jlogid), (key), NX_JNT_ARRAY); \
+                if (_nx_jlog_arr == NULL) {                             \
+                        _nx_jlog_arr = nx_json_node_new_array();        \
+                        NX_JLOG(jlogid,key,_nx_jlog_arr);               \
+                }                                                       \
+                nx_json_array_add(_nx_jlog_arr, jbundlefn(value));      \
+        } while (0);
+
 #define NX_JLOG_PRINT(jlogid) nx_json_tree_print(nx_json_log_get_stream(jlogid), NX_JLOG_PRETTY_PRINT_LEVEL)
 #define NX_JLOG_FPRINT(jlogid,stream) nx_json_tree_fprint(stream,nx_json_log_get_stream(jlogid), NX_JLOG_PRETTY_PRINT_LEVEL)
 #define NX_JLOG_XWRITE(jlogid,filename)                                 \
         do {                                                            \
                 FILE *nx_jlog_stream = nx_xfopen(filename,"w");         \
                 nx_json_tree_fprint(nx_jlog_stream, nx_json_log_get_stream(jlogid), NX_JLOG_PRETTY_PRINT_LEVEL); \
-                nx_xfclose(nx_jlog_stream);                             \
+                nx_xfclose(nx_jlog_stream, filename);                   \
         } while (0);
 #else
+#  define NX_JLOG_CLEAR(jlogid) do { (void)sizeof(jlogid); } while(0)
 #  define NX_JLOG(jlogid,key,value) do { (void)sizeof(value); } while(0)
 #  define NX_JLOG_TEMPLATE(jlogid,key,value,jbundlefn) do { (void)sizeof(value); } while(0)
 #  define NX_JLOG_ARR_TEMPLATE(jlogid,key,n,value,jbundlefn) do { (void)sizeof(value); } while(0)

@@ -44,3 +44,15 @@ void nx_json_log_free()
                 nx_s_json_log = NULL;
         }
 }
+
+void nx_json_log_clear_stream(int jlog_id)
+{
+        if (jlog_id < 0 || jlog_id >= NX_JLOG_N_STREAMS)
+                nx_fatal(NX_LOG_TAG, "JSON log id %d is not in range [0, %d]",
+                         jlog_id, NX_JLOG_N_STREAMS-1);
+        else if (nx_s_json_log == NULL || nx_s_json_log[jlog_id] == NULL)
+                return;
+
+        nx_json_tree_free(nx_s_json_log[jlog_id]);
+        nx_s_json_log[jlog_id] = NULL;
+}

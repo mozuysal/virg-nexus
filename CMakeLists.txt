@@ -13,6 +13,7 @@ set(virg_nexus_SOURCES
   src/nx_mem_block.c
   src/SFMT/SFMT.c
   src/nx_uniform_sampler.c
+  src/nx_bit_ops.c
   src/nx_math.c
   src/nx_svd.c
   src/nx_string.c
@@ -55,6 +56,7 @@ set(virg_nexus_HEADERS
   include/virg/nexus/nx_alloc.h
   include/virg/nexus/nx_mem_block.h
   include/virg/nexus/nx_uniform_sampler.h
+  include/virg/nexus/nx_bit_ops.h
   include/virg/nexus/nx_math.h
   include/virg/nexus/nx_svd.h
   include/virg/nexus/nx_mat234.h
@@ -221,6 +223,7 @@ set_target_properties(gtest PROPERTIES ARCHIVE_OUTPUT_DIRECTORY lib)
 set(test_SOURCES
   tests/tests_main.cc
   tests/tests_mem_block.cc
+  tests/tests_bit_ops.cc
   tests/tests_string.cc
   tests/tests_string_array.cc
   tests/tests_options.cc
