@@ -25,9 +25,11 @@ __NX_BEGIN_DECL
 #define NX_JLOG_PRETTY_PRINT_LEVEL 1
 
 struct NXJSONNode *nx_json_log_get_stream(int jlog_id);
+void nx_json_log_clear_all();
 void nx_json_log_clear_stream(int jlog_id);
 void nx_json_log_free();
 
+#define NX_JLOG_CLEAR_ALL() nx_json_log_free()
 #define NX_JLOG_CLEAR(jlogid) nx_json_log_clear_stream(jlogid)
 #define NX_JLOG(jlogid,key,value) nx_json_object_add(nx_json_log_get_stream(jlogid), (key), (value))
 #define NX_JLOG_TEMPLATE(jlogid,key,value,jbundlefn) nx_json_object_add(nx_json_log_get_stream(jlogid), (key), jbundlefn(value))
@@ -51,6 +53,7 @@ void nx_json_log_free();
                 nx_xfclose(nx_jlog_stream, filename);                   \
         } while (0);
 #else
+#  define NX_JLOG_CLEAR_ALL() do { (void)sizeof(int); } while(0)
 #  define NX_JLOG_CLEAR(jlogid) do { (void)sizeof(jlogid); } while(0)
 #  define NX_JLOG(jlogid,key,value) do { (void)sizeof(value); } while(0)
 #  define NX_JLOG_TEMPLATE(jlogid,key,value,jbundlefn) do { (void)sizeof(value); } while(0)
