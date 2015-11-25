@@ -46,6 +46,7 @@ set(virg_nexus_SOURCES
   src/nx_fast_detector.c
   src/nx_keypoint_vector.c
   src/nx_brief_extractor.c
+  src/nx_data_frame.c
 )
 
 set(virg_nexus_HEADERS
@@ -90,6 +91,7 @@ set(virg_nexus_HEADERS
   include/virg/nexus/nx_keypoint_vector.h
   include/virg/nexus/nx_fast_detector.h
   include/virg/nexus/nx_brief_extractor.h
+  include/virg/nexus/nx_data_frame.h
 )
 
 if (NOT VIRG_NEXUS_ANDROID)
@@ -234,6 +236,7 @@ set(test_SOURCES
   tests/tests_image_pyr.cc
   tests/tests_fast_detector.cc
   tests/tests_brief_extractor.cc
+  tests/tests_data_frame.cc
 )
 
 set(VIRG_NEXUS_TEST_DATA_PATH "${CMAKE_SOURCE_DIR}/tests/data")
