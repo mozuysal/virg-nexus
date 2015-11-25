@@ -13,8 +13,27 @@
 #include "virg/nexus/nx_data_frame.h"
 
 #include "virg/nexus/nx_alloc.h"
+#include "virg/nexus/nx_string_array.h"
+
+struct NXDataColumn {
+        int size;
+        int capacity;
+        enum NXDataColumnType type;
+        void **elems;
+
+        struct NXStringArray *levels;
+};
+
+struct NXDataColumnArray {
+        int size;
+        int capacity;
+        struct NXDataColumn *elem;
+};
 
 struct NXDataFrame {
+        int n_columns;
+        int n_rows;
+        struct NXDataColumnArray *columns;
 };
 
 struct NXDataFrame *nx_data_frame_alloc()
