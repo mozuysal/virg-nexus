@@ -37,9 +37,9 @@ void nx_data_frame_add_column(struct NXDataFrame *df, enum NXDataColumnType type
 
 void nx_data_frame_make_factor(struct NXDataFrame *df, int col_id);
 
-void nx_data_frame_n_columns(const struct NXDataFrame *df);
+int nx_data_frame_n_columns(const struct NXDataFrame *df);
 
-const struct NXDataColumn *nx_data_frame_columns(const struct NXDataFrame *df);
+const struct NXDataColumn *nx_data_frame_column(const struct NXDataFrame *df, int col_id);
 
 enum NXDataColumnType nx_data_column_type(const struct NXDataColumn *dc);
 
@@ -53,7 +53,7 @@ int nx_data_frame_add_row(struct NXDataFrame *df);
 
 int nx_data_frame_n_rows(const struct NXDataFrame *df);
 
-NXBool      nx_data_frame_is_none   (const struct NXDataFrame *df, int row_id, int col_id);
+NXBool      nx_data_frame_is_na     (const struct NXDataFrame *df, int row_id, int col_id);
 const char *nx_data_frame_get_string(const struct NXDataFrame *df, int row_id, int col_id);
 int         nx_data_frame_get_int   (const struct NXDataFrame *df, int row_id, int col_id);
 double      nx_data_frame_get_double(const struct NXDataFrame *df, int row_id, int col_id);
@@ -61,7 +61,7 @@ NXBool      nx_data_frame_get_bool  (const struct NXDataFrame *df, int row_id, i
 const char *nx_data_frame_get_factor(const struct NXDataFrame *df, int row_id, int col_id);
 
 void nx_data_frame_set       (struct NXDataFrame *df, int row_id, ...);
-void nx_data_frame_set_none  (struct NXDataFrame *df, int row_id, int col_id);
+void nx_data_frame_set_na    (struct NXDataFrame *df, int row_id, int col_id);
 void nx_data_frame_set_string(struct NXDataFrame *df, int row_id, int col_id, const char *value);
 void nx_data_frame_set_int   (struct NXDataFrame *df, int row_id, int col_id, int value);
 void nx_data_frame_set_double(struct NXDataFrame *df, int row_id, int col_id, double value);

@@ -40,7 +40,214 @@ protected:
 TEST_F(NXDataFrameTest, alloc) {
         struct NXDataFrame *df = nx_data_frame_alloc();
         EXPECT_TRUE(df != NULL);
+        EXPECT_EQ(nx_data_frame_n_columns(df),0);
+        EXPECT_EQ(nx_data_frame_n_rows(df),0);
         nx_data_frame_free(df);
 }
+
+TEST_F(NXDataFrameTest, add_column_string) {
+        struct NXDataFrame *df = nx_data_frame_alloc();
+
+        const char *label = "col.str";
+        enum NXDataColumnType type = NX_DCT_STRING;
+        nx_data_frame_add_column(df, type, label);
+        EXPECT_EQ(nx_data_frame_n_columns(df),1);
+
+        const struct NXDataColumn *dc = nx_data_frame_column(df,0);
+        EXPECT_TRUE(dc != NULL);
+        EXPECT_EQ(nx_data_column_type(dc),type);
+        EXPECT_STREQ(nx_data_column_label(dc),label);
+        EXPECT_EQ(nx_data_column_n_factor_levels(dc),0);
+        nx_data_frame_free(df);
+}
+
+TEST_F(NXDataFrameTest, add_column_int) {
+        struct NXDataFrame *df = nx_data_frame_alloc();
+
+        const char *label = "col.int";
+        enum NXDataColumnType type = NX_DCT_INT;
+        nx_data_frame_add_column(df, type, label);
+        EXPECT_EQ(nx_data_frame_n_columns(df),1);
+
+        const struct NXDataColumn *dc = nx_data_frame_column(df,0);
+        EXPECT_TRUE(dc != NULL);
+        EXPECT_EQ(nx_data_column_type(dc),type);
+        EXPECT_STREQ(nx_data_column_label(dc),label);
+        EXPECT_EQ(nx_data_column_n_factor_levels(dc),0);
+        nx_data_frame_free(df);
+}
+
+TEST_F(NXDataFrameTest, add_column_double) {
+        struct NXDataFrame *df = nx_data_frame_alloc();
+
+        const char *label = "col.double";
+        enum NXDataColumnType type = NX_DCT_DOUBLE;
+        nx_data_frame_add_column(df, type, label);
+        EXPECT_EQ(nx_data_frame_n_columns(df),1);
+
+        const struct NXDataColumn *dc = nx_data_frame_column(df,0);
+        EXPECT_TRUE(dc != NULL);
+        EXPECT_EQ(nx_data_column_type(dc),type);
+        EXPECT_STREQ(nx_data_column_label(dc),label);
+        EXPECT_EQ(nx_data_column_n_factor_levels(dc),0);
+        nx_data_frame_free(df);
+}
+
+TEST_F(NXDataFrameTest, add_column_bool) {
+        struct NXDataFrame *df = nx_data_frame_alloc();
+
+        const char *label = "col.bool";
+        enum NXDataColumnType type = NX_DCT_BOOL;
+        nx_data_frame_add_column(df, type, label);
+        EXPECT_EQ(nx_data_frame_n_columns(df),1);
+
+        const struct NXDataColumn *dc = nx_data_frame_column(df,0);
+        EXPECT_TRUE(dc != NULL);
+        EXPECT_EQ(nx_data_column_type(dc),type);
+        EXPECT_STREQ(nx_data_column_label(dc),label);
+        EXPECT_EQ(nx_data_column_n_factor_levels(dc),0);
+        nx_data_frame_free(df);
+}
+
+TEST_F(NXDataFrameTest, add_column_factor) {
+        struct NXDataFrame *df = nx_data_frame_alloc();
+
+        const char *label = "col.factor";
+        enum NXDataColumnType type = NX_DCT_FACTOR;
+        nx_data_frame_add_column(df, type, label);
+        EXPECT_EQ(nx_data_frame_n_columns(df),1);
+
+        const struct NXDataColumn *dc = nx_data_frame_column(df,0);
+        EXPECT_TRUE(dc != NULL);
+        EXPECT_EQ(nx_data_column_type(dc),type);
+        EXPECT_STREQ(nx_data_column_label(dc),label);
+        EXPECT_EQ(nx_data_column_n_factor_levels(dc),0);
+        nx_data_frame_free(df);
+}
+
+TEST_F(NXDataFrameTest, add_column_all) {
+        struct NXDataFrame *df = nx_data_frame_alloc();
+        const int n_columns = 5;
+        const char *labels[n_columns] = { "col.int", "col.bool", "col.factor", "col.string", "col.double"};
+        enum NXDataColumnType types[n_columns] = { NX_DCT_INT, NX_DCT_BOOL, NX_DCT_FACTOR, NX_DCT_STRING, NX_DCT_DOUBLE };
+        for (int i = 0; i < n_columns; ++i)
+                nx_data_frame_add_column(df, types[i], labels[i]);
+
+        EXPECT_EQ(nx_data_frame_n_columns(df),n_columns);
+        for (int i = 0; i < n_columns; ++i) {
+                const struct NXDataColumn *dc = nx_data_frame_column(df,i);
+                EXPECT_TRUE(dc != NULL);
+                EXPECT_EQ(nx_data_column_type(dc),types[i]);
+                EXPECT_STREQ(nx_data_column_label(dc),labels[i]);
+                EXPECT_EQ(nx_data_column_n_factor_levels(dc),0);
+        }
+
+        nx_data_frame_free(df);
+}
+
+TEST_F(NXDataFrameTest, add_row) {
+        struct NXDataFrame *df = nx_data_frame_alloc();
+        const int n_columns = 5;
+        const char *labels[n_columns] = { "col.int", "col.bool", "col.factor", "col.string", "col.double"};
+        enum NXDataColumnType types[n_columns] = { NX_DCT_INT, NX_DCT_BOOL, NX_DCT_FACTOR, NX_DCT_STRING, NX_DCT_DOUBLE };
+        for (int i = 0; i < n_columns; ++i)
+                nx_data_frame_add_column(df, types[i], labels[i]);
+
+        int row_id = nx_data_frame_add_row(df);
+        EXPECT_EQ(0, row_id);
+
+        EXPECT_EQ(1, nx_data_frame_n_rows(df));
+        for (int i = 0; i < n_columns; ++i)
+                EXPECT_TRUE(nx_data_frame_is_na(df, row_id, i));
+
+        nx_data_frame_free(df);
+}
+
+TEST_F(NXDataFrameTest, add_rows) {
+        struct NXDataFrame *df = nx_data_frame_alloc();
+        const int n_columns = 5;
+        const char *labels[n_columns] = { "col.int", "col.bool", "col.factor", "col.string", "col.double"};
+        enum NXDataColumnType types[n_columns] = { NX_DCT_INT, NX_DCT_BOOL, NX_DCT_FACTOR, NX_DCT_STRING, NX_DCT_DOUBLE };
+        for (int i = 0; i < n_columns; ++i)
+                nx_data_frame_add_column(df, types[i], labels[i]);
+
+        int n_rows = 20;
+        for (int i = 0; i < n_rows; ++i) {
+                int row_id = nx_data_frame_add_row(df);
+                EXPECT_EQ(i, row_id);
+        }
+
+        EXPECT_EQ(n_rows, nx_data_frame_n_rows(df));
+        for (int i = 0; i < n_rows; ++i)
+                for (int j = 0; j < n_columns; ++j)
+                        EXPECT_TRUE(nx_data_frame_is_na(df, i, j));
+
+        nx_data_frame_free(df);
+}
+
+TEST_F(NXDataFrameTest, set_elems) {
+        struct NXDataFrame *df = nx_data_frame_alloc();
+        const int n_columns = 5;
+        const char *labels[n_columns] = { "col.int", "col.bool", "col.factor", "col.string", "col.double"};
+        enum NXDataColumnType types[n_columns] = { NX_DCT_INT, NX_DCT_BOOL, NX_DCT_FACTOR, NX_DCT_STRING, NX_DCT_DOUBLE };
+        for (int i = 0; i < n_columns; ++i)
+                nx_data_frame_add_column(df, types[i], labels[i]);
+
+        int row_id = nx_data_frame_add_row(df);
+
+        int v_int = 42;
+        NXBool v_bool = NX_TRUE;
+        const char *v_factor = "FL";
+        const char *v_string = "STR";
+        double v_double = 42.0;
+        nx_data_frame_set_int(df, row_id, 0, v_int);
+        nx_data_frame_set_bool(df, row_id, 1, v_bool);
+        nx_data_frame_set_factor(df, row_id, 2, v_factor);
+        nx_data_frame_set_string(df, row_id, 3, v_string);
+        nx_data_frame_set_double(df, row_id, 4, v_double);
+
+        EXPECT_EQ(v_int, nx_data_frame_get_int(df, row_id, 0));
+        EXPECT_EQ(v_bool, nx_data_frame_get_bool(df, row_id, 1));
+        EXPECT_STREQ(v_factor, nx_data_frame_get_factor(df, row_id, 2));
+        EXPECT_STREQ(v_string, nx_data_frame_get_string(df, row_id, 3));
+        EXPECT_EQ(v_double, nx_data_frame_get_double(df, row_id, 4));
+
+        const struct NXDataColumn *dc = nx_data_frame_column(df, 2);
+        EXPECT_EQ(1, nx_data_column_n_factor_levels(dc));
+        EXPECT_STREQ(v_factor, nx_data_column_factor_level(dc, 0));
+
+        nx_data_frame_free(df);
+}
+
+TEST_F(NXDataFrameTest, set_row) {
+        struct NXDataFrame *df = nx_data_frame_alloc();
+        const int n_columns = 5;
+        const char *labels[n_columns] = { "col.int", "col.bool", "col.factor", "col.string", "col.double"};
+        enum NXDataColumnType types[n_columns] = { NX_DCT_INT, NX_DCT_BOOL, NX_DCT_FACTOR, NX_DCT_STRING, NX_DCT_DOUBLE };
+        for (int i = 0; i < n_columns; ++i)
+                nx_data_frame_add_column(df, types[i], labels[i]);
+
+        int row_id = nx_data_frame_add_row(df);
+
+        int v_int = 42;
+        NXBool v_bool = NX_TRUE;
+        const char *v_factor = "FL";
+        const char *v_string = "STR";
+        double v_double = 42.0;
+        nx_data_frame_set(df, row_id, v_int, v_bool, v_factor, v_string, v_double);
+
+        EXPECT_EQ(v_int, nx_data_frame_get_int(df, row_id, 0));
+        EXPECT_EQ(v_bool, nx_data_frame_get_bool(df, row_id, 1));
+        EXPECT_STREQ(v_factor, nx_data_frame_get_factor(df, row_id, 2));
+        EXPECT_STREQ(v_string, nx_data_frame_get_string(df, row_id, 3));
+        EXPECT_EQ(v_double, nx_data_frame_get_double(df, row_id, 4));
+
+        const struct NXDataColumn *dc = nx_data_frame_column(df, 2);
+        EXPECT_EQ(1, nx_data_column_n_factor_levels(dc));
+        EXPECT_STREQ(v_factor, nx_data_column_factor_level(dc, 0));
+
+        nx_data_frame_free(df);
+}
+
 
 } // namespace
