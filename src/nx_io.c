@@ -96,3 +96,29 @@ void nx_xfread(void *ptr, size_t size, size_t nmemb, FILE *stream)
         if (fread(ptr, size, nmemb, stream) != nmemb)
                 nx_io_fatal_exit(NX_LOG_TAG, "Error read %zd items from stream", nmemb);
 }
+
+void nx_fputs_readable(const char *s, FILE *stream)
+{
+        if (s == NULL) {
+                fprintf(stream, "null");
+                return;
+        }
+
+        fputc('\"', stream);
+        while (*s != '\0') {
+                switch (*s) {
+                case '\n': fputs("\\n", stream); break;
+                case '\r': fputs("\\r", stream); break;
+                case '\t': fputs("\\t", stream); break;
+                case '\b': fputs("\\b", stream); break;
+                case '\f': fputs("\\f", stream); break;
+                case '\"': fputs("\\\"", stream); break;
+                case '\\': fputs("\\\\", stream); break;
+                default:
+                        fputc(*s, stream);
+                }
+
+                ++s;
+        }
+        fputc('\"', stream);
+}

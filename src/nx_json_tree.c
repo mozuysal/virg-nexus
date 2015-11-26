@@ -75,32 +75,6 @@ struct NXJSONNode *nx_json_tree_from_file(const char *filename)
         return json_tree;
 }
 
-static void nx_fputs_readable(const char *s, FILE *stream)
-{
-        if (s == NULL) {
-                fprintf(stream, "null");
-                return;
-        }
-
-        fputc('\"', stream);
-        while (*s != '\0') {
-                switch (*s) {
-                case '\n': fputs("\\n", stream); break;
-                case '\r': fputs("\\r", stream); break;
-                case '\t': fputs("\\t", stream); break;
-                case '\b': fputs("\\b", stream); break;
-                case '\f': fputs("\\f", stream); break;
-                case '\"': fputs("\\\"", stream); break;
-                case '\\': fputs("\\\\", stream); break;
-                default:
-                        fputc(*s, stream);
-                }
-
-                ++s;
-        }
-        fputc('\"', stream);
-}
-
 static const char *nx_json_node_type_name(int type)
 {
         switch (type) {
