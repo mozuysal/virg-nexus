@@ -58,6 +58,29 @@ __NX_BEGIN_DECL
         } while(0)
 #endif
 
+#if defined(NDEBUG)
+#  define NX_ASSERT_RANGE(expr,min_val,max_val) do { (void)sizeof(expr); } while(0)
+#else
+#  define NX_ASSERT_RANGE(expr,min_val,max_val)                         \
+        do {                                                            \
+                if ((expr) < (min_val) || (expr) > (max_val)) {         \
+                        nx_fatal("NX_ASSERT_RANGE",                     \
+                                 "Assertion '%s == %d in [%d, %d]' failed on file %s:%d", \
+                                 #expr,expr,min_val,max_val, __FILE__, __LINE__); \
+                }                                                       \
+        } while(0)
+#endif
+
+#if defined(NDEBUG)
+#  define NX_ASSERT_INDEX(expr,size) do { (void)sizeof(expr); } while(0)
+#else
+#  define NX_ASSERT_INDEX(expr,size)                                    \
+                do {                                                    \
+                        NX_ASSERT_RANGE(expr,0,(size-1));               \
+                } while(0)
+#endif
+
+
 __NX_END_DECL
 
 #endif
