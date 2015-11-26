@@ -36,9 +36,11 @@ void nx_string_array_set(struct NXStringArray *sa, int id, const char *s);
 void nx_string_array_setf(struct NXStringArray *sa, int id, const char *fmt, ...)  __attribute__((format (printf, 3, 4)));
 void nx_string_array_vsetf(struct NXStringArray *sa, int id, const char *fmt, va_list args);
 
-void nx_string_array_append(struct NXStringArray *sa, const char *s);
-void nx_string_array_appendf(struct NXStringArray *sa, const char *fmt, ...)  __attribute__((format (printf, 2, 3)));
-void nx_string_array_vappendf(struct NXStringArray *sa, const char *fmt, va_list args);
+int nx_string_array_append(struct NXStringArray *sa, const char *s);
+int nx_string_array_appendf(struct NXStringArray *sa, const char *fmt, ...)  __attribute__((format (printf, 2, 3)));
+int nx_string_array_vappendf(struct NXStringArray *sa, const char *fmt, va_list args);
+
+int nx_string_array_find(const struct NXStringArray *sa, const char *s);
 
 int nx_string_array_write(const struct NXStringArray *sa, FILE *stream);
 void nx_string_array_xwrite(const struct NXStringArray *sa, FILE *stream);

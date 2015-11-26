@@ -19,6 +19,7 @@
 #include "gtest/gtest.h"
 
 #include "virg/nexus/nx_alloc.h"
+#include "virg/nexus/nx_string.h"
 #include "virg/nexus/nx_string_array.h"
 
 using namespace std;
@@ -84,12 +85,25 @@ TEST_F(NXStringArrayTest, downsize) {
 }
 
 TEST_F(NXStringArrayTest, append) {
-        for (int i = 0; i < 10; ++i)
-                nx_string_array_append(sa, "elem");
+        for (int i = 0; i < 10; ++i) {
+                int id = nx_string_array_append(sa, "elem");
+                EXPECT_EQ(i, id);
+        }
 
         EXPECT_EQ(10, nx_string_array_size(sa));
         for (int i = 0; i < 10; ++i)
                 EXPECT_STREQ("elem", nx_string_array_get(sa, i));
+}
+
+TEST_F(NXStringArrayTest, find) {
+        for (int i = 0; i < 10; ++i)
+                nx_string_array_appendf(sa, "elem%d", i);
+
+        for (int i = 0; i < 10; ++i) {
+                char *ss = nx_fstr("elem%d", i);
+                EXPECT_EQ(i, nx_string_array_find(sa, ss));
+                nx_free(ss);
+        }
 }
 
 TEST_F(NXStringArrayTest, write) {

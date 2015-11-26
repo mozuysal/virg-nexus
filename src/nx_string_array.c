@@ -121,24 +121,26 @@ void nx_string_array_vsetf(struct NXStringArray *sa, int id, const char *fmt, va
         sa->elems[id] = nx_vfstr(fmt, args);
 }
 
-void nx_string_array_append(struct NXStringArray *sa, const char *s)
+int nx_string_array_append(struct NXStringArray *sa, const char *s)
 {
         NX_ASSERT_PTR(sa);
 
         int n = sa->size;
         nx_string_array_resize(sa, n+1);
         nx_string_array_set(sa, n, s);
+        return n;
 }
 
-void nx_string_array_appendf(struct NXStringArray *sa, const char *fmt, ...)
+int nx_string_array_appendf(struct NXStringArray *sa, const char *fmt, ...)
 {
         va_list args;
         va_start(args, fmt);
-        nx_string_array_vappendf(sa, fmt, args);
+        int n = nx_string_array_vappendf(sa, fmt, args);
         va_end(args);
+        return n;
 }
 
-void nx_string_array_vappendf(struct NXStringArray *sa, const char *fmt, va_list args)
+int nx_string_array_vappendf(struct NXStringArray *sa, const char *fmt, va_list args)
 {
         NX_ASSERT_PTR(sa);
         NX_ASSERT_PTR(fmt);
@@ -146,6 +148,19 @@ void nx_string_array_vappendf(struct NXStringArray *sa, const char *fmt, va_list
         int n = sa->size;
         nx_string_array_resize(sa, n+1);
         nx_string_array_vsetf(sa, n, fmt, args);
+        return n;
+}
+
+int nx_string_array_find(const struct NXStringArray *sa, const char *s)
+{
+        NX_ASSERT_PTR(sa);
+        NX_ASSERT_PTR(s);
+
+        for (int i = 0; i < sa->size; ++i)
+                if (strcmp(s, sa->elems[i]) == 0)
+                        return i;
+
+        return -1;
 }
 
 int nx_string_array_write(const struct NXStringArray *sa, FILE *stream)
