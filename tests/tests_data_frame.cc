@@ -425,5 +425,140 @@ TEST_F(NXDataFrameTest, set_factor) {
         nx_data_frame_free(df);
 }
 
+TEST_F(NXDataFrameTest, make_factor_int) {
+        struct NXDataFrame *df = nx_data_frame_alloc();
+
+        const char *label = "col.int";
+        enum NXDataColumnType type = NX_DCT_INT;
+        nx_data_frame_add_column(df, type, label);
+
+        for (int i = 0; i < 5; ++i)
+                nx_data_frame_add_row(df);
+        nx_data_frame_set_int(df, 0, 0, 1);
+        nx_data_frame_set_int(df, 1, 0, 1);
+        nx_data_frame_set_int(df, 2, 0, 2);
+        nx_data_frame_set_int(df, 3, 0, 3);
+        nx_data_frame_set_int(df, 4, 0, 2);
+
+        nx_data_frame_make_factor(df, 0);
+        const struct NXDataColumn *dc = nx_data_frame_column(df,0);
+        EXPECT_EQ(nx_data_column_type(dc),NX_DCT_FACTOR);
+        EXPECT_STREQ(nx_data_column_label(dc),label);
+        EXPECT_EQ(nx_data_column_n_factor_levels(dc),3);
+        EXPECT_STREQ("1", nx_data_column_factor_level(dc, 0));
+        EXPECT_STREQ("2", nx_data_column_factor_level(dc, 1));
+        EXPECT_STREQ("3", nx_data_column_factor_level(dc, 2));
+
+        nx_data_frame_free(df);
+}
+
+TEST_F(NXDataFrameTest, make_factor_double) {
+        struct NXDataFrame *df = nx_data_frame_alloc();
+
+        const char *label = "col.double";
+        enum NXDataColumnType type = NX_DCT_DOUBLE;
+        nx_data_frame_add_column(df, type, label);
+
+        for (int i = 0; i < 5; ++i)
+                nx_data_frame_add_row(df);
+        nx_data_frame_set_double(df, 0, 0, 1.0);
+        nx_data_frame_set_double(df, 1, 0, 1.0);
+        nx_data_frame_set_double(df, 2, 0, 2.0);
+        nx_data_frame_set_double(df, 3, 0, 3.0);
+        nx_data_frame_set_double(df, 4, 0, 2.0);
+
+        nx_data_frame_make_factor(df, 0);
+        const struct NXDataColumn *dc = nx_data_frame_column(df,0);
+        EXPECT_EQ(nx_data_column_type(dc),NX_DCT_FACTOR);
+        EXPECT_STREQ(nx_data_column_label(dc),label);
+        EXPECT_EQ(nx_data_column_n_factor_levels(dc),3);
+        EXPECT_STREQ("1.000000", nx_data_column_factor_level(dc, 0));
+        EXPECT_STREQ("2.000000", nx_data_column_factor_level(dc, 1));
+        EXPECT_STREQ("3.000000", nx_data_column_factor_level(dc, 2));
+
+        nx_data_frame_free(df);
+}
+
+TEST_F(NXDataFrameTest, make_factor_bool) {
+        struct NXDataFrame *df = nx_data_frame_alloc();
+
+        const char *label = "col.bool";
+        enum NXDataColumnType type = NX_DCT_BOOL;
+        nx_data_frame_add_column(df, type, label);
+
+        for (int i = 0; i < 5; ++i)
+                nx_data_frame_add_row(df);
+        nx_data_frame_set_bool(df, 0, 0, NX_FALSE);
+        nx_data_frame_set_bool(df, 1, 0, NX_FALSE);
+        nx_data_frame_set_bool(df, 2, 0, NX_TRUE);
+        nx_data_frame_set_bool(df, 3, 0, NX_FALSE);
+        nx_data_frame_set_bool(df, 4, 0, NX_TRUE);
+
+        nx_data_frame_make_factor(df, 0);
+        const struct NXDataColumn *dc = nx_data_frame_column(df,0);
+        EXPECT_EQ(nx_data_column_type(dc),NX_DCT_FACTOR);
+        EXPECT_STREQ(nx_data_column_label(dc),label);
+        EXPECT_EQ(nx_data_column_n_factor_levels(dc),2);
+        EXPECT_STREQ("false", nx_data_column_factor_level(dc, 0));
+        EXPECT_STREQ("true", nx_data_column_factor_level(dc, 1));
+
+        nx_data_frame_free(df);
+}
+
+TEST_F(NXDataFrameTest, make_factor_string) {
+        struct NXDataFrame *df = nx_data_frame_alloc();
+
+        const char *label = "col.string";
+        enum NXDataColumnType type = NX_DCT_STRING;
+        nx_data_frame_add_column(df, type, label);
+
+        for (int i = 0; i < 5; ++i)
+                nx_data_frame_add_row(df);
+        nx_data_frame_set_string(df, 0, 0, "STR0");
+        nx_data_frame_set_string(df, 1, 0, "STR1");
+        nx_data_frame_set_string(df, 2, 0, "STR1");
+        nx_data_frame_set_string(df, 3, 0, "STR0");
+        nx_data_frame_set_string(df, 4, 0, "STR2");
+
+        nx_data_frame_make_factor(df, 0);
+        const struct NXDataColumn *dc = nx_data_frame_column(df,0);
+        EXPECT_EQ(nx_data_column_type(dc),NX_DCT_FACTOR);
+        EXPECT_STREQ(nx_data_column_label(dc),label);
+        EXPECT_EQ(nx_data_column_n_factor_levels(dc),3);
+        EXPECT_STREQ("STR0", nx_data_column_factor_level(dc, 0));
+        EXPECT_STREQ("STR1", nx_data_column_factor_level(dc, 1));
+        EXPECT_STREQ("STR2", nx_data_column_factor_level(dc, 2));
+
+        nx_data_frame_free(df);
+}
+
+TEST_F(NXDataFrameTest, make_factor_factor) {
+        struct NXDataFrame *df = nx_data_frame_alloc();
+
+        const char *label = "col.factor";
+        enum NXDataColumnType type = NX_DCT_FACTOR;
+        nx_data_frame_add_column(df, type, label);
+
+        for (int i = 0; i < 5; ++i)
+                nx_data_frame_add_row(df);
+        nx_data_frame_set_factor(df, 0, 0, "FACTOR0");
+        nx_data_frame_set_factor(df, 1, 0, "FACTOR1");
+        nx_data_frame_set_factor(df, 2, 0, "FACTOR1");
+        nx_data_frame_set_factor(df, 3, 0, "FACTOR0");
+        nx_data_frame_set_factor(df, 4, 0, "FACTOR2");
+
+        const struct NXDataColumn *dc = nx_data_frame_column(df,0);
+        nx_data_frame_make_factor(df, 0);
+        EXPECT_EQ(dc, nx_data_frame_column(df,0));
+        EXPECT_EQ(nx_data_column_type(dc),NX_DCT_FACTOR);
+        EXPECT_STREQ(nx_data_column_label(dc),label);
+        EXPECT_EQ(nx_data_column_n_factor_levels(dc),3);
+        EXPECT_STREQ("FACTOR0", nx_data_column_factor_level(dc, 0));
+        EXPECT_STREQ("FACTOR1", nx_data_column_factor_level(dc, 1));
+        EXPECT_STREQ("FACTOR2", nx_data_column_factor_level(dc, 2));
+
+        nx_data_frame_free(df);
+}
+
 
 } // namespace
