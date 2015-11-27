@@ -18,6 +18,7 @@
 #include <string.h>
 
 #include "virg/nexus/nx_alloc.h"
+#include "virg/nexus/nx_assert.h"
 #include "virg/nexus/nx_message.h"
 
 #define LEXER_TAB_WIDTH 8
@@ -49,6 +50,9 @@ struct NXLexerState {
 
 static void save_lexer_state(const struct NXLexer *lex, struct NXLexerState *state)
 {
+        NX_ASSERT_PTR(lex);
+        NX_ASSERT_PTR(state);
+
         state->pos = lex->pos;
         state->c = lex->c;
         state->line_no = lex->line_no;
@@ -57,6 +61,9 @@ static void save_lexer_state(const struct NXLexer *lex, struct NXLexerState *sta
 
 static void load_lexer_state(struct NXLexer *lex, const struct NXLexerState *state)
 {
+        NX_ASSERT_PTR(lex);
+        NX_ASSERT_PTR(state);
+
         lex->pos = state->pos;
         lex->c = state->c;
         lex->line_no = state->line_no;
@@ -65,6 +72,8 @@ static void load_lexer_state(struct NXLexer *lex, const struct NXLexerState *sta
 
 struct NXLexer *nx_lexer_new(char *text)
 {
+        NX_ASSERT_PTR(text);
+
         struct NXLexer *lex = NX_NEW(1, struct NXLexer);
         lex->text = text;
         lex->pos = -1;
@@ -86,31 +95,38 @@ void nx_lexer_free(struct NXLexer *lex)
 
 const char *nx_lexer_text(const struct NXLexer *lex)
 {
+        NX_ASSERT_PTR(lex);
         return lex->text;
 }
 
 int nx_lexer_position(const struct NXLexer *lex)
 {
+        NX_ASSERT_PTR(lex);
         return lex->pos;
 }
 
 int nx_lexer_current_char(const struct NXLexer *lex)
 {
+        NX_ASSERT_PTR(lex);
         return lex->c;
 }
 
 int nx_lexer_line_no(const struct NXLexer *lex)
 {
+        NX_ASSERT_PTR(lex);
         return lex->line_no;
 }
 
 int nx_lexer_column_no(const struct NXLexer *lex)
 {
+        NX_ASSERT_PTR(lex);
         return lex->col_no;
 }
 
 int nx_lexer_consume(struct NXLexer *lex)
 {
+        NX_ASSERT_PTR(lex);
+
         lex->c = lex->text[++lex->pos];
         if (lex->c == '\0')
                 lex->c = EOF;
@@ -131,6 +147,9 @@ int nx_lexer_consume(struct NXLexer *lex)
 
 NXBool nx_lexer_match(struct NXLexer *lex, const char *s)
 {
+        NX_ASSERT_PTR(lex);
+        NX_ASSERT_PTR(s);
+
         struct NXLexerState start_state;
         save_lexer_state(lex, &start_state);
 
@@ -150,6 +169,10 @@ NXBool nx_lexer_match(struct NXLexer *lex, const char *s)
 
 const char *nx_lexer_NUMBER(struct NXLexer *lex, int *len, enum NXLexerNumberType *type)
 {
+        NX_ASSERT_PTR(lex);
+        NX_ASSERT_PTR(len);
+        NX_ASSERT_PTR(type);
+
         int start = lex->pos;
 
         if (lex->c == '-')
@@ -199,6 +222,9 @@ const char *nx_lexer_NUMBER(struct NXLexer *lex, int *len, enum NXLexerNumberTyp
 
 const char *nx_lexer_QUOTED_STRING(struct NXLexer *lex, int *len)
 {
+        NX_ASSERT_PTR(lex);
+        NX_ASSERT_PTR(len);
+
         int start = lex->pos+1; // skip "
         do {
                 if (lex->c == '\\') {
