@@ -77,7 +77,7 @@ struct NXLexer *nx_lexer_new(char *text)
         struct NXLexer *lex = NX_NEW(1, struct NXLexer);
         lex->text = text;
         lex->pos = -1;
-        lex->c = EOF;
+        lex->c = 0;
         lex->line_no = 1;
         lex->col_no = 0;
 
@@ -126,6 +126,9 @@ int nx_lexer_column_no(const struct NXLexer *lex)
 int nx_lexer_consume(struct NXLexer *lex)
 {
         NX_ASSERT_PTR(lex);
+
+        if (lex->c == EOF)
+                return lex->c;
 
         lex->c = lex->text[++lex->pos];
         if (lex->c == '\0')
