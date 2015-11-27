@@ -4,9 +4,7 @@ project(virg-nexus C CXX)
 
 set(VERSION 1.0)
 
-option(VIRG_NEXUS_ANDROID "Enable Android Compilation"  OFF)
 option(VIRG_NEXUS_PC_LINUX "Enable Linux Compilation"  ON)
-option(VIRG_NEXUS_PC_WIN32 "Enable Win32 Compilation"  OFF)
 
 set(virg_nexus_SOURCES
   src/nx_alloc.c
@@ -47,6 +45,7 @@ set(virg_nexus_SOURCES
   src/nx_keypoint_vector.c
   src/nx_brief_extractor.c
   src/nx_data_frame.c
+  src/nx_message_c_impl.c
 )
 
 set(virg_nexus_HEADERS
@@ -94,10 +93,6 @@ set(virg_nexus_HEADERS
   include/virg/nexus/nx_data_frame.h
 )
 
-if (NOT VIRG_NEXUS_ANDROID)
-  set(virg_nexus_SOURCES ${virg_nexus_SOURCES} src/nx_message_c_impl.c)
-endif()
-
 add_library(virg-nexus STATIC ${virg_nexus_SOURCES})
 set_target_properties(virg-nexus PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 
@@ -125,16 +120,6 @@ if (VIRG_NEXUS_PC_LINUX)
   endif (VIRG_NEXUS_USE_SIMD)
 endif(VIRG_NEXUS_PC_LINUX)
 
-# Android
-if (VIRG_NEXUS_ANDROID)
-  set(VIRG_NEXUS_FLAGS_PLATFORM "-DVIRG_NEXUS_ANDROID")
-  # NEON
-  if (VIRG_NEXUS_USE_SIMD)
-    set(VIRG_NEXUS_USE_NEON 1)
-    set(VIRG_NEXUS_FLAGS_SIMD "-DVIRG_NEXUS_USE_SIMD -DVIRG_NEXUS_USE_NEON")
-  endif (VIRG_NEXUS_USE_SIMD)
-endif(VIRG_NEXUS_ANDROID)
-
 set(VIRG_NEXUS_FLAGS_DEBUG          "-Wall -pedantic -g -rdynamic -DJSMN_PARENT_LINKS=1 ${VIRG_NEXUS_FLAGS_PLATFORM} ${VIRG_NEXUS_FLAGS_SIMD}")
 set(VIRG_NEXUS_FLAGS_RELEASE        "-Wall -pedantic -O2 -DNDEBUG -DJSMN_PARENT_LINKS=1 ${VIRG_NEXUS_FLAGS_PLATFORM} ${VIRG_NEXUS_FLAGS_SIMD}")
 set(VIRG_NEXUS_FLAGS_RELWITHDEBINFO "-Wall -pedantic -O2 -DNDEBUG -g -rdynamic -DJSMN_PARENT_LINKS=1 ${VIRG_NEXUS_FLAGS_PLATFORM} ${VIRG_NEXUS_FLAGS_SIMD}")
@@ -152,16 +137,6 @@ set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${VIRG_NEXUS_FLAGS_RELWITHDEBINFO} -std=c++0
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
 
 configure_file(virg-nexus.pc.in ${CMAKE_SOURCE_DIR}/lib/pkgconfig/virg-nexus.pc @ONLY)
-# ------------------------------------- FFI --------------------------------------
-# set(ffi_dir src/ffi)
-
-# find_package(Java)
-# include(UseJava)
-
-# set(ffi_java_dir ${ffi_dir}/java/)
-# set(ffi_java_src ${ffi_java_dir}/
-
-# add_jar()
 # -------------------------- install target ----------------------------
 install(TARGETS virg-nexus ARCHIVE DESTINATION lib)
 install(TARGETS virg-nexus-shared LIBRARY DESTINATION lib)
@@ -170,7 +145,6 @@ foreach(virg_nexus_header ${virg_nexus_HEADERS})
   install(FILES ${virg_nexus_header} DESTINATION ${install_RELPATH})
 endforeach(virg_nexus_header)
 install(FILES lib/pkgconfig/virg-nexus.pc DESTINATION lib/pkgconfig)
-install(DIRECTORY lib/python DESTINATION lib FILES_MATCHING PATTERN "*.py")
 
 # --------------------------------- doc target -----------------------------------
 find_package(Doxygen)
@@ -181,7 +155,6 @@ if (DOXYGEN_FOUND)
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMENT "Generating API documentation with Doxygen" VERBATIM)
 endif(DOXYGEN_FOUND)
-
 
 # ---------------------------------- jpeg/png ------------------------------------
 include(FindPNG)
