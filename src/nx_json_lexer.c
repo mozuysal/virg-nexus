@@ -219,7 +219,7 @@ static void nx_json_lexer_NUMBER(struct NXJSONLexer *jlex, struct NXJSONToken *t
         int len = end-start;
 
         if (jlex->s[start] == '-' && len == 1)
-                NX_JSON_LEXER_ERROR(jlex,"%c should be followed by at least one digit", 'c');
+                NX_JSON_LEXER_ERROR(jlex,"%c should be followed by at least one digit", '-');
         else if (jlex->s[start] == '0' && len > 1)
                 NX_JSON_LEXER_ERROR(jlex,"Multi-digit numbers can not start with %d", 0);
         else if (len > 2 && jlex->s[start] == '-' && jlex->s[start+1] == '0')

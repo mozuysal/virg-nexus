@@ -21,6 +21,7 @@ set(virg_nexus_SOURCES
   src/nx_array.c
   src/nx_string_array.c
   src/nx_options.c
+  src/nx_lexer.c
   src/nx_json_lexer.c
   src/nx_json_parser.c
   src/nx_json_tree.c
@@ -68,6 +69,7 @@ set(virg_nexus_HEADERS
   include/virg/nexus/nx_timing.h
   include/virg/nexus/nx_array.h
   include/virg/nexus/nx_options.h
+  include/virg/nexus/nx_lexer.h
   include/virg/nexus/nx_json_lexer.h
   include/virg/nexus/nx_json_parser.h
   include/virg/nexus/nx_json_tree.h
