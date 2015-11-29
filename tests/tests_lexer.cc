@@ -20,6 +20,7 @@
 
 #include "virg/nexus/nx_alloc.h"
 #include "virg/nexus/nx_lexer.h"
+#include "virg/nexus/nx_message.h"
 #include "virg/nexus/nx_string.h"
 
 using namespace std;
@@ -180,6 +181,53 @@ TEST_F(NXLexerTest, numbers) {
         EXPECT_EQ(5, len);
         EXPECT_EQ(NX_LNT_FLOATING_POINT, type);
         EXPECT_EQ(0, strncmp(res, "1.0e0", len));
+        nx_lexer_consume(lex);
+
+        nx_lexer_free(lex);
+        nx_free(str);
+}
+
+TEST_F(NXLexerTest, quoted_strings) {
+        char *str = nx_strdup("\"\" \"a\" \"\\\"\" \"\\\\\" \"\\n\" \"abcd\" \"123\"");
+        struct NXLexer *lex = nx_lexer_new(str);
+
+        int len;
+        const char *res;
+
+        res = nx_lexer_QUOTED_STRING(lex, &len);
+        EXPECT_EQ(0, len);
+        EXPECT_EQ(0, strncmp(res, "", len));
+        EXPECT_EQ(2, nx_lexer_position(lex));
+        nx_lexer_consume(lex);
+
+        res = nx_lexer_QUOTED_STRING(lex, &len);
+        EXPECT_EQ(1, len);
+        EXPECT_EQ(0, strncmp(res, "a", len));
+        nx_lexer_consume(lex);
+
+        res = nx_lexer_QUOTED_STRING(lex, &len);
+        EXPECT_EQ(2, len);
+        EXPECT_EQ(0, strncmp(res, "\\\"", len));
+        nx_lexer_consume(lex);
+
+        res = nx_lexer_QUOTED_STRING(lex, &len);
+        EXPECT_EQ(2, len);
+        EXPECT_EQ(0, strncmp(res, "\\\\", len));
+        nx_lexer_consume(lex);
+
+        res = nx_lexer_QUOTED_STRING(lex, &len);
+        EXPECT_EQ(2, len);
+        EXPECT_EQ(0, strncmp(res, "\\n", len));
+        nx_lexer_consume(lex);
+
+        res = nx_lexer_QUOTED_STRING(lex, &len);
+        EXPECT_EQ(4, len);
+        EXPECT_EQ(0, strncmp(res, "abcd", len));
+        nx_lexer_consume(lex);
+
+        res = nx_lexer_QUOTED_STRING(lex, &len);
+        EXPECT_EQ(3, len);
+        EXPECT_EQ(0, strncmp(res, "123", len));
         nx_lexer_consume(lex);
 
         nx_lexer_free(lex);
