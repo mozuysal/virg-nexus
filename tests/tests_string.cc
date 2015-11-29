@@ -144,4 +144,35 @@ TEST_F(NXStringTest, strread_empty) {
         free(scpy);
 }
 
+TEST_F(NXStringTest, string_from_readable) {
+        EXPECT_EQ(NULL, nx_str_from_readable(0, NULL));
+
+        const char *r = "";
+        char *s = nx_str_from_readable(0, r);
+        EXPECT_EQ(0, strcmp("", s));
+        nx_free(s);
+
+        r = "\\\"";
+        s = nx_str_from_readable(4, r);
+        EXPECT_EQ(0, strcmp("\"", s));
+        nx_free(s);
+
+        r = "\\\\";
+        s = nx_str_from_readable(4, r);
+        EXPECT_EQ(0, strcmp("\\", s));
+        nx_free(s);
+
+        r = "\\\"abcd\\\"";
+        s = nx_str_from_readable(8, r);
+        EXPECT_EQ(0, strcmp("\"abcd\"", s));
+        nx_free(s);
+}
+
+TEST_F(NXStringTest, string_from_readable_invalid) {
+        const char *r = "\\";
+        char *s = nx_str_from_readable(1, r);
+        EXPECT_EQ(NULL, s);
+        nx_free(s);
+}
+
 } // namespace

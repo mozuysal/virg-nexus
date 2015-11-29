@@ -117,3 +117,37 @@ char *nx_strread0(FILE *stream)
 
         return s;
 }
+
+char *nx_str_from_readable(size_t size, const char *readable)
+{
+        if (readable == NULL)
+                return NULL;
+
+        char *s = NX_NEW_C(size+1);
+        char *p = s;
+        while (size--) {
+                if (*readable == '\\') {
+                        if (size == 0) {
+                                nx_free(s);
+                                return NULL;
+                        }
+
+                        readable++;
+                        size--;
+                        switch (*readable) {
+                        case 'r': *(p++) = '\r'; break;
+                        case 't': *(p++) = '\t'; break;
+                        case 'n': *(p++) = '\n'; break;
+                        case '\\': *(p++) = '\\'; break;
+                        case 'f': *(p++) = '\f'; break;
+                        case 'b': *(p++) = '\b'; break;
+                        case '"': *(p++) = '"'; break;
+                        }
+                        readable++;
+                } else {
+                        *(p++) = *(readable++);
+                }
+        }
+        *p = '\0';
+        return s;
+}
