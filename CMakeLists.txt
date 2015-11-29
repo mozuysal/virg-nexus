@@ -213,6 +213,7 @@ set(test_SOURCES
   tests/tests_brief_extractor.cc
   tests/tests_data_frame.cc
   tests/tests_lexer.cc
+  tests/tests_json_lexer.cc
 )
 
 set(VIRG_NEXUS_TEST_DATA_PATH "${CMAKE_SOURCE_DIR}/tests/data")
