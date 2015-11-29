@@ -58,30 +58,7 @@ static void nx_json_token_fill_string(struct NXJSONToken *t, int text_length, co
                 nx_free(t->text);
                 t->text = NULL;
         }
-
-        if (text_ptr != NULL) {
-                t->text = NX_NEW_C(text_length+1);
-                char *p = t->text;
-                while (text_length--) {
-                        if (*text_ptr == '\\') {
-                                text_ptr++;
-                                text_length--;
-                                switch (*text_ptr) {
-                                case 'r': *(p++) = '\r'; break;
-                                case 't': *(p++) = '\t'; break;
-                                case 'n': *(p++) = '\n'; break;
-                                case '\\': *(p++) = '\\'; break;
-                                case 'f': *(p++) = '\f'; break;
-                                case 'b': *(p++) = '\b'; break;
-                                case '"': *(p++) = '"'; break;
-                                }
-                                text_ptr++;
-                        } else {
-                                *(p++) = *(text_ptr++);
-                        }
-                }
-                *p = '\0';
-        }
+        t->text = nx_str_from_readable(text_length, text_ptr);
 }
 
 void nx_json_token_free_data(struct NXJSONToken *t)
