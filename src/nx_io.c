@@ -122,3 +122,19 @@ void nx_fputs_readable(const char *s, FILE *stream)
         }
         fputc('\"', stream);
 }
+
+void nx_fputs_double_quoted(const char *s, FILE *stream)
+{
+        if (s == NULL)
+                return;
+
+        fputc('\"', stream);
+        while (*s != '\0') {
+                if (*s == '\"')
+                        fputs("\"\"", stream);
+                else
+                        fputc(*s, stream);
+                ++s;
+        }
+        fputc('\"', stream);
+}

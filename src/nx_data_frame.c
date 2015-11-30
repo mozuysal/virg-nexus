@@ -453,10 +453,10 @@ NXBool nx_data_frame_save_csv(const struct NXDataFrame *df, const char *filename
                         if (!nx_data_frame_is_na(df, r, c)) {
                                 const struct NXDataColumn *dc = nx_data_frame_column(df, c);
                                 switch (nx_data_column_type(dc)) {
-                                case NX_DCT_STRING: nx_fputs_readable(nx_data_frame_get_string(df,r,c), fout); break;
-                                case NX_DCT_FACTOR: nx_fputs_readable(nx_data_frame_get_factor(df,r,c), fout); break;
+                                case NX_DCT_STRING: nx_fputs_double_quoted(nx_data_frame_get_string(df,r,c), fout); break;
+                                case NX_DCT_FACTOR: nx_fputs_double_quoted(nx_data_frame_get_factor(df,r,c), fout); break;
                                 case NX_DCT_INT: fprintf(fout, "%d", nx_data_frame_get_int(df,r,c)); break;
-                                case NX_DCT_DOUBLE: fprintf(fout, "%lf", nx_data_frame_get_double(df,r,c)); break;
+                                case NX_DCT_DOUBLE: fprintf(fout, "%.15g", nx_data_frame_get_double(df,r,c)); break;
                                 case NX_DCT_BOOL: fprintf(fout, "%s", nx_data_frame_get_bool(df,r,c) ? "true" : "false"); break;
                                 }
                         }

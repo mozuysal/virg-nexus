@@ -35,6 +35,7 @@ void nx_xfwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream);
 void nx_xfread(void *ptr, size_t size, size_t nmemb, FILE *stream);
 
 void nx_fputs_readable(const char *s, FILE *stream);
+void nx_fputs_double_quoted(const char *s, FILE *stream);
 
 __NX_END_DECL
 

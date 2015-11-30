@@ -15,6 +15,7 @@
 #include <cstring>
 #include <cmath>
 #include <ctime>
+#include <climits>
 
 #include "gtest/gtest.h"
 
@@ -560,5 +561,26 @@ TEST_F(NXDataFrameTest, make_factor_factor) {
         nx_data_frame_free(df);
 }
 
+TEST_F(NXDataFrameTest, io) {
+        struct NXDataFrame *df = nx_data_frame_alloc();
+        const int n_columns = 5;
+        const char *labels[n_columns] = { "col.int", "col.bool", "col.factor", "col.string", "col.double"};
+        enum NXDataColumnType types[n_columns] = { NX_DCT_INT, NX_DCT_BOOL, NX_DCT_FACTOR, NX_DCT_STRING, NX_DCT_DOUBLE };
+        for (int i = 0; i < n_columns; ++i)
+                nx_data_frame_add_column(df, types[i], labels[i]);
+
+        int row_id = nx_data_frame_add_row(df);
+        nx_data_frame_set(df, row_id, 123, NX_TRUE, "abc\"\\\"def", "123.0", 1.0/3.0);
+
+        row_id = nx_data_frame_add_row(df);
+        nx_data_frame_set(df, row_id, -123, NX_FALSE, "", "", 0.33);
+        nx_data_frame_set_na(df, row_id, 3);
+
+        row_id = nx_data_frame_add_row(df);
+        nx_data_frame_set(df, row_id, INT_MAX, NX_TRUE, "", "", 1.0/3.0 + 3.0);
+
+        nx_data_frame_save_csv(df, "/tmp/df.csv");
+        nx_data_frame_free(df);
+}
 
 } // namespace
