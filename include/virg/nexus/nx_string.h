@@ -30,7 +30,8 @@ int nx_strwrite(const char *s, FILE *stream);
 int nx_strread(char **s, size_t size, FILE *stream);
 char *nx_strread0(FILE *stream);
 
-char *nx_str_from_readable(size_t size, const char *readable);
+char *nx_xstr_from_readable(size_t size, const char *readable);
+char *nx_xstr_from_double_quoted(size_t size, const char *dquoted);
 
 __NX_END_DECL
 

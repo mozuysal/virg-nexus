@@ -118,7 +118,7 @@ char *nx_strread0(FILE *stream)
         return s;
 }
 
-char *nx_str_from_readable(size_t size, const char *readable)
+char *nx_xstr_from_readable(size_t size, const char *readable)
 {
         if (readable == NULL)
                 return NULL;
@@ -127,10 +127,8 @@ char *nx_str_from_readable(size_t size, const char *readable)
         char *p = s;
         while (size--) {
                 if (*readable == '\\') {
-                        if (size == 0) {
-                                nx_free(s);
-                                return NULL;
-                        }
+                        if (size == 0)
+                                nx_fatal(NX_LOG_TAG, "Missing control character after \\ in readable string!");
 
                         readable++;
                         size--;
@@ -142,10 +140,39 @@ char *nx_str_from_readable(size_t size, const char *readable)
                         case 'f': *(p++) = '\f'; break;
                         case 'b': *(p++) = '\b'; break;
                         case '"': *(p++) = '"'; break;
+                        default:
+                                nx_fatal(NX_LOG_TAG, "Unexpected control character '%c' in readable string!", *readable);
                         }
                         readable++;
                 } else {
                         *(p++) = *(readable++);
+                }
+        }
+        *p = '\0';
+        return s;
+}
+
+char *nx_xstr_from_double_quoted(size_t size, const char *dquoted)
+{
+        if (dquoted == NULL)
+                return NULL;
+
+        char *s = NX_NEW_C(size+1);
+        char *p = s;
+        while (size--) {
+                if (*dquoted == '"') {
+                        if (size == 0)
+                                nx_fatal(NX_LOG_TAG, "Missing double quote in double quoted string!");
+
+                        dquoted++;
+                        size--;
+                        if (*dquoted == '"')
+                                *(p++) = '"';
+                        else
+                                nx_fatal(NX_LOG_TAG, "Expected \" found '%c' in double quoted string!", *dquoted);
+                        dquoted++;
+                } else {
+                        *(p++) = *(dquoted++);
                 }
         }
         *p = '\0';

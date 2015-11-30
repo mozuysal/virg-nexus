@@ -58,7 +58,7 @@ static void nx_json_token_fill_string(struct NXJSONToken *t, int text_length, co
                 nx_free(t->text);
                 t->text = NULL;
         }
-        t->text = nx_str_from_readable(text_length, text_ptr);
+        t->text = nx_xstr_from_readable(text_length, text_ptr);
 }
 
 void nx_json_token_free_data(struct NXJSONToken *t)
@@ -171,8 +171,8 @@ static void nx_json_lexer_STRING(struct NXJSONLexer *jlex, struct NXJSONToken *t
 
 void nx_json_lexer_next_token(struct NXJSONLexer *jlex, struct NXJSONToken *t)
 {
-        while (nx_lexer_current_char(jlex->lex) != EOF) {
-                int c = nx_lexer_current_char(jlex->lex);
+        int c = EOF;
+        while ((c = nx_lexer_current_char(jlex->lex)) != EOF) {
                 if (nx_json_lexer_is_whitespace(c)) {
                         nx_json_lexer_skip_whitespace(jlex);
                         continue;
