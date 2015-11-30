@@ -47,6 +47,7 @@ set(virg_nexus_SOURCES
   src/nx_brief_extractor.c
   src/nx_data_frame.c
   src/nx_csv_lexer.c
+  src/nx_csv_parser.c
   src/nx_message_c_impl.c
 )
 
@@ -95,6 +96,7 @@ set(virg_nexus_HEADERS
   include/virg/nexus/nx_brief_extractor.h
   include/virg/nexus/nx_data_frame.h
   include/virg/nexus/nx_csv_lexer.h
+  include/virg/nexus/nx_csv_parser.h
 )
 
 add_library(virg-nexus STATIC ${virg_nexus_SOURCES})
