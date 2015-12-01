@@ -194,7 +194,7 @@ if (CMAKE_USE_PTHREADS_INIT)
 else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGTEST_HAS_PTHREAD=0")
 endif(CMAKE_USE_PTHREADS_INIT)
-set(GTEST_DIR ext/gtest-1.7.0)
+set(GTEST_DIR ext/googletest/googletest)
 set(GTEST_INCLUDE_DIRECTORIES ${GTEST_DIR}/include ${GTEST_DIR})
 include_directories(${GTEST_INCLUDE_DIRECTORIES})
 add_library(gtest ${GTEST_DIR}/src/gtest-all.cc)
@@ -219,6 +219,7 @@ set(test_SOURCES
   tests/tests_lexer.cc
   tests/tests_json_lexer.cc
   tests/tests_csv_lexer.cc
+  tests/tests_csv_parser.cc
 )
 
 set(VIRG_NEXUS_TEST_DATA_PATH "${CMAKE_SOURCE_DIR}/tests/data")
@@ -229,12 +230,12 @@ add_executable(virg-nexus-tests ${test_SOURCES})
 target_link_libraries(virg-nexus-tests virg-nexus gtest ${CMAKE_THREAD_LIBS_INIT} ${EXEC_LIBRARIES})
 set_target_properties(virg-nexus-tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY bin)
 
-add_custom_target(unit-tests bin/virg-nexus-tests
+add_custom_target(unit-tests bin/virg-nexus-tests --gtest_death_test_style=threadsafe
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   DEPENDS virg-nexus virg-nexus-tests
   COMMENT "Unit Testing" VERBATIM)
 
-add_custom_target(unit-tests-valgrind valgrind --leak-check=full --track-origins=yes --show-reachable=yes bin/virg-nexus-tests
+add_custom_target(unit-tests-valgrind valgrind --leak-check=full --track-origins=yes --show-reachable=yes bin/virg-nexus-tests --gtest_death_test_style=threadsafe --gtest_filter=-*DEATH
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   DEPENDS virg-nexus virg-nexus-tests
   COMMENT "Unit Testing with Valgrind" VERBATIM)
