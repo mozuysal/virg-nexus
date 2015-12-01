@@ -156,12 +156,20 @@ install(FILES lib/pkgconfig/virg-nexus.pc DESTINATION lib/pkgconfig)
 find_package(Doxygen)
 if (DOXYGEN_FOUND)
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
-  add_custom_target(doc ALL
-    ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    COMMENT "Generating API documentation with Doxygen" VERBATIM)
-endif(DOXYGEN_FOUND)
+  SET(DOXYGEN_INPUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
+  SET(DOXYGEN_OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/doc/html/index.html)
 
+  add_custom_command(
+    OUTPUT ${DOXYGEN_OUTPUT}
+    COMMAND ${CMAKE_COMMAND} -E echo_append "Generating API documentation with Doxygen"
+    COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_INPUT}
+    COMMAND ${CMAKE_COMMAND} -E echo "Done."
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    DEPENDS ${DOXYGEN_INPUT} virg-nexus
+    COMMENT "Generating API documentation with Doxygen" VERBATIM)
+
+  add_custom_target(doc ALL DEPENDS ${DOXYGEN_OUTPUT})
+endif(DOXYGEN_FOUND)
 # ---------------------------------- jpeg/png ------------------------------------
 include(FindPNG)
 include(FindJPEG)
