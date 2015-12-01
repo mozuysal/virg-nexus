@@ -20,6 +20,7 @@
 #include "virg/nexus/nx_assert.h"
 #include "virg/nexus/nx_string.h"
 #include "virg/nexus/nx_string_array.h"
+#include "virg/nexus/nx_csv_parser.h"
 
 #define CHECK_DATA_COLUMN_TYPE(dc,col_type)                             \
         do {                                                            \
@@ -177,7 +178,7 @@ void nx_data_frame_make_factor(struct NXDataFrame *df, int col_id)
                                 char value[256];
                                 switch (dc->type) {
                                 case NX_DCT_INT: snprintf(&value[0], 256, "%d", *((int *)elem_ptr)); break;
-                                case NX_DCT_DOUBLE: snprintf(&value[0], 256, "%lf", *((double *)elem_ptr)); break;
+                                case NX_DCT_DOUBLE: snprintf(&value[0], 256, "%.15g", *((double *)elem_ptr)); break;
                                 case NX_DCT_BOOL: snprintf(&value[0], 256, "%s", (*((NXBool *)elem_ptr)) ? "true" : "false"); break;
                                 default: nx_fatal(NX_LOG_TAG, "Can not make factor from data frame column %s", dc->label);
                                 }
@@ -475,7 +476,33 @@ NXBool nx_data_frame_save_csv(const struct NXDataFrame *df, const char *filename
 
 struct NXDataFrame *nx_data_frame_load_csv(const char *filename, NXBool strings_as_factors)
 {
-        return NULL;
+        FILE *fin = nx_xfopen(filename, "r");
+
+        int cap = 1024;
+        char *csv_text = NX_NEW_C(cap);
+
+        int c;
+        int i = 0;
+        while ((c = fgetc(fin)) != EOF) {
+                csv_text[i++] = c;
+
+                if (i >= cap-2) {
+                        cap *= 2;
+                        csv_text = nx_frealloc(csv_text, cap);
+                }
+        }
+        csv_text[i] = '\0';
+        nx_xfclose(fin, filename);
+
+        struct NXCSVLexer *clex = nx_csv_lexer_new(csv_text);
+        struct NXCSVParser *cp = nx_csv_parser_new(clex);
+        struct NXDataFrame *df = nx_csv_parser_parse(cp);
+
+        nx_csv_parser_free(cp);
+        nx_csv_lexer_free(clex);
+        nx_free(csv_text);
+
+        return df;
 }
 
 void nx_data_frame_xsave_csv(const struct NXDataFrame *df, const char *filename)

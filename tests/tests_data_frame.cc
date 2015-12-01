@@ -577,7 +577,7 @@ TEST_F(NXDataFrameTest, io) {
         nx_data_frame_set_na(df, row_id, 3);
 
         row_id = nx_data_frame_add_row(df);
-        nx_data_frame_set(df, row_id, INT_MAX, NX_TRUE, "", "", 1.0/3.0 + 3.0);
+        nx_data_frame_set(df, row_id, INT_MAX, NX_TRUE, "abcd", "efgh", 1.0/3.0 + 3.0);
 
         nx_data_frame_save_csv(df, "/tmp/df.csv");
         nx_data_frame_free(df);
