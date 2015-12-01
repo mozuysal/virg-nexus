@@ -238,13 +238,13 @@ add_executable(virg-nexus-tests ${test_SOURCES})
 target_link_libraries(virg-nexus-tests virg-nexus gtest ${CMAKE_THREAD_LIBS_INIT} ${EXEC_LIBRARIES})
 set_target_properties(virg-nexus-tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY bin)
 
-add_custom_target(unit-tests bin/virg-nexus-tests --gtest_death_test_style=threadsafe
+add_custom_target(unit-tests bin/virg-nexus-tests --gtest_death_test_style=threadsafe `printenv NX_TEST_FLAGS`
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   DEPENDS virg-nexus virg-nexus-tests
-  COMMENT "Unit Testing" VERBATIM)
+  COMMENT "Unit Testing")
 
-add_custom_target(unit-tests-valgrind valgrind --leak-check=full --track-origins=yes --show-reachable=yes bin/virg-nexus-tests --gtest_death_test_style=threadsafe --gtest_filter=-*DEATH
+set(valgrind-flags --leak-check=full --track-origins=yes --show-reachable=yes)
+add_custom_target(unit-tests-valgrind valgrind ${valgrind-flags} bin/virg-nexus-tests --gtest_death_test_style=threadsafe --gtest_filter=-*DEATH `printenv NX_TEST_FLAGS`
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   DEPENDS virg-nexus virg-nexus-tests
-  COMMENT "Unit Testing with Valgrind" VERBATIM)
-
+  COMMENT "Unit Testing with Valgrind")
