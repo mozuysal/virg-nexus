@@ -194,6 +194,8 @@ static enum NXDataColumnType *nx_csv_data_get_column_types(const struct NXCSVDat
                 if (!ctype_is_set[i])
                         ctypes[i] = NX_DCT_STRING;
 
+        nx_free(ctype_is_set);
+
         return ctypes;
 }
 
@@ -203,9 +205,10 @@ static void nx_csv_data_fill_data_frame(const struct NXCSVData *data, struct NXD
         int nc = data->n_columns;
         for (int r = 1; r < nr; ++r) { // skip column names
                 const struct NXCSVRecord *record = data->records[r];
+                int row_id = nx_data_frame_add_row(df);
                 for (int c = 0; c < nc; ++c) {
                         const struct NXCSVField *field = record->fields[c];
-                        nx_csv_field_set_data_frame(field, df, r, c);
+                        nx_csv_field_set_data_frame(field, df, row_id, c);
                 }
         }
 }
@@ -291,7 +294,7 @@ static struct NXCSVRecord *nx_csv_parser_parse_record(struct NXCSVParser *cp, st
                 nx_csv_parser_consume(cp);
         }
 
-        while (cp->token->type != NX_CTT_EOR || cp->token->type != NX_CTT_EOF) {
+        while (cp->token->type != NX_CTT_EOR && cp->token->type != NX_CTT_EOF) {
                 nx_csv_parser_match_comma(cp);
 
                 if (cp->token->type == NX_CTT_COMMA || cp->token->type == NX_CTT_EOR || cp->token->type == NX_CTT_EOF) {
@@ -301,6 +304,9 @@ static struct NXCSVRecord *nx_csv_parser_parse_record(struct NXCSVParser *cp, st
                         nx_csv_parser_consume(cp);
                 }
         }
+
+        if (cp->token->type == NX_CTT_EOR)
+                nx_csv_parser_consume(cp);
 
         return r;
 }

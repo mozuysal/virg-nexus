@@ -119,7 +119,7 @@ static void nx_csv_lexer_FIELD(struct NXCSVLexer *clex, struct NXCSVToken *t)
         int c = nx_lexer_current_char(clex->lex);
         do {
                 if (c == '"') {
-                        NX_CSV_LEXER_ERROR(clex,"Unquoted fields can not contain %c", '"');
+                        NX_CSV_LEXER_ERROR(clex,"Unquoted fields can not contain %c", c);
                 } else {
                         c = nx_lexer_consume(clex->lex);
                 }

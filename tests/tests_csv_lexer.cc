@@ -165,4 +165,12 @@ TEST_F(NXCSVLexerTest, two_records) {
         nx_free(s);
 }
 
+TEST_F(NXCSVLexerTest, unquoted_double_quote_DEATH) {
+        char *s = nx_strdup("ab\"cd");
+        struct NXCSVLexer *clex = nx_csv_lexer_new(s);
+
+        struct NXCSVToken t = { NX_CTT_INVALID, NULL};
+        EXPECT_DEATH({nx_csv_lexer_next_token(clex, &t);},"Unquoted fields can not contain \"");
+}
+
 } // namespace
