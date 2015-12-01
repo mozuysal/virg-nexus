@@ -138,3 +138,12 @@ void nx_fputs_double_quoted(const char *s, FILE *stream)
         }
         fputc('\"', stream);
 }
+
+FILE *nx_xtmpfile(void)
+{
+        FILE *stream = tmpfile();
+        if (!stream)
+                nx_io_fatal_exit(NX_LOG_TAG, "Error creating and opening temporary file");
+
+        return stream;
+}
