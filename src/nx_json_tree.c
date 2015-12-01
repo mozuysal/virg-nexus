@@ -53,7 +53,7 @@ struct NXJSONNode *nx_json_tree_from_stream(FILE *stream)
         while ((c = fgetc(stream)) != EOF) {
                 jtext[i++] = c;
 
-                if (i == cap-1) {
+                if (i >= cap-2) {
                         cap *= 2;
                         jtext = nx_frealloc(jtext, cap);
                 }
