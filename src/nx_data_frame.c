@@ -22,6 +22,8 @@
 #include "virg/nexus/nx_string_array.h"
 #include "virg/nexus/nx_csv_parser.h"
 
+#define NX_DATA_FRAME_DOUBLE_IO_FORMAT "%.17g"
+
 #define CHECK_DATA_COLUMN_TYPE(dc,col_type)                             \
         do {                                                            \
                 if (dc->type != col_type)                               \
@@ -178,7 +180,7 @@ void nx_data_frame_make_factor(struct NXDataFrame *df, int col_id)
                                 char value[256];
                                 switch (dc->type) {
                                 case NX_DCT_INT: snprintf(&value[0], 256, "%d", *((int *)elem_ptr)); break;
-                                case NX_DCT_DOUBLE: snprintf(&value[0], 256, "%.15g", *((double *)elem_ptr)); break;
+                                case NX_DCT_DOUBLE: snprintf(&value[0], 256, NX_DATA_FRAME_DOUBLE_IO_FORMAT, *((double *)elem_ptr)); break;
                                 case NX_DCT_BOOL: snprintf(&value[0], 256, "%s", (*((NXBool *)elem_ptr)) ? "true" : "false"); break;
                                 default: nx_fatal(NX_LOG_TAG, "Can not make factor from data frame column %s", dc->label);
                                 }
@@ -427,25 +429,19 @@ void nx_data_frame_set_factor(struct NXDataFrame *df, int row_id, int col_id, co
         dc->elems[row_id] = (void *)elem_ptr;
 }
 
-NXBool nx_data_frame_save_csv(const struct NXDataFrame *df, const char *filename)
+NXBool nx_data_frame_save_csv_stream(const struct NXDataFrame *df, FILE *stream)
 {
         NX_ASSERT_PTR(df);
-        NX_ASSERT_PTR(filename);
-
-        FILE *fout = fopen(filename, "w");
-        if (fout == NULL) {
-                nx_error(NX_LOG_TAG, "Error opening file %s for CSV data frame output", filename);
-                return NX_FALSE;
-        }
+        NX_ASSERT_PTR(stream);
 
         int nc = nx_data_frame_n_columns(df);
         for (int i = 0; i < nc; ++i) {
                 const struct NXDataColumn *dc = nx_data_frame_column(df, i);
-                nx_fputs_readable(nx_data_column_label(dc), fout);
+                nx_fputs_readable(nx_data_column_label(dc), stream);
                 if (i != nc-1)
-                        fputs(",", fout);
+                        fputs(",", stream);
                 else
-                        fputs("\n", fout);
+                        fputs("\n", stream);
         }
 
         int nr = nx_data_frame_n_rows(df);
@@ -454,36 +450,34 @@ NXBool nx_data_frame_save_csv(const struct NXDataFrame *df, const char *filename
                         if (!nx_data_frame_is_na(df, r, c)) {
                                 const struct NXDataColumn *dc = nx_data_frame_column(df, c);
                                 switch (nx_data_column_type(dc)) {
-                                case NX_DCT_STRING: nx_fputs_double_quoted(nx_data_frame_get_string(df,r,c), fout); break;
-                                case NX_DCT_FACTOR: nx_fputs_double_quoted(nx_data_frame_get_factor(df,r,c), fout); break;
-                                case NX_DCT_INT: fprintf(fout, "%d", nx_data_frame_get_int(df,r,c)); break;
-                                case NX_DCT_DOUBLE: fprintf(fout, "%.15g", nx_data_frame_get_double(df,r,c)); break;
-                                case NX_DCT_BOOL: fprintf(fout, "%s", nx_data_frame_get_bool(df,r,c) ? "true" : "false"); break;
+                                case NX_DCT_STRING: nx_fputs_double_quoted(nx_data_frame_get_string(df,r,c), stream); break;
+                                case NX_DCT_FACTOR: nx_fputs_double_quoted(nx_data_frame_get_factor(df,r,c), stream); break;
+                                case NX_DCT_INT: fprintf(stream, "%d", nx_data_frame_get_int(df,r,c)); break;
+                                case NX_DCT_DOUBLE: fprintf(stream, NX_DATA_FRAME_DOUBLE_IO_FORMAT, nx_data_frame_get_double(df,r,c)); break;
+                                case NX_DCT_BOOL: fprintf(stream, "%s", nx_data_frame_get_bool(df,r,c) ? "true" : "false"); break;
                                 }
                         }
 
                         if (c != nc-1)
-                                fputs(",", fout);
+                                fputs(",", stream);
                         else
-                                fputs("\n", fout);
+                                fputs("\n", stream);
                 }
         }
-
-        fclose(fout);
 
         return NX_TRUE;
 }
 
-struct NXDataFrame *nx_data_frame_load_csv(const char *filename, NXBool strings_as_factors)
+struct NXDataFrame *nx_data_frame_load_csv_stream(FILE *stream, NXBool strings_as_factors)
 {
-        FILE *fin = nx_xfopen(filename, "r");
+        NX_ASSERT_PTR(stream);
 
         int cap = 1024;
         char *csv_text = NX_NEW_C(cap);
 
         int c;
         int i = 0;
-        while ((c = fgetc(fin)) != EOF) {
+        while ((c = fgetc(stream)) != EOF) {
                 csv_text[i++] = c;
 
                 if (i >= cap-2) {
@@ -492,7 +486,6 @@ struct NXDataFrame *nx_data_frame_load_csv(const char *filename, NXBool strings_
                 }
         }
         csv_text[i] = '\0';
-        nx_xfclose(fin, filename);
 
         struct NXCSVLexer *clex = nx_csv_lexer_new(csv_text);
         struct NXCSVParser *cp = nx_csv_parser_new(clex);
@@ -501,6 +494,45 @@ struct NXDataFrame *nx_data_frame_load_csv(const char *filename, NXBool strings_
         nx_csv_parser_free(cp);
         nx_csv_lexer_free(clex);
         nx_free(csv_text);
+
+        return df;
+}
+
+NXBool nx_data_frame_save_csv(const struct NXDataFrame *df, const char *filename)
+{
+        NX_ASSERT_PTR(df);
+        NX_ASSERT_PTR(filename);
+
+        FILE *fout = nx_fopen(filename, "w");
+        if (fout == NULL) {
+                nx_error(NX_LOG_TAG, "Error opening file %s for CSV data frame output", filename);
+                return NX_FALSE;
+        }
+
+        NXBool res = nx_data_frame_save_csv_stream(df, fout);
+
+        if (nx_fclose(fout, filename) != NX_OK)
+                res = NX_FALSE;
+
+        return res;
+}
+
+struct NXDataFrame *nx_data_frame_load_csv(const char *filename, NXBool strings_as_factors)
+{
+        NX_ASSERT_PTR(filename);
+
+        FILE *fin = nx_fopen(filename, "r");
+        if (fin == NULL) {
+                nx_error(NX_LOG_TAG, "Error opening file %s for reading CSV data", filename);
+                return NX_FALSE;
+        }
+
+        struct NXDataFrame *df = nx_data_frame_load_csv_stream(fin, strings_as_factors);
+
+        if (nx_fclose(fin, filename) != NX_OK) {
+                nx_data_frame_free(df);
+                df = NULL;
+        }
 
         return df;
 }

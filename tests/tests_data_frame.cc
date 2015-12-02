@@ -20,6 +20,7 @@
 #include "gtest/gtest.h"
 
 #include "virg/nexus/nx_alloc.h"
+#include "virg/nexus/nx_io.h"
 #include "virg/nexus/nx_data_frame.h"
 
 using namespace std;
@@ -473,9 +474,9 @@ TEST_F(NXDataFrameTest, make_factor_double) {
         EXPECT_EQ(nx_data_column_type(dc),NX_DCT_FACTOR);
         EXPECT_STREQ(nx_data_column_label(dc),label);
         EXPECT_EQ(nx_data_column_n_factor_levels(dc),3);
-        EXPECT_STREQ("1.000000", nx_data_column_factor_level(dc, 0));
-        EXPECT_STREQ("2.000000", nx_data_column_factor_level(dc, 1));
-        EXPECT_STREQ("3.000000", nx_data_column_factor_level(dc, 2));
+        EXPECT_STREQ("1", nx_data_column_factor_level(dc, 0));
+        EXPECT_STREQ("2", nx_data_column_factor_level(dc, 1));
+        EXPECT_STREQ("3", nx_data_column_factor_level(dc, 2));
 
         nx_data_frame_free(df);
 }
@@ -570,17 +571,58 @@ TEST_F(NXDataFrameTest, io) {
                 nx_data_frame_add_column(df, types[i], labels[i]);
 
         int row_id = nx_data_frame_add_row(df);
-        nx_data_frame_set(df, row_id, 123, NX_TRUE, "abc\"\\\"def", "123.0", 1.0/3.0);
+        nx_data_frame_set(df, row_id, 123, NX_TRUE, "abc\"def", "123.0", 1.0/3.0);
 
         row_id = nx_data_frame_add_row(df);
         nx_data_frame_set(df, row_id, -123, NX_FALSE, "", "", 0.33);
-        nx_data_frame_set_na(df, row_id, 3);
+        nx_data_frame_set_na(df, row_id, 2);
 
         row_id = nx_data_frame_add_row(df);
-        nx_data_frame_set(df, row_id, INT_MAX, NX_TRUE, "abcd", "efgh", 1.0/3.0 + 3.0);
+        nx_data_frame_set(df, row_id, INT_MAX, NX_TRUE, "abcd", "ef\ngh", 1.0/3.0 + 3.0);
 
-        nx_data_frame_save_csv(df, "/tmp/df.csv");
+        FILE *tmp_stream = nx_xtmpfile();
+        EXPECT_TRUE(nx_data_frame_save_csv_stream(df, tmp_stream));
+
+        rewind(tmp_stream);
+        struct NXDataFrame *cpy = nx_data_frame_load_csv_stream(tmp_stream, NX_FALSE);
+        EXPECT_TRUE(cpy != NULL);
+
+        nx_xfclose(tmp_stream, "tmp stream");
+
+        EXPECT_EQ(nx_data_frame_n_columns(cpy),n_columns);
+        for (int i = 0; i < n_columns; ++i) {
+                const struct NXDataColumn *dc = nx_data_frame_column(cpy,i);
+                EXPECT_TRUE(dc != NULL);
+                if (i == 2)
+                        EXPECT_EQ(NX_DCT_STRING,nx_data_column_type(dc));
+                else
+                        EXPECT_EQ(types[i],nx_data_column_type(dc));
+                EXPECT_STREQ(labels[i],nx_data_column_label(dc));
+                EXPECT_EQ(0,nx_data_column_n_factor_levels(dc));
+        }
+
+        EXPECT_EQ(123,nx_data_frame_get_int(cpy,0,0));
+        EXPECT_EQ(-123,nx_data_frame_get_int(cpy,1,0));
+        EXPECT_EQ(INT_MAX,nx_data_frame_get_int(cpy,2,0));
+
+        EXPECT_TRUE(nx_data_frame_get_bool(cpy,0,1));
+        EXPECT_FALSE(nx_data_frame_get_bool(cpy,1,1));
+        EXPECT_TRUE(nx_data_frame_get_bool(cpy,2,1));
+
+        EXPECT_STREQ("abc\"def",nx_data_frame_get_string(cpy,0,2));
+        EXPECT_TRUE(nx_data_frame_is_na(cpy,1,2));
+        EXPECT_STREQ("abcd",nx_data_frame_get_string(cpy,2,2));
+
+        EXPECT_STREQ("123.0",nx_data_frame_get_string(cpy,0,3));
+        EXPECT_STREQ("",nx_data_frame_get_string(cpy,1,3));
+        EXPECT_STREQ("ef\ngh",nx_data_frame_get_string(cpy,2,3));
+
+        EXPECT_EQ(1.0/3.0,nx_data_frame_get_double(cpy,0,4));
+        EXPECT_EQ(0.33,nx_data_frame_get_double(cpy,1,4));
+        EXPECT_EQ(1.0/3.0+3.0,nx_data_frame_get_double(cpy,2,4));
+
         nx_data_frame_free(df);
+        nx_data_frame_free(cpy);
 }
 
 } // namespace

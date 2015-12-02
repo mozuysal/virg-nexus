@@ -13,6 +13,8 @@
 #ifndef VIRG_NEXUS_NX_DATA_FRAME_H
 #define VIRG_NEXUS_NX_DATA_FRAME_H
 
+#include <stdio.h>
+
 #include "virg/nexus/nx_config.h"
 #include "virg/nexus/nx_types.h"
 
@@ -67,6 +69,9 @@ void nx_data_frame_set_int   (struct NXDataFrame *df, int row_id, int col_id, in
 void nx_data_frame_set_double(struct NXDataFrame *df, int row_id, int col_id, double value);
 void nx_data_frame_set_bool  (struct NXDataFrame *df, int row_id, int col_id, NXBool value);
 void nx_data_frame_set_factor(struct NXDataFrame *df, int row_id, int col_id, const char *value);
+
+NXBool nx_data_frame_save_csv_stream(const struct NXDataFrame *df, FILE *stream);
+struct NXDataFrame *nx_data_frame_load_csv_stream(FILE *stream, NXBool strings_as_factors);
 
 NXBool nx_data_frame_save_csv(const struct NXDataFrame *df, const char *filename);
 struct NXDataFrame *nx_data_frame_load_csv(const char *filename, NXBool strings_as_factors);
