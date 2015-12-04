@@ -43,6 +43,9 @@ int nx_fast_detect_keypoints(int n_keys_max, struct NXKeypoint *keys,
         for (int i = 0; i < n_keys_max; ++i) {
                 keys[i].xs = keys[i].x;
                 keys[i].ys = keys[i].y;
+                keys[i].level = 0;
+                keys[i].scale = 1.0f;
+                keys[i].sigma = 0.0f;
                 keys[i].score = 0.0f;
                 keys[i].ori = 0.0f;
                 keys[i].id = i;
