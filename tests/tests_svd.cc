@@ -78,20 +78,25 @@ TEST_F(NXSVDTest, SVD_USVt) {
         for (int i = 0; i < TEST_M; ++i)
                 for (int j = 0; j < TEST_M; ++j)
                         abs_diff_sum += fabs(U[j*TEST_M+i] - Us[j*TEST_M+i]);
-        /* printf("U diff = %.12le\n", abs_diff_sum); */
+        printf("U diff = %.12le\n", abs_diff_sum);
         EXPECT_GT(1e-12, abs_diff_sum);
 
         abs_diff_sum = 0.0;
         for (int i = 0; i < TEST_M; ++i)
                 abs_diff_sum += fabs(S[i] - Ss[i]);
-        /* printf("S diff = %.12le\n", abs_diff_sum); */
+        printf("S diff = %.12le\n", abs_diff_sum);
         EXPECT_GT(1e-12, abs_diff_sum);
 
         abs_diff_sum = 0.0;
-        for (int i = 0; i < TEST_N; ++i)
-                for (int j = 0; j < TEST_N; ++j)
+        for (int i = 0; i < TEST_N; ++i) {
+                for (int j = 0; j < TEST_N; ++j) {
                         abs_diff_sum += fabs(Vt[j*TEST_N+i] - Vts[j*TEST_N+i]);
-        /* printf("Vt diff = %.12le\n", abs_diff_sum); */
+                        printf("%g-%g ", Vt[j*TEST_N+i], Vts[j*TEST_N+i]);
+                }
+                printf("\n");
+        }
+
+        printf("Vt diff = %.12le\n", abs_diff_sum);
         EXPECT_GT(1e-12, abs_diff_sum);
 }
 
