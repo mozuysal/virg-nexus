@@ -122,7 +122,7 @@ if (VIRG_NEXUS_PC_LINUX)
   # SSE
   if (VIRG_NEXUS_USE_SIMD)
     set(VIRG_NEXUS_USE_SSE 1)
-    set(VIRG_NEXUS_FLAGS_SIMD "-DVIRG_NEXUS_USE_SIMD -msse -mfpmath=sse -DVIRG_NEXUS_USE_SSE")
+    set(VIRG_NEXUS_FLAGS_SIMD "-DVIRG_NEXUS_USE_SIMD -msse -msse2 -mfpmath=sse -DVIRG_NEXUS_USE_SSE -DHAVE_SSE2")
   endif (VIRG_NEXUS_USE_SIMD)
 endif(VIRG_NEXUS_PC_LINUX)
 
@@ -138,9 +138,9 @@ set(CMAKE_CXX_FLAGS_DEBUG          "${VIRG_NEXUS_FLAGS_DEBUG} -std=c++11")
 set(CMAKE_CXX_FLAGS_RELEASE        "${VIRG_NEXUS_FLAGS_RELEASE} -std=c++11")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${VIRG_NEXUS_FLAGS_RELWITHDEBINFO} -std=c++11")
 
-# set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_BUILD_TYPE Debug)
 # set(CMAKE_BUILD_TYPE Release)
-set(CMAKE_BUILD_TYPE RelWithDebInfo)
+# set(CMAKE_BUILD_TYPE RelWithDebInfo)
 
 configure_file(virg-nexus.pc.in ${CMAKE_SOURCE_DIR}/lib/pkgconfig/virg-nexus.pc @ONLY)
 # -------------------------- install target ----------------------------
