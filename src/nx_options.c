@@ -260,7 +260,6 @@ static inline void nx_options_check_required(struct NXOptions *opt)
 static void nx_options_set_rest_from_args(struct NXOptions *opt, int argc, char*argv[], const NXBool *is_processed)
 {
         NX_ASSERT_PTR(opt->rest);
-        NX_ASSERT(opt->rest->value.r == NULL);
 
         int n_rest_arg = 0;
         for (int i = 0; i < argc; ++i) {
