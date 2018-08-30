@@ -137,18 +137,6 @@ TEST_F(NXImageTest, ImageGraySaveLoadAsIsJPEG) {
         nx_image_free(img1_);
 }
 
-TEST_F(NXImageTest, ImageRGBASaveLoadAsIsJPEG) {
-        img0_ = nx_image_new_rgba(NX, NY);
-        memcpy(img0_->data, TEST_IMAGE_COLOR_DATA, sizeof(TEST_IMAGE_COLOR_DATA));
-        nx_image_xsave_jpeg(img0_, TMP_JPEG_IMAGE_FILENAME);
-        img1_ = nx_image_alloc();
-        nx_image_xload_jpeg(img1_, TMP_JPEG_IMAGE_FILENAME, NX_IMAGE_LOAD_AS_IS);
-        for (int i = 0; i < 4*N; ++i)
-                EXPECT_EQ(TEST_IMAGE_JPEG_COLOR_DATA[i], img1_->data[i]);
-        nx_image_free(img0_);
-        nx_image_free(img1_);
-}
-
 TEST_F(NXImageTest, ImageFileFormatFromFilename) {
         EXPECT_EQ(NX_IMAGE_FILE_FORMAT_PNM_BINARY, nx_image_file_format_from_filename("sad/sdf/avdf.pgm"));
         EXPECT_EQ(NX_IMAGE_FILE_FORMAT_PNM_BINARY, nx_image_file_format_from_filename("sad/sdf/avdf.ppm"));
