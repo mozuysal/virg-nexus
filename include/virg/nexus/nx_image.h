@@ -107,7 +107,7 @@ uchar nx_image_sample_bilinear(const struct NXImage *img, float xs, float ys);
 
 __NX_END_DECL
 
-int nx_image_n_channels(enum NXImageType type)
+static inline int nx_image_n_channels(enum NXImageType type)
 {
         return type == NX_IMAGE_GRAYSCALE ? 1 : 4;
 }
