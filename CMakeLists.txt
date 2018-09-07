@@ -49,6 +49,7 @@ set(virg_nexus_SOURCES
   src/nx_csv_lexer.c
   src/nx_csv_parser.c
   src/nx_message_c_impl.c
+  src/nx_camera.c
 )
 
 set(virg_nexus_HEADERS
@@ -97,6 +98,7 @@ set(virg_nexus_HEADERS
   include/virg/nexus/nx_data_frame.h
   include/virg/nexus/nx_csv_lexer.h
   include/virg/nexus/nx_csv_parser.h
+  include/virg/nexus/nx_camera.h
 )
 
 add_library(virg-nexus STATIC ${virg_nexus_SOURCES})
@@ -228,6 +230,7 @@ set(test_SOURCES
   tests/tests_json_lexer.cc
   tests/tests_csv_lexer.cc
   tests/tests_csv_parser.cc
+  tests/tests_camera.cc
 )
 
 set(VIRG_NEXUS_TEST_DATA_PATH "${CMAKE_SOURCE_DIR}/tests/data")
