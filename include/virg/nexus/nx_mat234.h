@@ -13,6 +13,7 @@
 #ifndef VIRG_NEXUS_NX_MAT234_H
 #define VIRG_NEXUS_NX_MAT234_H
 
+#include <string.h>
 #include <math.h>
 
 #include "virg/nexus/nx_config.h"
@@ -26,7 +27,8 @@ static inline void   nx_smat3_mul(float *C, const float *A, const float *B);
 
 static inline double nx_dmat3_inv(double *M3i, const double *M3);
 static inline void   nx_dmat3_mul(double *C, const double *A, const double *B);
-
+static inline void   nx_dmat3_mul_ua(double *C, const double *U, const double *A);
+static inline void   nx_dmat3_eye(double *A);
 /*
  * -----------------------------------------------------------------------------
  *                                   Definitions
@@ -136,6 +138,29 @@ static inline void nx_dmat3_mul(double *C, const double *A, const double *B)
         C[6] = A[0]*B[6]+A[3]*B[7]+A[6]*B[8];
         C[7] = A[1]*B[6]+A[4]*B[7]+A[7]*B[8];
         C[8] = A[2]*B[6]+A[5]*B[7]+A[8]*B[8];
+}
+
+static inline void nx_dmat3_mul_ua(double *C, const double *U, const double *A)
+{
+        C[0] = U[0]*A[0]+U[3]*A[1]+U[6]*A[2];
+        C[1] = U[4]*A[1]+U[7]*A[2];
+        C[2] = U[8]*A[2];
+
+        C[3] = U[0]*A[3]+U[3]*A[4]+U[6]*A[5];
+        C[4] = U[4]*A[4]+U[7]*A[5];
+        C[5] = U[8]*A[5];
+
+        C[6] = U[0]*A[6]+U[3]*A[7]+U[6]*A[8];
+        C[7] = U[4]*A[7]+U[7]*A[8];
+        C[8] = U[8]*A[8];
+}
+
+static inline void nx_dmat3_eye(double *A)
+{
+        memset(A, 0, 9*sizeof(*A));
+        A[0] = 1.0;
+        A[4] = 1.0;
+        A[8] = 1.0;
 }
 
 __NX_END_DECL
