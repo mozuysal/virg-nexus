@@ -28,7 +28,7 @@
                 fflush(stdout);                                         \
                 int line_no = nx_lexer_line_no((lx)->lex);              \
                 int col_no = nx_lexer_column_no((lx)->lex);             \
-                nx_fatal("NXJSONLexer",NX_JSON_LEXER_ERROR_LINE_COL_INFO msg,line_no,col_no,##__VA_ARGS__); \
+                NX_FATAL("NXJSONLexer",NX_JSON_LEXER_ERROR_LINE_COL_INFO msg,line_no,col_no,##__VA_ARGS__); \
         } while (0)
 
 static char *g_json_token_names[] = {

@@ -374,11 +374,11 @@ NXResult nx_brief_extractor_read(struct NXBriefExtractor *be, FILE *stream)
 void nx_brief_extractor_xwrite(const struct NXBriefExtractor *be, FILE *stream)
 {
         if (nx_brief_extractor_write(be, stream) != NX_OK)
-                nx_fatal(NX_LOG_TAG, "Error writing BRIEF extractor to stream!");
+                NX_FATAL(NX_LOG_TAG, "Error writing BRIEF extractor to stream!");
 }
 
 void nx_brief_extractor_xread(struct NXBriefExtractor *be, FILE *stream)
 {
         if (nx_brief_extractor_read(be, stream) != NX_OK)
-                nx_fatal(NX_LOG_TAG, "Error reading BRIEF extractor from stream!");
+                NX_FATAL(NX_LOG_TAG, "Error reading BRIEF extractor from stream!");
 }

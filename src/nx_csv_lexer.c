@@ -28,7 +28,7 @@
                 fflush(stdout);                                         \
                 int line_no = nx_lexer_line_no((lx)->lex);              \
                 int col_no = nx_lexer_column_no((lx)->lex);             \
-                nx_fatal("NXCSVLexer",NX_CSV_LEXER_ERROR_LINE_COL_INFO msg,line_no,col_no,##__VA_ARGS__); \
+                NX_FATAL("NXCSVLexer",NX_CSV_LEXER_ERROR_LINE_COL_INFO msg,line_no,col_no,##__VA_ARGS__); \
         } while (0)
 
 static char *g_csv_token_names[] = {

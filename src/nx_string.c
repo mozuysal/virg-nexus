@@ -64,7 +64,7 @@ char *nx_vfstr(const char* format, va_list args)
                 va_end(args_cpy);
 
                 if (n < 0)
-                        nx_fatal(NX_LOG_TAG, "Error making string from format %s",
+                        NX_FATAL(NX_LOG_TAG, "Error making string from format %s",
                                  format);
 
                 if (n >= ls) {
@@ -128,7 +128,7 @@ char *nx_xstr_from_readable(size_t size, const char *readable)
         while (size--) {
                 if (*readable == '\\') {
                         if (size == 0)
-                                nx_fatal(NX_LOG_TAG, "Missing control character after \\ in readable string!");
+                                NX_FATAL(NX_LOG_TAG, "Missing control character after \\ in readable string!");
 
                         readable++;
                         size--;
@@ -141,7 +141,7 @@ char *nx_xstr_from_readable(size_t size, const char *readable)
                         case 'b': *(p++) = '\b'; break;
                         case '"': *(p++) = '"'; break;
                         default:
-                                nx_fatal(NX_LOG_TAG, "Unexpected control character '%c' in readable string!", *readable);
+                                NX_FATAL(NX_LOG_TAG, "Unexpected control character '%c' in readable string!", *readable);
                         }
                         readable++;
                 } else {
@@ -162,14 +162,14 @@ char *nx_xstr_from_double_quoted(size_t size, const char *dquoted)
         while (size--) {
                 if (*dquoted == '"') {
                         if (size == 0)
-                                nx_fatal(NX_LOG_TAG, "Missing double quote in double quoted string!");
+                                NX_FATAL(NX_LOG_TAG, "Missing double quote in double quoted string!");
 
                         dquoted++;
                         size--;
                         if (*dquoted == '"')
                                 *(p++) = '"';
                         else
-                                nx_fatal(NX_LOG_TAG, "Expected \" found '%c' in double quoted string!", *dquoted);
+                                NX_FATAL(NX_LOG_TAG, "Expected \" found '%c' in double quoted string!", *dquoted);
                         dquoted++;
                 } else {
                         *(p++) = *(dquoted++);

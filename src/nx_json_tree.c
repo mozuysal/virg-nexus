@@ -269,7 +269,7 @@ struct NXJSONNode *nx_json_array_fget(struct NXJSONNode *jarray, int position, i
 {
         struct NXJSONNode *n = nx_json_array_get(jarray, position, type);
         if (n == NULL)
-                nx_fatal(NX_LOG_TAG, "JSON array has no element matching type <%s> at position %d!",
+                NX_FATAL(NX_LOG_TAG, "JSON array has no element matching type <%s> at position %d!",
                          nx_json_node_type_name(type), position);
 
         return n;
@@ -279,7 +279,7 @@ struct NXJSONNode *nx_json_object_fget(struct NXJSONNode *jobject, const char *n
 {
         struct NXJSONNode *n = nx_json_object_get(jobject, name, type);
         if (n == NULL)
-                nx_fatal(NX_LOG_TAG, "JSON object has no element matching type <%s> with name '%s'!",
+                NX_FATAL(NX_LOG_TAG, "JSON object has no element matching type <%s> with name '%s'!",
                          nx_json_node_type_name(type), name);
 
         return n;
@@ -354,7 +354,7 @@ static void nx_json_tree_fprint_recursive(FILE *stream, struct NXJSONNode *root,
                 fputc('}', stream);
                 return;
         default:
-                nx_fatal(NX_LOG_TAG, "Unknown JSON node type %d while printing!", root->type);
+                NX_FATAL(NX_LOG_TAG, "Unknown JSON node type %d while printing!", root->type);
         }
 }
 

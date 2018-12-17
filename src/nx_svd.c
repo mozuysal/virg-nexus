@@ -55,7 +55,7 @@ static int nx_sgesvd_query_lwork(char jobu, char jobvt, int m, int n)
                 return (int)work;
         }
 
-        nx_fatal(NX_LOG_TAG, "Error querying for SVD work size!");
+        NX_FATAL(NX_LOG_TAG, "Error querying for SVD work size!");
 }
 
 static void nx_ssvd(char jobU, char jobVt, int m, int n,
@@ -124,7 +124,7 @@ static int nx_dgesvd_query_lwork(char jobu, char jobvt, int m, int n)
                 return (int)work;
         }
 
-        nx_fatal(NX_LOG_TAG, "Error querying for SVD work size!");
+        NX_FATAL(NX_LOG_TAG, "Error querying for SVD work size!");
 }
 
 static void nx_dsvd(char jobU, char jobVt, int m, int n,

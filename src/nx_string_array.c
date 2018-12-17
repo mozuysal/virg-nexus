@@ -168,13 +168,13 @@ int nx_string_array_write(const struct NXStringArray *sa, FILE *stream)
         NX_ASSERT_PTR(sa);
 
         if (fwrite(&sa->size, sizeof(sa->size), 1, stream) != 1) {
-                nx_error(NX_LOG_TAG, "Error writing string array length to stream");
+                NX_ERROR(NX_LOG_TAG, "Error writing string array length to stream");
                 return -1;
         }
 
         for (int i = 0; i < sa->size; ++i)
                 if (nx_strwrite(sa->elems[i], stream) != 0) {
-                        nx_error(NX_LOG_TAG, "Error writing string array element %d to stream: '%s'",
+                        NX_ERROR(NX_LOG_TAG, "Error writing string array element %d to stream: '%s'",
                                  i, sa->elems[i]);
                         return -1;
                 }
@@ -187,7 +187,7 @@ void nx_string_array_xwrite(const struct NXStringArray *sa, FILE *stream)
         NX_ASSERT_PTR(sa);
 
         if (nx_string_array_write(sa, stream) != 0)
-                nx_fatal(NX_LOG_TAG, "Error writing string array to stream");
+                NX_FATAL(NX_LOG_TAG, "Error writing string array to stream");
 }
 
 int nx_string_array_read(struct NXStringArray *sa, FILE *stream)
@@ -196,14 +196,14 @@ int nx_string_array_read(struct NXStringArray *sa, FILE *stream)
 
         int size = 0;
         if (fread(&size, sizeof(size), 1, stream) != 1) {
-                nx_error(NX_LOG_TAG, "Error writing string array length to stream");
+                NX_ERROR(NX_LOG_TAG, "Error writing string array length to stream");
                 return -1;
         }
 
         nx_string_array_resize(sa, size);
         for (int i = 0; i < sa->size; ++i)
                 if (nx_strread(&sa->elems[i], 0, stream) != 0) {
-                        nx_error(NX_LOG_TAG, "Error reading string array element %d from stream", i);
+                        NX_ERROR(NX_LOG_TAG, "Error reading string array element %d from stream", i);
                         return -1;
                 }
 
@@ -215,7 +215,7 @@ void nx_string_array_xread(struct NXStringArray *sa, FILE *stream)
         NX_ASSERT_PTR(sa);
 
         if (nx_string_array_read(sa, stream) != 0)
-                nx_fatal(NX_LOG_TAG, "Error reading string array from stream");
+                NX_FATAL(NX_LOG_TAG, "Error reading string array from stream");
 }
 
 struct NXStringArray *nx_string_array_read0(FILE *stream)

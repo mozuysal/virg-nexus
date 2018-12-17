@@ -27,7 +27,7 @@ struct NXJSONNode *nx_json_log_get_stream(int jlog_id)
         }
 
         if (jlog_id < 0 || jlog_id >= NX_JLOG_N_STREAMS)
-                nx_fatal(NX_LOG_TAG, "JSON log id %d is not in range [0, %d]",
+                NX_FATAL(NX_LOG_TAG, "JSON log id %d is not in range [0, %d]",
                          jlog_id, NX_JLOG_N_STREAMS-1);
         else if (nx_s_json_log[jlog_id] == NULL)
                 nx_s_json_log[jlog_id] = nx_json_node_new_object();
@@ -48,7 +48,7 @@ void nx_json_log_free()
 void nx_json_log_clear_stream(int jlog_id)
 {
         if (jlog_id < 0 || jlog_id >= NX_JLOG_N_STREAMS)
-                nx_fatal(NX_LOG_TAG, "JSON log id %d is not in range [0, %d]",
+                NX_FATAL(NX_LOG_TAG, "JSON log id %d is not in range [0, %d]",
                          jlog_id, NX_JLOG_N_STREAMS-1);
         else if (nx_s_json_log == NULL || nx_s_json_log[jlog_id] == NULL)
                 return;

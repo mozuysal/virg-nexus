@@ -277,7 +277,7 @@ static inline void nx_csv_parser_match_comma(struct NXCSVParser *cp)
         if (cp->token->type == NX_CTT_COMMA) {
                 nx_csv_parser_consume(cp);
         } else {
-                nx_fatal(NX_LOG_TAG, "Expecting comma, found %s", nx_csv_token_name(cp->token));
+                NX_FATAL(NX_LOG_TAG, "Expecting comma, found %s", nx_csv_token_name(cp->token));
         }
 }
 
@@ -286,7 +286,7 @@ static struct NXCSVRecord *nx_csv_parser_parse_record(struct NXCSVParser *cp, st
         struct NXCSVRecord *r = nx_csv_record_new(data);
 
         if (cp->token->type == NX_CTT_EOR) {
-                nx_fatal(NX_LOG_TAG, "Empty record %d while parsing CSV", data->size);
+                NX_FATAL(NX_LOG_TAG, "Empty record %d while parsing CSV", data->size);
         } else if (cp->token->type == NX_CTT_COMMA) {
                 nx_csv_record_add_field_from_token(r, NULL);
         } else {
@@ -316,14 +316,14 @@ static struct NXCSVData *nx_csv_parser_parse_csv(struct NXCSVParser *cp)
         struct NXCSVData *data = nx_csv_data_alloc();
 
         if (cp->token->type == NX_CTT_EOF)
-                nx_fatal(NX_LOG_TAG, "Can not parse empty CSV!");
+                NX_FATAL(NX_LOG_TAG, "Can not parse empty CSV!");
 
         while (cp->token->type != NX_CTT_EOF) {
                 struct NXCSVRecord *r = nx_csv_parser_parse_record(cp, data);
                 if (data->n_columns == 0)
                         data->n_columns = r->size;
                 else if (r->size != data->n_columns)
-                        nx_fatal(NX_LOG_TAG, "Error parsing CSV: Number of fields %d of record %d does not match the previous columns %d",
+                        NX_FATAL(NX_LOG_TAG, "Error parsing CSV: Number of fields %d of record %d does not match the previous columns %d",
                                  r->size, data->size-1, data->n_columns);
         }
 

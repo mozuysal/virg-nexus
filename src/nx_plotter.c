@@ -47,7 +47,7 @@ struct NXPlotter *nx_plotter_new(FILE *stream)
         } else {
                 plotter->pgplot = popen("gnuplot", "w");
                 if (plotter->pgplot == NULL)
-                        nx_fatal(NX_LOG_TAG, "Error opening pipe to Gnuplot");
+                        NX_FATAL(NX_LOG_TAG, "Error opening pipe to Gnuplot");
                 plotter->is_pipe = NX_TRUE;
         }
 
@@ -154,7 +154,7 @@ static char *split_plot_format(const char *fmt, int *n)
                 case 's':
                         break;
                 default:
-                        nx_fatal(NX_LOG_TAG, "Unknown character in plot format: %c", *p);
+                        NX_FATAL(NX_LOG_TAG, "Unknown character in plot format: %c", *p);
                 }
                 ++p;
                 ++*n;
@@ -215,7 +215,7 @@ void nx_plotter_single_plot(struct NXPlotter *plotter, int n, const char *fmt, .
         int n_data = 0;
         const char *plot_statements = split_plot_format(fmt, &n_data);
         if (n_data < 1)
-                nx_fatal(NX_LOG_TAG, "single plot requires at least a single data argument");
+                NX_FATAL(NX_LOG_TAG, "single plot requires at least a single data argument");
 
         nx_plotter_send_command(plotter, "plot '-' %s\n", plot_statements);
 

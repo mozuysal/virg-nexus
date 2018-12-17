@@ -27,14 +27,14 @@
 #define CHECK_DATA_COLUMN_TYPE(dc,col_type)                             \
         do {                                                            \
                 if (dc->type != col_type)                               \
-                        nx_fatal(NX_LOG_TAG, "Data frame column %d is not of type %s!", col_id, #col_type); \
+                        NX_FATAL(NX_LOG_TAG, "Data frame column %d is not of type %s!", col_id, #col_type); \
         } while (0)
 
 #define CHECK_DATA_FRAME_ELEMENT(dc,row_id,col_type)                    \
         do {                                                            \
                 CHECK_DATA_COLUMN_TYPE(dc,col_type);                    \
                 if (dc->elems[row_id] == NULL)                          \
-                        nx_fatal(NX_LOG_TAG, "Data frame element at %d,%d is N/A!", row_id, col_id); \
+                        NX_FATAL(NX_LOG_TAG, "Data frame element at %d,%d is N/A!", row_id, col_id); \
         } while (0)
 
 #define NA_DATA_FRAME_ELEMENT(dc,row_id)                \
@@ -94,7 +94,7 @@ static void nx_data_column_append_row(struct NXDataColumn *dc)
         if (dc->size < INT_MAX)
                 nx_data_column_grow(dc,dc->size+1);
         else
-                nx_fatal(NX_LOG_TAG, "Maximum number of rows (%d) has been reached for data frame column %s!", dc->size, dc->label);
+                NX_FATAL(NX_LOG_TAG, "Maximum number of rows (%d) has been reached for data frame column %s!", dc->size, dc->label);
 }
 
 static void nx_data_column_free(struct NXDataColumn *dc)
@@ -182,7 +182,7 @@ void nx_data_frame_make_factor(struct NXDataFrame *df, int col_id)
                                 case NX_DCT_INT: snprintf(&value[0], 256, "%d", *((int *)elem_ptr)); break;
                                 case NX_DCT_DOUBLE: snprintf(&value[0], 256, NX_DATA_FRAME_DOUBLE_IO_FORMAT, *((double *)elem_ptr)); break;
                                 case NX_DCT_BOOL: snprintf(&value[0], 256, "%s", (*((NXBool *)elem_ptr)) ? "true" : "false"); break;
-                                default: nx_fatal(NX_LOG_TAG, "Can not make factor from data frame column %s", dc->label);
+                                default: NX_FATAL(NX_LOG_TAG, "Can not make factor from data frame column %s", dc->label);
                                 }
                                 nx_data_frame_set_factor(df, i, col_id, value);
                         }
@@ -505,7 +505,7 @@ NXBool nx_data_frame_save_csv(const struct NXDataFrame *df, const char *filename
 
         FILE *fout = nx_fopen(filename, "w");
         if (fout == NULL) {
-                nx_error(NX_LOG_TAG, "Error opening file %s for CSV data frame output", filename);
+                NX_ERROR(NX_LOG_TAG, "Error opening file %s for CSV data frame output", filename);
                 return NX_FALSE;
         }
 
@@ -523,7 +523,7 @@ struct NXDataFrame *nx_data_frame_load_csv(const char *filename, NXBool strings_
 
         FILE *fin = nx_fopen(filename, "r");
         if (fin == NULL) {
-                nx_error(NX_LOG_TAG, "Error opening file %s for reading CSV data", filename);
+                NX_ERROR(NX_LOG_TAG, "Error opening file %s for reading CSV data", filename);
                 return NX_FALSE;
         }
 
@@ -543,7 +543,7 @@ void nx_data_frame_xsave_csv(const struct NXDataFrame *df, const char *filename)
         NX_ASSERT_PTR(filename);
 
         if (!nx_data_frame_save_csv(df, filename))
-                nx_fatal(NX_LOG_TAG, "Error saving data frame to CSV file %s", filename);
+                NX_FATAL(NX_LOG_TAG, "Error saving data frame to CSV file %s", filename);
 }
 
 struct NXDataFrame *nx_data_frame_xload_csv(const char *filename, NXBool strings_as_factors)
@@ -552,7 +552,7 @@ struct NXDataFrame *nx_data_frame_xload_csv(const char *filename, NXBool strings
 
         struct NXDataFrame *df = nx_data_frame_load_csv(filename, strings_as_factors);
         if (df == NULL)
-                nx_fatal(NX_LOG_TAG, "Error loading data frame from file %s", filename);
+                NX_FATAL(NX_LOG_TAG, "Error loading data frame from file %s", filename);
 
         return df;
 }

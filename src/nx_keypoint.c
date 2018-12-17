@@ -64,14 +64,14 @@ void nx_keypoint_xwrite(const struct NXKeypoint *key, int n, FILE *stream)
 {
         int n_wr = nx_keypoint_write(key, n, stream);
         if (n_wr != n)
-                nx_io_fatal_exit(NX_LOG_TAG, "Error writing keypoints, wrote %d of %d", n_wr, n);
+                NX_IO_FATAL(NX_LOG_TAG, "Error writing keypoints, wrote %d of %d", n_wr, n);
 }
 
 void nx_keypoint_xread(struct NXKeypoint *key, int n, FILE *stream)
 {
         int n_rd = nx_keypoint_read(key, n, stream);
         if (n_rd != n)
-                nx_io_fatal_exit(NX_LOG_TAG, "Error reading keypoints, read %d of %d", n_rd, n);
+                NX_IO_FATAL(NX_LOG_TAG, "Error reading keypoints, read %d of %d", n_rd, n);
 }
 
 

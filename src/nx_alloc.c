@@ -24,7 +24,7 @@ void *nx_aligned_alloc(size_t sz, size_t alignment)
         int alloc_res = posix_memalign(&ptr, alignment, sz);
 
         if (alloc_res) {
-                nx_error(NX_LOG_TAG, "Error allocating %zd bytes, out of memory!", sz);
+                NX_ERROR(NX_LOG_TAG, "Error allocating %zd bytes, out of memory!", sz);
                 return NULL;
         } else {
                 return ptr;
@@ -37,7 +37,7 @@ void *nx_faligned_alloc(size_t sz, size_t alignment)
         int alloc_res = posix_memalign(&ptr, alignment, sz);
 
         if (alloc_res) {
-                nx_fatal(NX_LOG_TAG, "Error allocating %zd bytes, out of memory!", sz);
+                NX_FATAL(NX_LOG_TAG, "Error allocating %zd bytes, out of memory!", sz);
                 return NULL;
         } else {
                 return ptr;
@@ -49,7 +49,7 @@ void *nx_malloc(size_t sz)
         void *ptr = malloc(sz);
 
         if (sz != 0 && !ptr) {
-                nx_error(NX_LOG_TAG, "Error allocating %zd bytes, out of memory!", sz);
+                NX_ERROR(NX_LOG_TAG, "Error allocating %zd bytes, out of memory!", sz);
                 return NULL;
         }
 
@@ -72,7 +72,7 @@ void *nx_fmalloc(size_t sz)
         void *ptr = malloc(sz);
 
         if (sz != 0 && !ptr) {
-                nx_fatal(NX_LOG_TAG, "Error allocating %zd bytes, out of memory!", sz);
+                NX_FATAL(NX_LOG_TAG, "Error allocating %zd bytes, out of memory!", sz);
                 return NULL;
         } else {
                 return ptr;
@@ -83,7 +83,7 @@ void *nx_fcalloc(size_t n_memb, size_t sz)
 {
         void *ptr = nx_calloc(n_memb, sz);
         if (n_memb != 0 && sz != 0 && !ptr)
-                nx_fatal(NX_LOG_TAG, "Error allocating %zd bytes, out of memory!", sz);
+                NX_FATAL(NX_LOG_TAG, "Error allocating %zd bytes, out of memory!", sz);
 
         return ptr;
 }
@@ -92,7 +92,7 @@ void *nx_frealloc(void *ptr, size_t sz)
 {
         void *res_ptr = realloc(ptr, sz);
         if (sz != 0 && !res_ptr)
-                nx_fatal(NX_LOG_TAG, "Error reallocating %zd bytes, out of memory!", sz);
+                NX_FATAL(NX_LOG_TAG, "Error reallocating %zd bytes, out of memory!", sz);
 
         return res_ptr;
 }

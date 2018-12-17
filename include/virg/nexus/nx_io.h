@@ -18,12 +18,21 @@
 #include <stdio.h>
 
 #include "virg/nexus/nx_types.h"
+#include "virg/nexus/nx_message.h"
 
 __NX_BEGIN_DECL
 
-__NX_NO_RETURN void nx_io_fatal_exit(const char *tag, const char *fmt, ...) __attribute__((format (printf, 2, 3)));
+#define NX_IO_FATAL(tag,fmt,...)                        \
+        do {                                            \
+                perror(NULL);                           \
+                NX_FATAL(tag,fmt,##__VA_ARGS__);        \
+        } while(0)
 
-void nx_io_error(const char *tag, const char *fmt, ...) __attribute__((format (printf, 2, 3)));
+#define NX_IO_ERROR(tag,fmt,...)                   \
+        do {                                       \
+                perror(NULL);                      \
+                NX_ERROR(tag, fmt, ##__VA_ARGS__); \
+        } while(0)
 
 FILE *nx_xfopen(const char *path, const char *mode);
 void nx_xfclose(FILE *stream, const char *stream_label);

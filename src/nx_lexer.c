@@ -27,7 +27,7 @@
 #define NX_LEXER_ERROR(lx,msg,...)                                 \
         do {                                                            \
                 fflush(stdout);                                         \
-                nx_fatal("NXLexer",NX_LEXER_ERROR_LINE_COL_INFO msg,(lx)->line_no,(lx)->col_no,##__VA_ARGS__); \
+                NX_FATAL("NXLexer",NX_LEXER_ERROR_LINE_COL_INFO msg,(lx)->line_no,(lx)->col_no,##__VA_ARGS__); \
         } while (0)
 
 

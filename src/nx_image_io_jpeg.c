@@ -105,7 +105,7 @@ void nx_image_xsave_jpeg(const struct NXImage *img, const char *filename)
         FILE *jpeg_stream = nx_xfopen(filename, "wb");
 
         if (save_as_jpeg(img, jpeg_stream) != NX_OK) {
-                nx_fatal(NX_LOG_TAG, "Can not save image as JPEG to %s", filename);
+                NX_FATAL(NX_LOG_TAG, "Can not save image as JPEG to %s", filename);
         }
 
         nx_xfclose(jpeg_stream, filename);
@@ -122,7 +122,7 @@ NXResult nx_image_save_jpeg(const struct NXImage *img, const char *filename)
         }
 
         if (save_as_jpeg(img, jpeg_stream) != NX_OK) {
-                nx_error(NX_LOG_TAG, "Can not save image as JPEG to %s", filename);
+                NX_ERROR(NX_LOG_TAG, "Can not save image as JPEG to %s", filename);
                 fclose(jpeg_stream);
                 return NX_FAIL;
         }
@@ -203,7 +203,7 @@ void nx_image_xload_jpeg(struct NXImage *img, const char *filename,
 
         FILE *jpeg_stream = nx_xfopen(filename, "rb");
         if (load_as_jpeg(img, jpeg_stream, mode) != NX_OK)
-                nx_fatal(NX_LOG_TAG, "Error loading JPEG stream from file %s!", filename);
+                NX_FATAL(NX_LOG_TAG, "Error loading JPEG stream from file %s!", filename);
         nx_xfclose(jpeg_stream, filename);
 }
 
@@ -220,7 +220,7 @@ NXResult nx_image_load_jpeg(struct NXImage *img, const char *filename,
 
         NXResult res_read;
         if ((res_read = load_as_jpeg(img, jpeg_stream, mode)) != NX_OK)
-                nx_error(NX_LOG_TAG, "Error loading JPEG stream from file %s!", filename);
+                NX_ERROR(NX_LOG_TAG, "Error loading JPEG stream from file %s!", filename);
         NXResult res_close = nx_fclose(jpeg_stream, filename);
 
         if (res_read == NX_OK)

@@ -177,7 +177,7 @@ void nx_image_pyr_builder_update(struct NXImagePyrBuilder *builder, struct NXIma
                 _nx_image_pyr_builder_update_scaled(builder, pyr);
                 break;
         default:
-                nx_fatal(NX_LOG_TAG, "Can not update image pyramid with unknown builder type %d!",
+                NX_FATAL(NX_LOG_TAG, "Can not update image pyramid with unknown builder type %d!",
                          (int)builder->type);
         }
 }

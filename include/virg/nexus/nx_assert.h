@@ -24,9 +24,7 @@ __NX_BEGIN_DECL
 #  define NX_ASSERT(expr)                                               \
         do {                                                            \
                 if (!(expr)) {                                          \
-                        nx_fatal("NX_ASSERT",                           \
-                                 "Assertion '%s' failed on file %s:%d",   \
-                                 #expr, __FILE__, __LINE__);            \
+                        NX_FATAL("NX_ASSERT","Assertion '%s' failed", #expr); \
                 }                                                       \
         } while(0)
 #endif
@@ -37,9 +35,7 @@ __NX_BEGIN_DECL
 #  define NX_ASSERT_PTR(ptr)                                            \
         do {                                                            \
                 if (!(ptr)) {                                           \
-                        nx_fatal("NX_ASSERT_PTR",                       \
-                                 "Unexpected NULL pointer detected on file %s:%d", \
-                                 __FILE__, __LINE__);                   \
+                        NX_FATAL("NX_ASSERT_PTR","Unexpected NULL pointer"); \
                 }                                                       \
         } while(0)
 #endif
@@ -51,9 +47,7 @@ __NX_BEGIN_DECL
 #  define NX_ASSERT_CUSTOM(msg,expr)                                    \
         do {                                                            \
                 if (!(expr)) {                                          \
-                        nx_fatal("NX_ASSERT_CUSTOM",                    \
-                                 "%s - on file %s:%d",                  \
-                                 (msg), __FILE__, __LINE__);            \
+                        NX_FATAL("NX_ASSERT_CUSTOM", "%s", (msg));      \
                 }                                                       \
         } while(0)
 #endif
@@ -64,9 +58,9 @@ __NX_BEGIN_DECL
 #  define NX_ASSERT_RANGE(expr,min_val,max_val)                         \
         do {                                                            \
                 if ((expr) < (min_val) || (expr) > (max_val)) {         \
-                        nx_fatal("NX_ASSERT_RANGE",                     \
-                                 "Assertion '%s == %d in [%d, %d]' failed on file %s:%d", \
-                                 #expr,expr,min_val,max_val, __FILE__, __LINE__); \
+                        NX_FATAL("NX_ASSERT_RANGE",                     \
+                                 "Assertion '%s == %d in [%d, %d]' failed", \
+                                 #expr,expr,min_val,max_val);           \
                 }                                                       \
         } while(0)
 #endif

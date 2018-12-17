@@ -33,7 +33,7 @@ int nx_fast_detect_keypoints(int n_keys_max, struct NXKeypoint *keys,
         NX_ASSERT_PTR(img);
 
         if (n_keys_max == 0) {
-                nx_warning(NX_LOG_TAG, "Call to nx_fast_detect_keypoints with 0 as the max. number of keypoints!");
+                NX_WARNING(NX_LOG_TAG, "Call to nx_fast_detect_keypoints with 0 as the max. number of keypoints!");
                 return 0;
         }
 
@@ -76,7 +76,7 @@ int nx_fast_detect_keypoints_pyr(int n_keys_supp_max, struct NXKeypoint *keys_su
         NX_ASSERT_PTR(pyr);
 
         if (n_keys_supp_max == 0 || n_keys_max == 0) {
-                nx_warning(NX_LOG_TAG, "Call to nx_fast_detect_keypoints_pyr with 0 as the maximum number of keypoints!");
+                NX_WARNING(NX_LOG_TAG, "Call to nx_fast_detect_keypoints_pyr with 0 as the maximum number of keypoints!");
                 return 0;
         }
 

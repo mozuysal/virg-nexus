@@ -188,7 +188,7 @@ static inline double nx_homography_svd_solve(double *h, int n_corr, double *A)
 double nx_homography_estimate_dlt(double *h, int n_corr, const struct NXHCorr *corr_list)
 {
         if (n_corr < 4) {
-                nx_warning(NX_LOG_TAG, "Insufficient number of correspondences for homography estimation by DLT!");
+                NX_WARNING(NX_LOG_TAG, "Insufficient number of correspondences for homography estimation by DLT!");
                 return DBL_MAX;
         }
 
@@ -208,7 +208,7 @@ double nx_homography_estimate_dlt_inliers(double *h, int n_corr, const struct NX
 {
         int n_inliers = nx_homography_count_inliers(n_corr, corr_list);
         if (n_inliers < 4) {
-                nx_warning(NX_LOG_TAG, "Insufficient number of inliers for homography estimation by DLT!");
+                NX_WARNING(NX_LOG_TAG, "Insufficient number of inliers for homography estimation by DLT!");
                 return DBL_MAX;
         }
 

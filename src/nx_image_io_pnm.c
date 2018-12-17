@@ -54,7 +54,7 @@ void nx_image_xsave_pnm(const struct NXImage *img, const char *filename)
         FILE *pnm = nx_xfopen(filename, "wb");
 
         if (save_as_pnm(img, pnm) != NX_OK) {
-                nx_fatal(NX_LOG_TAG, "Can not save image of unknown type '%d' as PNM", (int)img->type);
+                NX_FATAL(NX_LOG_TAG, "Can not save image of unknown type '%d' as PNM", (int)img->type);
         }
 
         nx_xfclose(pnm, filename);
@@ -71,7 +71,7 @@ NXResult nx_image_save_pnm(const struct NXImage *img, const char *filename)
         }
 
         if (save_as_pnm(img, pnm) != NX_OK) {
-                nx_error(NX_LOG_TAG, "Can not save image of unknown type '%d' as PNM", (int)img->type);
+                NX_ERROR(NX_LOG_TAG, "Can not save image of unknown type '%d' as PNM", (int)img->type);
                 fclose(pnm);
                 return NX_FAIL;
         }
@@ -144,11 +144,11 @@ void nx_image_xload_pnm(struct NXImage *img, const char *filename,
 
         char ch1, ch2;
         if (fscanf(pnm, "%c%c", &ch1, &ch2) != 2) {
-                nx_io_fatal_exit(NX_LOG_TAG, "Could not read image header from %s", filename);
+                NX_IO_FATAL(NX_LOG_TAG, "Could not read image header from %s", filename);
         }
 
         if(ch1 != 'P' || (ch2 != '5' && ch2 != '6')) {
-                nx_fatal(NX_LOG_TAG, "Image %s is not a PNM file", filename);
+                NX_FATAL(NX_LOG_TAG, "Image %s is not a PNM file", filename);
         }
 
         enum NXImageType pnm_type;
@@ -167,7 +167,7 @@ void nx_image_xload_pnm(struct NXImage *img, const char *filename,
                 while (c != '\n') {
                         c = fgetc(pnm);
                         if (c == EOF)
-                                nx_io_fatal_exit(NX_LOG_TAG, "%s does not contain image data", filename);
+                                NX_IO_FATAL(NX_LOG_TAG, "%s does not contain image data", filename);
                 }
                 c = fgetc(pnm);
         }
@@ -177,7 +177,7 @@ void nx_image_xload_pnm(struct NXImage *img, const char *filename,
         int pnm_height;
         int pnm_levels;
         if (fscanf(pnm, "%d %d %d", &pnm_width, &pnm_height, &pnm_levels) != 3) {
-                nx_io_fatal_exit(NX_LOG_TAG, "Could not read image attributes from %s", filename);
+                NX_IO_FATAL(NX_LOG_TAG, "Could not read image attributes from %s", filename);
         }
         c = fgetc(pnm);
 
@@ -196,7 +196,7 @@ void nx_image_xload_pnm(struct NXImage *img, const char *filename,
         }
 
         if (read_pnm_data(img, img_type, pnm, pnm_width, pnm_height, pnm_type) != NX_OK)
-                nx_io_fatal_exit(NX_LOG_TAG, "Error reading PNM data from %s", filename);
+                NX_IO_FATAL(NX_LOG_TAG, "Error reading PNM data from %s", filename);
 
         nx_xfclose(pnm, filename);
 }
@@ -214,13 +214,13 @@ NXResult nx_image_load_pnm(struct NXImage *img, const char *filename,
 
         char ch1, ch2;
         if (fscanf(pnm, "%c%c", &ch1, &ch2) != 2) {
-                nx_io_error(NX_LOG_TAG, "Could not read image header from %s", filename);
+                NX_IO_ERROR(NX_LOG_TAG, "Could not read image header from %s", filename);
                 fclose(pnm);
                 return NX_FAIL;
         }
 
         if(ch1 != 'P' || (ch2 != '5' && ch2 != '6')) {
-                nx_error(NX_LOG_TAG, "Image %s is not a PNM file", filename);
+                NX_ERROR(NX_LOG_TAG, "Image %s is not a PNM file", filename);
                 fclose(pnm);
                 return NX_FAIL;
         }
@@ -237,7 +237,7 @@ NXResult nx_image_load_pnm(struct NXImage *img, const char *filename,
         int pnm_levels;
 
         if (fscanf(pnm, "%d %d %d", &pnm_width, &pnm_height, &pnm_levels) != 3) {
-                nx_io_error(NX_LOG_TAG, "Could not read image attributes from %s", filename);
+                NX_IO_ERROR(NX_LOG_TAG, "Could not read image attributes from %s", filename);
                 fclose(pnm);
                 return NX_FAIL;
         }
@@ -245,7 +245,7 @@ NXResult nx_image_load_pnm(struct NXImage *img, const char *filename,
         // Skip a new line
         char buffer[256];
         if (fgets(buffer, sizeof(buffer), pnm) == NULL) {
-                nx_io_error(NX_LOG_TAG, "Error reading from %s", filename);
+                NX_IO_ERROR(NX_LOG_TAG, "Error reading from %s", filename);
                 fclose(pnm);
                 return NX_FAIL;
         }

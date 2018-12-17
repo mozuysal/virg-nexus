@@ -221,7 +221,7 @@ void nx_image_convert(struct NXImage *dest, const struct NXImage *src)
                                         src->data, src->row_stride);
                 break;
         default:
-                nx_fatal(NX_LOG_TAG, "Unknown destination image type %d!", (int)dest->type);
+                NX_FATAL(NX_LOG_TAG, "Unknown destination image type %d!", (int)dest->type);
                 return;
         }
 }

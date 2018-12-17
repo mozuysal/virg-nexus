@@ -82,7 +82,7 @@ static void nx_json_parser_match(struct NXJSONParser *jp, enum NXJSONTokenType t
 
                 nx_json_parser_consume(jp);
         } else {
-                nx_fatal(NX_LOG_TAG, "Expecting %s, found %s", nx_json_token_type_name(type),
+                NX_FATAL(NX_LOG_TAG, "Expecting %s, found %s", nx_json_token_type_name(type),
                          nx_json_token_name(jp->jtoken));
         }
 }
@@ -97,7 +97,7 @@ static void nx_json_parser_parse_number(struct NXJSONParser *jp)
         else if (jp->jtoken->type == NX_JTT_FPNUM)
                 nx_json_parser_match(jp, NX_JTT_FPNUM);
         else
-                nx_fatal(NX_LOG_TAG, "Expecting number; found %s",
+                NX_FATAL(NX_LOG_TAG, "Expecting number; found %s",
                          nx_json_token_to_string(jp->jtoken));
 }
 
@@ -113,7 +113,7 @@ static void nx_json_parser_parse_value(struct NXJSONParser *jp)
         case NX_JTT_LSBRAC: nx_json_parser_parse_array(jp); break;
         case NX_JTT_LCBRAC: nx_json_parser_parse_object(jp); break;
         default:
-                nx_fatal(NX_LOG_TAG, "Expecting number, string, true, false, null, object or array, found %s",
+                NX_FATAL(NX_LOG_TAG, "Expecting number, string, true, false, null, object or array, found %s",
                          nx_json_token_to_string(jp->jtoken));
         }
 }
@@ -202,7 +202,7 @@ static void nx_json_parser_parse_json(struct NXJSONParser *jp)
         } else if (jp->jtoken->type == NX_JTT_LCBRAC) {
                 nx_json_parser_parse_object(jp);
         } else {
-                nx_fatal(NX_LOG_TAG, "Expecting array or object; found %s",
+                NX_FATAL(NX_LOG_TAG, "Expecting array or object; found %s",
                          nx_json_token_to_string(jp->jtoken));
         }
 }
