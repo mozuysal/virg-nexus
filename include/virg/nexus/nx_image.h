@@ -121,11 +121,11 @@ uchar nx_image_sample_bilinear(const struct NXImage *img, float xs, float ys);
                 NX_ASSERT_CUSTOM("Images must be of the same type",img0->type == img1->type); \
         } while(0)
 
-__NX_END_DECL
-
 static inline int nx_image_n_channels(enum NXImageType type)
 {
         return type == NX_IMAGE_GRAYSCALE ? 1 : 4;
 }
+
+__NX_END_DECL
 
 #endif
