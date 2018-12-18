@@ -48,6 +48,9 @@ struct NXImage *nx_image_alloc()
 
 struct NXImage *nx_image_new(int width, int height, enum NXImageType type)
 {
+        NX_ASSERT(width >= 0);
+        NX_ASSERT(height >= 0);
+
         struct NXImage *img = nx_image_alloc();
         int n_ch = nx_image_n_channels(type);
         nx_image_resize(img, width, height, width*n_ch, type);
@@ -65,6 +68,13 @@ struct NXImage *nx_image_new_rgba(int width, int height)
         return nx_image_new(width, height, NX_IMAGE_RGBA);
 }
 
+struct NXImage *nx_image_new_like(const struct NXImage* src)
+{
+        NX_ASSERT_PTR(src);
+
+        return nx_image_new(src->width, src->height, src->type);
+}
+
 void nx_image_free(struct NXImage *img)
 {
         if (img) {
@@ -76,8 +86,8 @@ void nx_image_free(struct NXImage *img)
 void nx_image_resize(struct NXImage *img, int width, int height, int row_stride, enum NXImageType type)
 {
         NX_ASSERT_PTR(img);
-        NX_ASSERT(width > 0);
-        NX_ASSERT(height > 0);
+        NX_ASSERT(width >= 0);
+        NX_ASSERT(height >= 0);
 
         if (img->width == width &&
             img->height == height &&
@@ -99,6 +109,14 @@ void nx_image_resize(struct NXImage *img, int width, int height, int row_stride,
         img->n_channels = n_ch;
         img->data = (uchar *)img->mem->ptr;
         img->row_stride = row_stride;
+}
+
+void nx_image_resize_like(struct NXImage *img, const struct NXImage *src)
+{
+        NX_ASSERT_PTR(img);
+        NX_ASSERT_PTR(src);
+
+        nx_image_resize(img, src->width, src->height, -1, src->type);
 }
 
 void nx_image_release(struct NXImage *img)

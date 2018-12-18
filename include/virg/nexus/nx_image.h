@@ -48,10 +48,26 @@ struct NXImage *nx_image_new_gray(int width, int height);
 
 struct NXImage *nx_image_new_rgba(int width, int height);
 
+/**
+ * Creates and returns a new image with the same width, height, and type as the
+ * source image. The row_stride of the created image does not necessarily match
+ * the source.
+ *
+ */
+struct NXImage *nx_image_new_like(const struct NXImage *src);
+
 void nx_image_free(struct NXImage *img);
 
 void nx_image_resize(struct NXImage *img, int width, int height,
                      int row_stride, enum NXImageType type);
+
+/**
+ * Resizes the given image to the same width, height, and type of the source
+ * image. The row_stride of the resized image does not necessarily match the
+ * source.
+ *
+ */
+void nx_image_resize_like(struct NXImage *img, const struct NXImage *src);
 
 void nx_image_release(struct NXImage *img);
 
