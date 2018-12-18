@@ -53,13 +53,11 @@ void nx_mem_block_reserve(struct NXMemBlock *mem, size_t new_capacity)
 
         if (new_capacity > mem->capacity) {
                 if (mem->own_memory) {
-                        mem->ptr = (char *)nx_frealloc(mem->ptr, new_capacity * sizeof(char));
+                        mem->ptr = nx_frealloc(mem->ptr, new_capacity);
                 } else {
-                        char *new_ptr = NX_NEW_C(new_capacity);
+                        void *new_ptr = nx_fmalloc(new_capacity);
                         if (mem->size > 0)
-                                memcpy(new_ptr, mem->ptr, mem->size * sizeof(char));
-                        /* else */
-                                /* memset(new_ptr, 0, new_sz * sizeof(char)); */
+                                memcpy(new_ptr, mem->ptr, mem->size);
                         mem->ptr = new_ptr;
                         mem->own_memory = NX_TRUE;
                 }
@@ -90,7 +88,7 @@ void nx_mem_block_release(struct NXMemBlock *mem)
         mem->own_memory = NX_FALSE;
 }
 
-void nx_mem_block_wrap(struct NXMemBlock *mem, char* ptr, size_t sz, size_t capacity, NXBool own_memory)
+void nx_mem_block_wrap(struct NXMemBlock *mem, void *ptr, size_t sz, size_t capacity, NXBool own_memory)
 {
         NX_ASSERT_PTR(mem);
         NX_ASSERT_PTR(ptr);
@@ -108,7 +106,7 @@ void nx_mem_block_swap(struct NXMemBlock *mem0, struct NXMemBlock *mem1)
         NX_ASSERT_PTR(mem0);
         NX_ASSERT_PTR(mem1);
 
-        char *t_ptr;
+        void *t_ptr;
         size_t t_sz;
         NXBool t_om;
 
@@ -135,7 +133,7 @@ void nx_mem_block_copy(struct NXMemBlock *dest, const struct NXMemBlock *src)
         nx_mem_block_resize(dest, src->size);
 
         if (src->ptr) {
-                memcpy(dest->ptr, src->ptr, dest->size * sizeof(char));
+                memcpy(dest->ptr, src->ptr, dest->size);
         }
 }
 
@@ -144,7 +142,7 @@ void nx_mem_block_set_zero(struct NXMemBlock *mem)
         NX_ASSERT_PTR(mem);
 
         if (mem->ptr) {
-                memset(mem->ptr, 0, mem->size * sizeof(char));
+                memset(mem->ptr, 0, mem->size);
         }
 }
 
