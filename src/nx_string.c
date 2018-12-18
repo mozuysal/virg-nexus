@@ -69,7 +69,7 @@ char *nx_vfstr(const char* format, va_list args)
 
                 if (n >= ls) {
                         ls = n+1;
-                        s = nx_frealloc(s, ls);
+                        s = nx_xrealloc(s, ls);
                 } else {
                         return s;
                 }
@@ -95,7 +95,7 @@ int nx_strread(char **s, size_t size, FILE *stream)
                 return 1;
 
         if (ls >= size)
-                *s = nx_frealloc(*s, (ls+1)*sizeof(**s));
+                *s = nx_xrealloc(*s, (ls+1)*sizeof(**s));
 
         size_t n_read = fread(*s, sizeof(**s), ls, stream);
         (*s)[ls] = '\0';

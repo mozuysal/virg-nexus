@@ -55,7 +55,7 @@ struct NXJSONNode *nx_json_tree_from_stream(FILE *stream)
 
                 if (i >= cap-2) {
                         cap *= 2;
-                        jtext = nx_frealloc(jtext, cap);
+                        jtext = nx_xrealloc(jtext, cap);
                 }
         }
         jtext[i] = '\0';

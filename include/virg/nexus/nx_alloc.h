@@ -23,19 +23,19 @@ void *nx_malloc(size_t sz);
 
 void *nx_calloc(size_t n_memb, size_t sz);
 
-void *nx_fmalloc(size_t sz);
+void *nx_xmalloc(size_t sz);
 
-void *nx_fcalloc(size_t n_memb, size_t sz);
+void *nx_xcalloc(size_t n_memb, size_t sz);
 
-void *nx_frealloc(void *ptr, size_t sz);
+void *nx_xrealloc(void *ptr, size_t sz);
 
 void *nx_aligned_alloc(size_t sz, size_t alignment);
 
-void *nx_faligned_alloc(size_t sz, size_t alignment);
+void *nx_xaligned_alloc(size_t sz, size_t alignment);
 
 void nx_free(void *ptr);
 
-#define NX_NEW(n,type) ((type *)nx_fmalloc((n) * sizeof(type)))
+#define NX_NEW(n,type) ((type *)nx_xmalloc((n) * sizeof(type)))
 #define NX_NEW_C(n)    NX_NEW((n),char)
 #define NX_NEW_UC(n)   NX_NEW((n),unsigned char)
 #define NX_NEW_SI(n)   NX_NEW((n),short)
@@ -52,7 +52,7 @@ void nx_free(void *ptr);
                         cap *= 2;                               \
                         if (cap < (sz))                         \
                                 cap = (sz);                     \
-                        x = nx_frealloc((x), cap*sizeof(*(x))); \
+                        x = nx_xrealloc((x), cap*sizeof(*(x))); \
                 }                                               \
         } while (0)
 
@@ -61,15 +61,15 @@ void nx_free(void *ptr);
                         cap /= 2;                               \
                         if (cap > 2*(sz))                       \
                                 cap = (sz);                     \
-                        x = nx_frealloc((x), cap*sizeof(*(x))); \
+                        x = nx_xrealloc((x), cap*sizeof(*(x))); \
                 }                                               \
         } while (0)
 
 #define NX_NEW_ARRAY_STRUCT(sp,arr_name,init_cap) do {                  \
-                sp = nx_fmalloc(sizeof(*sp));                           \
+                sp = nx_xmalloc(sizeof(*sp));                           \
                 sp->size = 0;                                           \
                 sp->capacity = init_cap;                                \
-                sp->arr_name = nx_fmalloc(init_cap*sizeof(*(sp->arr_name))); \
+                sp->arr_name = nx_xmalloc(init_cap*sizeof(*(sp->arr_name))); \
         } while (0)
 
 #define NX_GROW_ARRAY_STRUCT(sp,arr_name) \

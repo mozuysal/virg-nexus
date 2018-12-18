@@ -31,7 +31,7 @@ void *nx_aligned_alloc(size_t sz, size_t alignment)
         }
 }
 
-void *nx_faligned_alloc(size_t sz, size_t alignment)
+void *nx_xaligned_alloc(size_t sz, size_t alignment)
 {
         void *ptr = 0;
         int alloc_res = posix_memalign(&ptr, alignment, sz);
@@ -67,7 +67,7 @@ void *nx_calloc(size_t n_memb, size_t sz)
         return ptr;
 }
 
-void *nx_fmalloc(size_t sz)
+void *nx_xmalloc(size_t sz)
 {
         void *ptr = malloc(sz);
 
@@ -79,7 +79,7 @@ void *nx_fmalloc(size_t sz)
         }
 }
 
-void *nx_fcalloc(size_t n_memb, size_t sz)
+void *nx_xcalloc(size_t n_memb, size_t sz)
 {
         void *ptr = nx_calloc(n_memb, sz);
         if (n_memb != 0 && sz != 0 && !ptr)
@@ -88,7 +88,7 @@ void *nx_fcalloc(size_t n_memb, size_t sz)
         return ptr;
 }
 
-void *nx_frealloc(void *ptr, size_t sz)
+void *nx_xrealloc(void *ptr, size_t sz)
 {
         void *res_ptr = realloc(ptr, sz);
         if (sz != 0 && !res_ptr)

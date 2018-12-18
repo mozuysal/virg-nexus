@@ -83,7 +83,7 @@ void nx_array_reserve(struct NXArray *arr, int new_capacity)
         if (new_capacity < arr->size)
                 new_capacity = arr->size;
 
-        arr->elems = nx_frealloc(arr->elems, new_capacity * arr->elem_sz);
+        arr->elems = nx_xrealloc(arr->elems, new_capacity * arr->elem_sz);
         arr->capacity = new_capacity;
 }
 

@@ -53,9 +53,9 @@ void nx_mem_block_reserve(struct NXMemBlock *mem, size_t new_capacity)
 
         if (new_capacity > mem->capacity) {
                 if (mem->own_memory) {
-                        mem->ptr = nx_frealloc(mem->ptr, new_capacity);
+                        mem->ptr = nx_xrealloc(mem->ptr, new_capacity);
                 } else {
-                        void *new_ptr = nx_fmalloc(new_capacity);
+                        void *new_ptr = nx_xmalloc(new_capacity);
                         if (mem->size > 0)
                                 memcpy(new_ptr, mem->ptr, mem->size);
                         mem->ptr = new_ptr;

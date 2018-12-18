@@ -45,7 +45,7 @@ static inline void nx_camera_update_projection_matrix(struct NXCamera *c)
 
 struct NXCamera *nx_camera_alloc()
 {
-        struct NXCamera *c = (struct NXCamera*)nx_fcalloc(1, sizeof(struct NXCamera));
+        struct NXCamera *c = (struct NXCamera*)nx_xcalloc(1, sizeof(struct NXCamera));
         nx_dmat3_eye(&c->K[0]);
         nx_dmat3_eye(&c->R[0]);
         nx_dmat3_eye(&c->P[0]);

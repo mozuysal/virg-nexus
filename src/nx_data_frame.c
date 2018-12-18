@@ -482,7 +482,7 @@ struct NXDataFrame *nx_data_frame_load_csv_stream(FILE *stream, NXBool strings_a
 
                 if (i >= cap-2) {
                         cap *= 2;
-                        csv_text = nx_frealloc(csv_text, cap);
+                        csv_text = nx_xrealloc(csv_text, cap);
                 }
         }
         csv_text[i] = '\0';
