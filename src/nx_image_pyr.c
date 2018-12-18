@@ -17,7 +17,7 @@
 #include <math.h>
 
 #include <virg/nexus/nx_alloc.h>
-#include <virg/nexus/nx_message.h>
+#include <virg/nexus/nx_log.h>
 #include <virg/nexus/nx_assert.h>
 
 struct NXImagePyr *nx_image_pyr_alloc()

@@ -18,7 +18,7 @@
 #include <string.h>
 
 #include "virg/nexus/nx_alloc.h"
-#include "virg/nexus/nx_message.h"
+#include "virg/nexus/nx_log.h"
 #include "virg/nexus/nx_string.h"
 
 static struct NXPlotter *g_plotter = NULL;

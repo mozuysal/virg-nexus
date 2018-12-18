@@ -16,7 +16,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "virg/nexus/nx_message.h"
+#include "virg/nexus/nx_log.h"
 #include "virg/nexus/nx_assert.h"
 
 enum NXImageFileFormat nx_image_file_format_from_header(const char *filename)

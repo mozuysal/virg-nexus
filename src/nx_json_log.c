@@ -14,7 +14,7 @@
 #include "virg/nexus/nx_json_log.h"
 
 #include "virg/nexus/nx_alloc.h"
-#include "virg/nexus/nx_message.h"
+#include "virg/nexus/nx_log.h"
 
 static struct NXJSONNode **nx_s_json_log = NULL;
 

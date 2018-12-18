@@ -17,7 +17,7 @@
 #include <math.h>
 
 #include <virg/nexus/nx_alloc.h>
-#include <virg/nexus/nx_message.h>
+#include <virg/nexus/nx_log.h>
 #include <virg/nexus/nx_assert.h>
 
 static void _nx_image_pyr_builder_update_fast(struct NXImagePyrBuilder *builder, struct NXImagePyr *pyr);

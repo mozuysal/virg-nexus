@@ -15,7 +15,7 @@
 #include <float.h>
 
 #include "virg/nexus/nx_assert.h"
-#include "virg/nexus/nx_message.h"
+#include "virg/nexus/nx_log.h"
 #include "virg/nexus/nx_uniform_sampler.h"
 
 void nx_image_warp_affine_bilinear(int dest_w, int dest_h, uchar *dest, int dest_stride,

@@ -19,7 +19,7 @@
 
 #include "virg/nexus/nx_assert.h"
 #include "virg/nexus/nx_alloc.h"
-#include "virg/nexus/nx_message.h"
+#include "virg/nexus/nx_log.h"
 #include "virg/nexus/nx_string.h"
 #include "virg/nexus/nx_string_array.h"
 

@@ -18,7 +18,7 @@
 #include <stdio.h>
 
 #include "virg/nexus/nx_types.h"
-#include "virg/nexus/nx_message.h"
+#include "virg/nexus/nx_log.h"
 
 __NX_BEGIN_DECL
 

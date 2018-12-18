@@ -20,7 +20,7 @@
 
 #include "virg/nexus/nx_alloc.h"
 #include "virg/nexus/nx_lexer.h"
-#include "virg/nexus/nx_message.h"
+#include "virg/nexus/nx_log.h"
 #include "virg/nexus/nx_string.h"
 
 using namespace std;

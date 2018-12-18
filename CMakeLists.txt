@@ -49,7 +49,7 @@ set(virg_nexus_SOURCES
   src/nx_data_frame.c
   src/nx_csv_lexer.c
   src/nx_csv_parser.c
-  src/nx_message_c_impl.c
+  src/nx_log_c_impl.c
   src/nx_camera.c
 )
 
@@ -57,7 +57,7 @@ set(virg_nexus_HEADERS
   include/virg/nexus/nx_config.h
   include/virg/nexus/nx_types.h
   include/virg/nexus/nx_assert.h
-  include/virg/nexus/nx_message.h
+  include/virg/nexus/nx_log.h
   include/virg/nexus/nx_alloc.h
   include/virg/nexus/nx_mem_block.h
   include/virg/nexus/nx_uniform_sampler.h

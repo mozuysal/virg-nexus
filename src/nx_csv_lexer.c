@@ -19,7 +19,7 @@
 #include "virg/nexus/nx_types.h"
 #include "virg/nexus/nx_alloc.h"
 #include "virg/nexus/nx_string.h"
-#include "virg/nexus/nx_message.h"
+#include "virg/nexus/nx_log.h"
 #include "virg/nexus/nx_lexer.h"
 
 #define NX_CSV_LEXER_ERROR_LINE_COL_INFO "Line %d, Column %d: "

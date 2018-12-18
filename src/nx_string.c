@@ -17,7 +17,7 @@
 
 #include "virg/nexus/nx_types.h"
 #include "virg/nexus/nx_alloc.h"
-#include "virg/nexus/nx_message.h"
+#include "virg/nexus/nx_log.h"
 
 #define NX_FSTR_INITIAL_LENGTH 64
 

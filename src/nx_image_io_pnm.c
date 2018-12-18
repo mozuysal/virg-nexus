@@ -14,7 +14,7 @@
 
 #include <stdlib.h>
 
-#include "virg/nexus/nx_message.h"
+#include "virg/nexus/nx_log.h"
 #include "virg/nexus/nx_assert.h"
 #include "virg/nexus/nx_io.h"
 #include "virg/nexus/nx_colorspace.h"

@@ -14,8 +14,6 @@
 
 #include <errno.h>
 
-#include "virg/nexus/nx_message.h"
-
 FILE *nx_xfopen(const char *path, const char *mode)
 {
         FILE *stream = fopen(path, mode);

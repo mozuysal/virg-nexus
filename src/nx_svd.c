@@ -13,7 +13,7 @@
 #include "virg/nexus/nx_svd.h"
 
 #include "virg/nexus/nx_alloc.h"
-#include "virg/nexus/nx_message.h"
+#include "virg/nexus/nx_log.h"
 
 /* --------------------------------- LAPACK SVD ----------------------------------- */
 extern void dgesvd_(char* jobu, char* jobvt, int* m, int* n,
