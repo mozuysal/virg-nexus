@@ -123,8 +123,8 @@ void nx_affine_warp_processor_warp(struct NXAffineWarpProcessor *wp, const struc
 {
         NX_ASSERT_PTR(wp);
         NX_ASSERT_PTR(img);
-        NX_ASSERT_PTR(img->data);
-        NX_IMAGE_ASSERT_GRAYSCALE(img);
+        NX_ASSERT_PTR(img->data.v);
+        NX_IMAGE_ASSERT_GRAYSCALE_UCHAR(img);
 
         wp->image = img;
         nx_affine_warp_processor_resize_buffers(wp, param.scale, param.planar_angle, param.tilt, param.tilt_angle);
@@ -344,13 +344,17 @@ void nx_affine_warp_processor_resize_result_buffer(struct NXAffineWarpProcessor 
 void nx_affine_warp_processor_resize_buffer(struct NXAffineWarpProcessor *wp, const struct NXImage *in_buffer,
                                             struct NXImage *out_buffer, double scale_x, double scale_y, double angle)
 {
+        NX_ASSERT_PTR(wp);
+        NX_ASSERT_PTR(in_buffer);
+        NX_ASSERT_PTR(out_buffer);
+
         int wi = in_buffer->width;
         int hi = in_buffer->height;
         int wo = wp->image->width;
         int ho = wp->image->height;
 
         nx_affine_warp_processor_transformed_buffer_size(wp, &wo, &ho, scale_x, scale_y, angle, wp->forward_t);
-        nx_image_resize(out_buffer, wo, ho, -1, NX_IMAGE_GRAYSCALE);
+        nx_image_resize(out_buffer, wo, ho, -1, NX_IMAGE_GRAYSCALE, in_buffer->dtype);
         nx_image_set_zero(out_buffer);
 
         double center_in[2] = { wi/2.0, hi/2.0 };
@@ -366,8 +370,8 @@ static void warp_buffer_affine_bilinear(const struct NXImage* in_buffer,
                                         struct NXImage* out_buffer,
                                         const float* t);
 
-static void warp_processor_blur_s(struct NXImage *image,
-                                  float sigma_x, float sigma_y);
+static void warp_processor_blur(struct NXImage *image,
+                                float sigma_x, float sigma_y);
 
 void compute_skew_rotation_buffer(const struct NXImage* img,
                                   struct NXImage* buffer,
@@ -385,7 +389,7 @@ void compute_skew_rotation_buffer(const struct NXImage* img,
         warp_buffer_affine_bilinear(img, buffer, t);
 
         float sigma_x = 0.8 * sqrt(tilt*tilt-1);
-        warp_processor_blur_s(buffer, sigma_x, 0.0f);
+        warp_processor_blur(buffer, sigma_x, 0.0f);
 }
 
 void compute_subsample_buffer(struct NXImage* in_buffer,
@@ -404,7 +408,7 @@ void compute_subsample_buffer(struct NXImage* in_buffer,
 
         if (scale > 1.0) {
                 float sigma = 0.8 * sqrt(scale*scale-1);
-                warp_processor_blur_s(out_buffer, sigma, sigma);
+                warp_processor_blur(out_buffer, sigma, sigma);
         }
 }
 
@@ -424,7 +428,7 @@ void compute_result_buffer(struct NXImage* in_buffer,
         fill_inverse_transform(t, iw/2.0f, ih/2.0f, rw/2.0f, rh/2.0f, scale, scale, planar_angle);
         warp_buffer_affine_bilinear(in_buffer, res_buffer, t);
 
-        warp_processor_blur_s(res_buffer, post_blur_sigma, post_blur_sigma);
+        warp_processor_blur(res_buffer, post_blur_sigma, post_blur_sigma);
 }
 
 inline static void fill_inverse_transform(float* t, float cx_in, float cy_in,
@@ -469,7 +473,7 @@ static void warp_buffer_affine_bilinear(const struct NXImage* in_buffer,
 #pragma omp parallel for private(pixels) schedule(dynamic, 4)
 #endif
         for (int y = 0; y < out_buffer->height; ++y) {
-                uchar *drow = out_buffer->data + y*out_buffer->row_stride;
+                uchar *drow = out_buffer->data.uc + y*out_buffer->row_stride;
 
                 __m128 XY = _mm_add_ps(T67, _mm_mul_ps(T34, _mm_set1_ps(y)));
                 for (int x = 0; x < out_buffer->width; ++x, XY = _mm_add_ps(XY, T01)) {
@@ -490,7 +494,7 @@ static void warp_buffer_affine_bilinear(const struct NXImage* in_buffer,
 
                         int xpi = _mm_cvt_ss2si(XPIYPI);
                         int ypi = _mm_cvt_ss2si(_mm_shuffle_ps(XPIYPI, XPIYPI, 0x0002));
-                        const uchar *p0 = in_buffer->data + ypi*in_buffer->row_stride + xpi;
+                        const uchar *p0 = in_buffer->data.uc + ypi*in_buffer->row_stride + xpi;
                         const uchar *p1 = p0 + in_buffer->row_stride;
                         pixels[0] = p0[0];
                         pixels[1] = p0[1];
@@ -516,7 +520,7 @@ static void warp_buffer_affine_bilinear(const struct NXImage* in_buffer,
 #pragma omp parallel for schedule(dynamic, 4)
 #endif
         for (int y = 0; y < out_buffer->height; ++y) {
-                uchar *drow = out_buffer->data + y*out_buffer->row_stride;
+                uchar *drow = out_buffer->data.uc + y*out_buffer->row_stride;
 
                 float xp = y*t[3] + t[6];
                 float yp = y*t[4] + t[7];
@@ -529,7 +533,7 @@ static void warp_buffer_affine_bilinear(const struct NXImage* in_buffer,
                                 continue;
                         }
 
-                        const uchar *p0 = in_buffer->data + ypi*in_buffer->row_stride + xpi;
+                        const uchar *p0 = in_buffer->data.uc + ypi*in_buffer->row_stride + xpi;
                         const uchar *p1 = p0 + in_buffer->row_stride;
 
                         float u = xp-xpi;
@@ -561,7 +565,7 @@ void fill_warp_buffer_bg(const struct NXImage* image,
         const int LAST_Y = image->height - 1;
 
         for (int y = 0; y < warp_buffer->height; ++y) {
-                uchar *drow = warp_buffer->data + y*warp_buffer->row_stride;
+                uchar *drow = warp_buffer->data.uc + y*warp_buffer->row_stride;
 
                 float xp = y*t2 + t4;
                 float yp = y*t3 + t5;
@@ -619,8 +623,8 @@ void fill_warp_buffer_bg(const struct NXImage* image,
                         }
 
                         if (bg) {
-                                const uchar *p0 = image->data + idy[0]*image->row_stride;
-                                const uchar *p1 = image->data + idy[1]*image->row_stride;
+                                const uchar *p0 = image->data.uc + idy[0]*image->row_stride;
+                                const uchar *p1 = image->data.uc + idy[1]*image->row_stride;
                                 int I = vp*(up*p0[idx[0]] + u*p0[idx[1]])
                                         + v*(up*p1[idx[0]] + u*p1[idx[1]]);
 
@@ -635,62 +639,12 @@ void fill_warp_buffer_bg(const struct NXImage* image,
         }
 }
 
-static void convolve_sym_s_uc(int n, uchar *data, int n_k, const float *kernel)
-{
-#ifdef USE_SSE
-        int i = 0;
-        __m128i Z = _mm_setzero_si128();
-        for (; i < n-7; i += 8) {
-                __m128 K = _mm_set1_ps(kernel[0]);
-                uchar* dk0 = data + i + n_k - 1;
-                __m128i DK0 = _mm_loadl_epi64((const __m128i*)dk0);
-                __m128i B = _mm_unpacklo_epi8(DK0, Z); // 8x16 bit integers @ dk0
-
-                __m128 S0 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(B, Z));
-                S0 = _mm_mul_ps(S0, K);
-                __m128 S1 = _mm_cvtepi32_ps(_mm_unpackhi_epi16(B, Z));
-                S1 = _mm_mul_ps(S1, K);
-
-                for (int k = 1; k < n_k; ++k) {
-                        K = _mm_set1_ps(kernel[k]);
-                        __m128i DM = _mm_unpacklo_epi8(_mm_loadl_epi64((const __m128i*)(dk0-k)), Z);
-                        __m128i DP = _mm_unpacklo_epi8(_mm_loadl_epi64((const __m128i*)(dk0+k)), Z);
-                        __m128i DMP = _mm_add_epi16(DM, DP);
-                        S0 = _mm_add_ps(S0, _mm_mul_ps(K, _mm_cvtepi32_ps(_mm_unpacklo_epi16(DMP, Z))));
-                        S1 = _mm_add_ps(S1, _mm_mul_ps(K, _mm_cvtepi32_ps(_mm_unpackhi_epi16(DMP, Z))));
-                }
-
-                __m128i R0 = _mm_cvtps_epi32(S0);
-                __m128i R1 = _mm_cvtps_epi32(S1);
-                __m128i R = _mm_packus_epi16(_mm_packus_epi32(R0, R1), Z);
-                _mm_storel_epi64((__m128i*)(data+i), R);
-        }
-        for (; i < n; ++i) {
-                uchar* dk0 = data + i + n_k - 1;
-                float sum = kernel[0] * *dk0;
-                for (int k = 1; k < n_k; ++k) {
-                        sum += kernel[k] * (dk0[-k] + dk0[+k]);
-                }
-                data[i] = sum;
-        }
-#else
-        for (int i = 0; i < n; ++i) {
-                uchar* dk0 = data + i + n_k - 1;
-                float sum = kernel[0] * *dk0;
-                for (int k = 1; k < n_k; ++k) {
-                        sum += kernel[k] * (dk0[-k] + dk0[+k]);
-                }
-                data[i] = sum;
-        }
-#endif
-}
-
 static const double BLUR_KERNEL_LOSS = 0.003;
-static void warp_processor_blur_s(struct NXImage *image,
-                                  float sigma_x, float sigma_y)
+static void warp_processor_blur(struct NXImage *image,
+                                float sigma_x, float sigma_y)
 {
         const int N_THREADS = omp_get_max_threads();
-        uchar *buffers[N_THREADS];
+        float *buffers[N_THREADS];
         for (int i = 0; i < N_THREADS; ++i)
                 buffers[i] = nx_image_filter_buffer_alloc(image->width, image->height,
                                                           sigma_x, sigma_y);
@@ -703,31 +657,32 @@ static void warp_processor_blur_s(struct NXImage *image,
 
         // Smooth in x-direction
         int nk = nkx / 2 + 1;
-        nx_kernel_sym_gaussian_s(nk, kernel, sigma_x);
+        nx_kernel_sym_gaussian(nk, kernel, sigma_x);
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic, 4)
 #endif
         for (int y = 0; y < image->height; ++y) {
-                uchar *buffer = buffers[omp_get_thread_num()];
-                uchar *image_row = image->data + y * image->row_stride;
+                float *buffer = buffers[omp_get_thread_num()];
+                uchar *image_row = image->data.uc + y * image->row_stride;
                 nx_filter_copy_to_buffer1_uc(image->width, buffer, image_row, nkx / 2, NX_BORDER_MIRROR);
-                convolve_sym_s_uc(image->width, buffer, nk, kernel);
-                memcpy(image_row, buffer, image->width * sizeof(uchar));
+                nx_convolve_sym(image->width, buffer, nk, kernel);
+                for (int x = 0; x < image->width; ++x)
+                        image_row[x] = (uchar)buffer[x];
         }
 
         // Smooth in y-direction
         nk = nky / 2 + 1;
-        nx_kernel_sym_gaussian_s(nk, kernel, sigma_y);
+        nx_kernel_sym_gaussian(nk, kernel, sigma_y);
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic, 4)
 #endif
         for (int x = 0; x < image->width; ++x) {
-                uchar *buffer = buffers[omp_get_thread_num()];
-                uchar *image_col = image->data + x;
+                float *buffer = buffers[omp_get_thread_num()];
+                uchar *image_col = image->data.uc + x;
                 nx_filter_copy_to_buffer_uc(image->height, buffer, image_col, image->row_stride, nky / 2, NX_BORDER_MIRROR);
-                convolve_sym_s_uc(image->height, buffer, nk, kernel);
+                nx_convolve_sym(image->height, buffer, nk, kernel);
                 for (int y = 0; y < image->height; ++y)
-                        image_col[y*image->row_stride] = buffer[y];
+                        image_col[y*image->row_stride] = (uchar)buffer[y];
         }
 
         nx_free(kernel);

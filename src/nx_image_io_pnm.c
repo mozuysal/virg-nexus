@@ -21,12 +21,15 @@
 
 static NXResult save_as_pnm(const struct NXImage *img, FILE *pnm)
 {
-       if (img->type == NX_IMAGE_GRAYSCALE) {
+        NX_ASSERT_PTR(img);
+        NX_ASSERT_CUSTOM("Only UCHAR images can be saved directly as PNM files", img->dtype==NX_IMAGE_UCHAR);
+
+        if (img->type == NX_IMAGE_GRAYSCALE) {
                 const char *magic_head = "P5";
                 fprintf(pnm, "%s\n%d %d %d\n", magic_head, img->width, img->height, 255);
 
                 for (int y = 0; y < img->height; ++y) {
-                        const uchar *row = img->data + y * img->row_stride;
+                        const uchar *row = img->data.uc + y * img->row_stride;
                         fwrite((const void*)row, sizeof(uchar), img->width, pnm);
                 }
         } else if (img->type == NX_IMAGE_RGBA) {
@@ -34,7 +37,7 @@ static NXResult save_as_pnm(const struct NXImage *img, FILE *pnm)
                 fprintf(pnm, "%s\n%d %d\n%d\n", magic_head, img->width, img->height, 255);
 
                 for (int y = 0; y < img->height; ++y) {
-                        const uchar *row = img->data + y*img->row_stride;
+                        const uchar *row = img->data.uc + y*img->row_stride;
                         for (int x = 0; x < img->width; ++x) {
                                 fwrite((const void*)(row+4*x), sizeof(uchar), 3, pnm);
                         }
@@ -50,6 +53,7 @@ void nx_image_xsave_pnm(const struct NXImage *img, const char *filename)
 {
         NX_ASSERT_PTR(img);
         NX_ASSERT_PTR(filename);
+        NX_ASSERT_CUSTOM("Only UCHAR images can be saved directly as PNM files", img->dtype==NX_IMAGE_UCHAR);
 
         FILE *pnm = nx_xfopen(filename, "wb");
 
@@ -82,21 +86,24 @@ NXResult nx_image_save_pnm(const struct NXImage *img, const char *filename)
 }
 
 static NXResult read_pnm_data(struct NXImage *img, enum NXImageType img_type,
-                          FILE *pnm, int pnm_width, int pnm_height, enum NXImageType pnm_type)
+                              FILE *pnm, int pnm_width, int pnm_height, enum NXImageType pnm_type)
 {
-        int n_ch = nx_image_n_channels(img_type);
-        nx_image_resize(img, pnm_width, pnm_height, pnm_width*n_ch, img_type);
+        NX_ASSERT_PTR(img);
+        NX_ASSERT_PTR(pnm);
+        NX_ASSERT_CUSTOM("Only UCHAR images can be loaded directly from PNM files", img->dtype==NX_IMAGE_UCHAR);
+
+        nx_image_resize(img, pnm_width, pnm_height, NX_IMAGE_STRIDE_DEFAULT, img_type, img->dtype);
 
         if (pnm_type == NX_IMAGE_GRAYSCALE) {
                 if (img_type == NX_IMAGE_GRAYSCALE) {
                         for (int y = 0; y < img->height; ++y) {
-                                uchar* row = img->data + y * img->row_stride;
+                                uchar* row = img->data.uc + y * img->row_stride;
                                 if (fread((void*)row, sizeof(uchar), img->width, pnm) != img->width)
                                         return NX_FAIL;
                         }
-                } else {
+                } else if (img_type == NX_IMAGE_RGBA) {
                         for (int y = 0; y < img->height; ++y) {
-                                uchar* row = img->data + y * img->row_stride;
+                                uchar* row = img->data.uc + y * img->row_stride;
                                 for(int x = 0; x < img->width; ++x) {
                                         uchar value;
                                         if (fread((void*)&value, sizeof(uchar), 1, pnm) != 1)
@@ -107,11 +114,13 @@ static NXResult read_pnm_data(struct NXImage *img, enum NXImageType img_type,
                                         row[4*x+3] = 255;
                                 }
                         }
+                } else {
+                        NX_FATAL(NX_LOG_TAG, "Unsupported image type while loading grayscale PNM!");
                 }
         } else {
                 if (img_type == NX_IMAGE_GRAYSCALE) {
                         for (int y = 0; y < img->height; ++y) {
-                                uchar* row = img->data + y * img->row_stride;
+                                uchar* row = img->data.uc + y * img->row_stride;
                                 for (int x = 0; x < img->width; ++x) {
                                         uchar value[3];
                                         if (fread((void*)&value, sizeof(uchar), 3, pnm) != 3)
@@ -119,15 +128,17 @@ static NXResult read_pnm_data(struct NXImage *img, enum NXImageType img_type,
                                         row[x] = nx_rgb_to_gray(value[0], value[1], value[2]);
                                 }
                         }
-                } else {
+                } else if (img_type == NX_IMAGE_RGBA) {
                         for (int y = 0; y < img->height; ++y) {
-                                uchar* row = img->data + y * img->row_stride;
+                                uchar* row = img->data.uc + y * img->row_stride;
                                 for (int x = 0; x < img->width; ++x) {
                                         if (fread((void*)(row + 4*x), sizeof(uchar), 3, pnm) != 3)
                                                 return NX_FAIL;
                                         row[4*x+3] = 255;
                                 }
                         }
+                } else {
+                        NX_FATAL(NX_LOG_TAG, "Unsupported image type while loading RGB PNM!");
                 }
         }
 
@@ -135,10 +146,11 @@ static NXResult read_pnm_data(struct NXImage *img, enum NXImageType img_type,
 }
 
 void nx_image_xload_pnm(struct NXImage *img, const char *filename,
-                            enum NXImageLoadMode mode)
+                        enum NXImageLoadMode mode)
 {
         NX_ASSERT_PTR(img);
         NX_ASSERT_PTR(filename);
+        NX_ASSERT_CUSTOM("Only UCHAR images can be loaded directly from PNM files", img->dtype==NX_IMAGE_UCHAR);
 
         FILE *pnm = nx_xfopen(filename, "rb");
 
@@ -206,6 +218,7 @@ NXResult nx_image_load_pnm(struct NXImage *img, const char *filename,
 {
         NX_ASSERT_PTR(img);
         NX_ASSERT_PTR(filename);
+        NX_ASSERT_CUSTOM("Only UCHAR images can be loaded directly from PNM files", img->dtype==NX_IMAGE_UCHAR);
 
         FILE *pnm = nx_fopen(filename, "rb");
         if (!pnm) {

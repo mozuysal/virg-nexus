@@ -75,7 +75,7 @@ void nx_image_pyr_create_level(struct NXImagePyr *pyr, int level_id, int width, 
 
         struct NXImagePyrLevel *level = pyr->levels + level_id;
 
-        nx_image_resize(level->img, width, height, 0, NX_IMAGE_GRAYSCALE);
+        nx_image_resize(level->img, width, height, 0, NX_IMAGE_GRAYSCALE, NX_IMAGE_UCHAR);
 
         level->scale = scale;
         level->sigma = sigma;

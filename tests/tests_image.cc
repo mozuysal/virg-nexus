@@ -73,66 +73,66 @@ TEST_F(NXImageTest, ImageAllocFree) {
         img0_ = nx_image_alloc();
         EXPECT_TRUE(NULL != img0_);
         EXPECT_TRUE(NULL != img0_->mem);
-        EXPECT_EQ(NULL, img0_->data);
+        EXPECT_EQ(NULL, img0_->data.v);
         EXPECT_EQ(0, img0_->width);
         EXPECT_EQ(0, img0_->height);
         nx_image_free(img0_);
 }
 
-TEST_F(NXImageTest, ImageNewGrayFree) {
-        img0_ = nx_image_new_gray(640, 480);
+TEST_F(NXImageTest, ImageNewGrayUCFree) {
+        img0_ = nx_image_new_gray_uc(640, 480);
         EXPECT_TRUE(NULL != img0_);
         EXPECT_TRUE(NULL != img0_->mem);
-        EXPECT_TRUE(NULL != img0_->data);
+        EXPECT_TRUE(NULL != img0_->data.uc);
         EXPECT_EQ(640, img0_->width);
         EXPECT_EQ(480, img0_->height);
         EXPECT_EQ(1, img0_->n_channels);
         nx_image_free(img0_);
 }
 
-TEST_F(NXImageTest, ImageNewRGBAFree) {
-        img0_ = nx_image_new_rgba(640, 480);
+TEST_F(NXImageTest, ImageNewRGBAUCFree) {
+        img0_ = nx_image_new_rgba_uc(640, 480);
         EXPECT_TRUE(NULL != img0_);
         EXPECT_TRUE(NULL != img0_->mem);
-        EXPECT_TRUE(NULL != img0_->data);
+        EXPECT_TRUE(NULL != img0_->data.uc);
         EXPECT_EQ(640, img0_->width);
         EXPECT_EQ(480, img0_->height);
         EXPECT_EQ(4, img0_->n_channels);
         nx_image_free(img0_);
 }
 
-TEST_F(NXImageTest, ImageGraySaveLoadAsIs) {
-        img0_ = nx_image_new_gray(NX, NY);
-        memcpy(img0_->data, TEST_IMAGE_DATA, sizeof(TEST_IMAGE_DATA));
+TEST_F(NXImageTest, ImageGrayUCSaveLoadAsIs) {
+        img0_ = nx_image_new_gray_uc(NX, NY);
+        memcpy(img0_->data.uc, TEST_IMAGE_DATA, sizeof(TEST_IMAGE_DATA));
         nx_image_xsave_pnm(img0_, TMP_PGM_IMAGE_FILENAME);
         img1_ = nx_image_alloc();
         nx_image_xload_pnm(img1_, TMP_PGM_IMAGE_FILENAME, NX_IMAGE_LOAD_AS_IS);
         for (int i = 0; i < N; ++i)
-                EXPECT_EQ(TEST_IMAGE_DATA[i], img1_->data[i]);
+                EXPECT_EQ(TEST_IMAGE_DATA[i], img1_->data.uc[i]);
         nx_image_free(img0_);
         nx_image_free(img1_);
 }
 
-TEST_F(NXImageTest, ImageRGBASaveLoadAsIs) {
-        img0_ = nx_image_new_rgba(NX, NY);
-        memcpy(img0_->data, TEST_IMAGE_COLOR_DATA, sizeof(TEST_IMAGE_COLOR_DATA));
+TEST_F(NXImageTest, ImageRGBAUCSaveLoadAsIs) {
+        img0_ = nx_image_new_rgba_uc(NX, NY);
+        memcpy(img0_->data.uc, TEST_IMAGE_COLOR_DATA, sizeof(TEST_IMAGE_COLOR_DATA));
         nx_image_xsave_pnm(img0_, TMP_PPM_IMAGE_FILENAME);
         img1_ = nx_image_alloc();
         nx_image_xload_pnm(img1_, TMP_PPM_IMAGE_FILENAME, NX_IMAGE_LOAD_AS_IS);
         for (int i = 0; i < 4*N; ++i)
-                EXPECT_EQ(TEST_IMAGE_COLOR_DATA[i], img1_->data[i]);
+                EXPECT_EQ(TEST_IMAGE_COLOR_DATA[i], img1_->data.uc[i]);
         nx_image_free(img0_);
         nx_image_free(img1_);
 }
 
-TEST_F(NXImageTest, ImageGraySaveLoadAsIsJPEG) {
-        img0_ = nx_image_new_gray(NX, NY);
-        memcpy(img0_->data, TEST_IMAGE_DATA, sizeof(TEST_IMAGE_DATA));
+TEST_F(NXImageTest, ImageGrayUCSaveLoadAsIsJPEG) {
+        img0_ = nx_image_new_gray_uc(NX, NY);
+        memcpy(img0_->data.uc, TEST_IMAGE_DATA, sizeof(TEST_IMAGE_DATA));
         nx_image_xsave_jpeg(img0_, TMP_JPEG_IMAGE_FILENAME);
         img1_ = nx_image_alloc();
         nx_image_xload_jpeg(img1_, TMP_JPEG_IMAGE_FILENAME, NX_IMAGE_LOAD_AS_IS);
         for (int i = 0; i < N; ++i)
-                EXPECT_EQ(TEST_IMAGE_DATA[i], img1_->data[i]);
+                EXPECT_EQ(TEST_IMAGE_DATA[i], img1_->data.uc[i]);
         nx_image_free(img0_);
         nx_image_free(img1_);
 }
@@ -153,20 +153,11 @@ TEST_F(NXImageTest, ImageFileFormatFromHeader) {
         EXPECT_EQ(NX_IMAGE_FILE_FORMAT_JPEG, nx_image_file_format_from_header(TMP_JPEG_IMAGE_FILENAME));
 }
 
-TEST_F(NXImageTest, ImageGrayFilterSI) {
-        img0_ = nx_image_new_gray(NX, NY);
-        memcpy(img0_->data, TEST_IMAGE_DATA, sizeof(TEST_IMAGE_DATA));
+TEST_F(NXImageTest, ImageGrayUCFilter) {
+        img0_ = nx_image_new_gray_uc(NX, NY);
+        memcpy(img0_->data.uc, TEST_IMAGE_DATA, sizeof(TEST_IMAGE_DATA));
         img1_ = nx_image_alloc();
-        nx_image_smooth_si(img1_, img0_, TEST_SIGMA, TEST_SIGMA, NULL);
-        nx_image_free(img0_);
-        nx_image_free(img1_);
-}
-
-TEST_F(NXImageTest, ImageGrayFilterS) {
-        img0_ = nx_image_new_gray(NX, NY);
-        memcpy(img0_->data, TEST_IMAGE_DATA, sizeof(TEST_IMAGE_DATA));
-        img1_ = nx_image_alloc();
-        nx_image_smooth_s(img1_, img0_, TEST_SIGMA, TEST_SIGMA, NULL);
+        nx_image_smooth(img1_, img0_, TEST_SIGMA, TEST_SIGMA, NULL);
         nx_image_free(img0_);
         nx_image_free(img1_);
 }

@@ -31,13 +31,14 @@ int nx_fast_detect_keypoints(int n_keys_max, struct NXKeypoint *keys,
         NX_ASSERT(n_keys_max >= 0);
         NX_ASSERT_PTR(keys);
         NX_ASSERT_PTR(img);
+        NX_IMAGE_ASSERT_GRAYSCALE_UCHAR(img);
 
         if (n_keys_max == 0) {
                 NX_WARNING(NX_LOG_TAG, "Call to nx_fast_detect_keypoints with 0 as the max. number of keypoints!");
                 return 0;
         }
 
-        fast9_detect(keys, img->data, img->width, img->height,
+        fast9_detect(keys, img->data.uc, img->width, img->height,
                      img->row_stride, threshold, &n_keys_max);
 
         for (int i = 0; i < n_keys_max; ++i) {
@@ -60,8 +61,9 @@ void nx_fast_score_keypoints(int n_keys, struct NXKeypoint *keys,
         NX_ASSERT(n_keys >= 0);
         NX_ASSERT_PTR(keys);
         NX_ASSERT_PTR(img);
+        NX_IMAGE_ASSERT_GRAYSCALE_UCHAR(img);
 
-        fast9_score(img->data, img->row_stride, keys, n_keys, threshold);
+        fast9_score(img->data.uc, img->row_stride, keys, n_keys, threshold);
 }
 
 int nx_fast_detect_keypoints_pyr(int n_keys_supp_max, struct NXKeypoint *keys_supp,
@@ -222,6 +224,11 @@ static float nx_keypoint_ori_ic(const uchar *center, int n_offsets, const int *o
 static void nx_fast_detector_compute_keypoint_ori_ic(int n_keys, struct NXKeypoint* keys, const struct NXImage *img,
                                                      const struct NXFastDetectorICData *data)
 {
+        NX_ASSERT_PTR(keys);
+        NX_ASSERT_PTR(img);
+        NX_ASSERT_PTR(data);
+        NX_IMAGE_ASSERT_GRAYSCALE_UCHAR(img);
+
         const int r = data->radius;
         const int xe = img->width - r;
         const int ye = img->height - r;
@@ -236,7 +243,7 @@ static void nx_fast_detector_compute_keypoint_ori_ic(int n_keys, struct NXKeypoi
                 struct NXKeypoint *k = keys + i;
 
                 if (k->x >= r && k->x < xe && k->y >= r && k->y < ye) {
-                        const uchar *center = img->data + k->y * img->row_stride + k->x;
+                        const uchar *center = img->data.uc + k->y * img->row_stride + k->x;
                         k->ori = nx_keypoint_ori_ic(center, data->n_offsets, img_offsets, data->offset_table);
                 }
         }
@@ -249,6 +256,7 @@ int nx_fast_detector_detect(struct NXFastDetector *detector, int max_n_keys, str
         NX_ASSERT_PTR(detector);
         NX_ASSERT_PTR(img);
         NX_ASSERT_PTR(keys);
+        NX_IMAGE_ASSERT_GRAYSCALE_UCHAR(img);
 
         size_t work_size = max_n_keys * detector->work_multiplier;
         nx_keypoint_vector_resize(detector->keys_work, work_size);

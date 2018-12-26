@@ -192,6 +192,7 @@ void nx_brief_extractor_compute_pyr(struct NXBriefExtractor *be, const struct NX
 
         int sample_level = level + be->pyr_level_offset;
         const struct NXImage *img = pyr->levels[sample_level].img;
+        NX_IMAGE_ASSERT_GRAYSCALE_UCHAR(img);
 
         float key_scale = pyr->levels[level].scale;
         float sample_scale = pyr->levels[sample_level].scale;
@@ -209,8 +210,8 @@ void nx_brief_extractor_compute_pyr(struct NXBriefExtractor *be, const struct NX
                         int sample_x1 = (x + offsets[2]) * scale_f;
                         int sample_y1 = (y + offsets[3]) * scale_f;
 
-                        uchar I0 = img->data[img->row_stride * sample_y0 + sample_x0];
-                        uchar I1 = img->data[img->row_stride * sample_y1 + sample_x1];
+                        uchar I0 = img->data.uc[img->row_stride * sample_y0 + sample_x0];
+                        uchar I1 = img->data.uc[img->row_stride * sample_y1 + sample_x1];
 
                         if (I0 > I1)
                                 *desc |= 1;
@@ -226,6 +227,7 @@ NXBool nx_brief_extractor_compute_pyr_at_theta(struct NXBriefExtractor *be, cons
 
         int sample_level = level + be->pyr_level_offset;
         const struct NXImage *img = pyr->levels[sample_level].img;
+        NX_IMAGE_ASSERT_GRAYSCALE_UCHAR(img);
 
         float key_scale = pyr->levels[level].scale;
         float sample_scale = pyr->levels[sample_level].scale;
@@ -250,8 +252,8 @@ NXBool nx_brief_extractor_compute_pyr_at_theta(struct NXBriefExtractor *be, cons
                             || sample_y0 < 0 || sample_y0 >= img->height || sample_y1 < 0 || sample_y1 >= img->height)
                                 return NX_FALSE;
 
-                        uchar I0 = img->data[img->row_stride * sample_y0 + sample_x0];
-                        uchar I1 = img->data[img->row_stride * sample_y1 + sample_x1];
+                        uchar I0 = img->data.uc[img->row_stride * sample_y0 + sample_x0];
+                        uchar I1 = img->data.uc[img->row_stride * sample_y1 + sample_x1];
 
                         if (I0 > I1)
                                 *desc |= 1;

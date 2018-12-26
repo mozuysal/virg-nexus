@@ -216,7 +216,7 @@ void _nx_image_pyr_builder_update_fast(struct NXImagePyrBuilder *builder, struct
 {
         float sigma_g = compute_sigma_g(NX_IMAGE_PYR_BUILDER_INITIAL_SIGMA, pyr->levels[0].sigma);
         if (sigma_g > 0.0f)
-                nx_image_smooth_s(pyr->levels[0].img, pyr->levels[0].img, sigma_g, sigma_g, NULL);
+                nx_image_smooth(pyr->levels[0].img, pyr->levels[0].img, sigma_g, sigma_g, NULL);
 
         // Downsample each layer with AA filter to yield the next one
         int n_levels = pyr->n_levels;
@@ -240,7 +240,7 @@ void _nx_image_pyr_builder_update_fine(struct NXImagePyrBuilder *builder, struct
                 if (i == 0) {
                         float sigma_g = compute_sigma_g(sigma_current, oct_levels[0].sigma);
                         if (sigma_g > 0.0f) {
-                                nx_image_smooth_s(oct_levels[0].img, oct_levels[0].img, sigma_g, sigma_g, NULL);
+                                nx_image_smooth(oct_levels[0].img, oct_levels[0].img, sigma_g, sigma_g, NULL);
                                 sigma_current = oct_levels[0].sigma;
                         }
                 }
@@ -250,7 +250,7 @@ void _nx_image_pyr_builder_update_fine(struct NXImagePyrBuilder *builder, struct
                 for (int j = 1; j < n_steps; ++j) {
                         float sigma_desired = oct_levels[j].sigma * sigma_multiplier;
                         float sigma_g = compute_sigma_g(sigma_current, sigma_desired);
-                        nx_image_smooth_s(oct_levels[j].img, oct_levels[j-1].img, sigma_g, sigma_g, NULL);
+                        nx_image_smooth(oct_levels[j].img, oct_levels[j-1].img, sigma_g, sigma_g, NULL);
                         sigma_current = sigma_desired;
                 }
 
@@ -260,7 +260,7 @@ void _nx_image_pyr_builder_update_fine(struct NXImagePyrBuilder *builder, struct
                         struct NXImagePyrLevel *next_oct_level0 = oct_levels + n_steps;
                         float sigma_desired = next_oct_level0->sigma * sigma_multiplier;
                         float sigma_g = compute_sigma_g(sigma_current, sigma_desired);
-                        nx_image_smooth_s(builder->work_img, oct_levels[n_steps-1].img, sigma_g, sigma_g, NULL);
+                        nx_image_smooth(builder->work_img, oct_levels[n_steps-1].img, sigma_g, sigma_g, NULL);
                         nx_image_downsample(next_oct_level0->img, builder->work_img);
                         sigma_current = sigma_desired;
 
@@ -276,7 +276,7 @@ void _nx_image_pyr_builder_update_scaled(struct NXImagePyrBuilder *builder, stru
         float sigma_g = compute_sigma_g(sigma_current, pyr->levels[0].sigma);
 
         if (sigma_g > 0.0f) {
-                nx_image_smooth_s(pyr->levels[0].img, pyr->levels[0].img, sigma_g, sigma_g, NULL);
+                nx_image_smooth(pyr->levels[0].img, pyr->levels[0].img, sigma_g, sigma_g, NULL);
                 sigma_current = pyr->levels[0].sigma;
         }
 
@@ -286,7 +286,7 @@ void _nx_image_pyr_builder_update_scaled(struct NXImagePyrBuilder *builder, stru
         for (int i = 1; i < n_levels; ++i) {
                 float sigma_desired = pyr->levels[i].sigma;
                 float sigma_g = compute_sigma_g(sigma_current, sigma_desired);
-                nx_image_smooth_s(builder->work_img, builder->work_img, sigma_g, sigma_g, NULL);
+                nx_image_smooth(builder->work_img, builder->work_img, sigma_g, sigma_g, NULL);
                 sigma_current = sigma_desired;
 
                 nx_image_scale(pyr->levels[i].img, builder->work_img, 1.0f / pyr->levels[i].scale);

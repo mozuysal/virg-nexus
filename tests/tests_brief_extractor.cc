@@ -218,9 +218,9 @@ TEST_F(NXBriefExtractorTest, BriefExtractorComputePyrArtificial) {
         nx_brief_extractor_update_limits(be_);
 
         struct NXImage *img = nx_image_alloc();
-        nx_image_resize(img, TEST_IMAGE_W, TEST_IMAGE_H, 0, NX_IMAGE_GRAYSCALE);
+        nx_image_resize(img, TEST_IMAGE_W, TEST_IMAGE_H, 0, NX_IMAGE_GRAYSCALE, NX_IMAGE_UCHAR);
         for (int i = 0; i < TEST_IMAGE_H; ++i)
-                memcpy(img->data + i*img->row_stride,
+                memcpy(img->data.uc + i*img->row_stride,
                        TEST_IMAGE_DATA + i*TEST_IMAGE_W,
                        TEST_IMAGE_W * sizeof(uchar));
         nx_image_pyr_builder_set_fast(builder_, 1, 0);

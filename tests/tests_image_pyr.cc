@@ -50,7 +50,7 @@ protected:
         }
 
         virtual void SetUp() {
-                img_ = nx_image_new_gray(TEST_WIDTH0, TEST_HEIGHT0);
+                img_ = nx_image_new_gray_uc(TEST_WIDTH0, TEST_HEIGHT0);
                 nx_image_set_zero(img_);
                 lena_ = nx_image_alloc();
                 nx_image_xload_pnm(lena_, TEST_DATA_LENA_PPM, NX_IMAGE_LOAD_GRAYSCALE);

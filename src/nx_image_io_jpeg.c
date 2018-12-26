@@ -42,6 +42,7 @@ static NXResult save_as_jpeg(const struct NXImage *img, FILE *jpeg_stream)
 {
         NX_ASSERT_PTR(img);
         NX_ASSERT_PTR(jpeg_stream);
+        NX_ASSERT_CUSTOM("Only UCHAR images can be saved directly as JPEG files", img->dtype==NX_IMAGE_UCHAR);
 
         struct jpeg_compress_struct cinfo;
         my_error_mgr jerr;
@@ -70,7 +71,7 @@ static NXResult save_as_jpeg(const struct NXImage *img, FILE *jpeg_stream)
 
         if (img->type == NX_IMAGE_GRAYSCALE) {
                 while (cinfo.next_scanline < cinfo.image_height) {
-                        JSAMPROW row_pointer = (JSAMPROW)((unsigned char*)(img->data + cinfo.next_scanline * img->row_stride));
+                        JSAMPROW row_pointer = (JSAMPROW)((unsigned char*)(img->data.uc + cinfo.next_scanline * img->row_stride));
                         jpeg_write_scanlines(&cinfo, &row_pointer, 1);
                 }
         } else if (img->type == NX_IMAGE_RGBA) {
@@ -78,7 +79,7 @@ static NXResult save_as_jpeg(const struct NXImage *img, FILE *jpeg_stream)
                 uchar* buffer = NX_NEW_UC(3*img->width);
                 JSAMPROW row_pointer = (JSAMPROW)(buffer);
                 while (cinfo.next_scanline < cinfo.image_height) {
-                        const unsigned char* read_row = img->data + cinfo.next_scanline * img->row_stride;
+                        const unsigned char* read_row = img->data.uc + cinfo.next_scanline * img->row_stride;
                         for(x = 0; x < img->width; ++x) {
                                 buffer[3*x]   = read_row[4*x];
                                 buffer[3*x+1] = read_row[4*x+1];
@@ -101,6 +102,7 @@ void nx_image_xsave_jpeg(const struct NXImage *img, const char *filename)
 {
         NX_ASSERT_PTR(img);
         NX_ASSERT_PTR(filename);
+        NX_ASSERT_CUSTOM("Only UCHAR images can be saved directly as JPEG files", img->dtype==NX_IMAGE_UCHAR);
 
         FILE *jpeg_stream = nx_xfopen(filename, "wb");
 
@@ -115,6 +117,7 @@ NXResult nx_image_save_jpeg(const struct NXImage *img, const char *filename)
 {
         NX_ASSERT_PTR(img);
         NX_ASSERT_PTR(filename);
+        NX_ASSERT_CUSTOM("Only UCHAR images can be saved directly as JPEG files", img->dtype==NX_IMAGE_UCHAR);
 
         FILE *jpeg_stream = nx_fopen(filename, "wb");
         if (!jpeg_stream) {
@@ -137,6 +140,7 @@ static NXResult load_as_jpeg(struct NXImage *img, FILE *jpeg_stream,
 {
         NX_ASSERT_PTR(img);
         NX_ASSERT_PTR(jpeg_stream);
+        NX_ASSERT_CUSTOM("Only UCHAR images can be loaded directly from JPEG files", img->dtype==NX_IMAGE_UCHAR);
 
         struct jpeg_decompress_struct cinfo;
         my_error_mgr jerr;
@@ -165,11 +169,11 @@ static NXResult load_as_jpeg(struct NXImage *img, FILE *jpeg_stream,
 
         jpeg_start_decompress(&cinfo);
         nx_image_resize(img, cinfo.output_width, cinfo.output_height,
-                        -1, cinfo.output_components == 1 ? NX_IMAGE_GRAYSCALE : NX_IMAGE_RGBA);
+                        NX_IMAGE_STRIDE_DEFAULT, cinfo.output_components == 1 ? NX_IMAGE_GRAYSCALE : NX_IMAGE_RGBA, img->dtype);
 
         if (cinfo.out_color_space == JCS_GRAYSCALE) {
                 while (cinfo.output_scanline < cinfo.output_height) {
-                        JSAMPROW row_pointer = (JSAMPROW)(img->data + cinfo.output_scanline * img->row_stride);
+                        JSAMPROW row_pointer = (JSAMPROW)(img->data.uc + cinfo.output_scanline * img->row_stride);
                         jpeg_read_scanlines(&cinfo, &row_pointer, 1);
                 }
         } else {
@@ -177,7 +181,7 @@ static NXResult load_as_jpeg(struct NXImage *img, FILE *jpeg_stream,
                 uchar* buffer = NX_NEW_UC(3*img->width);
                 JSAMPROW row_pointer = (JSAMPROW)(buffer);
                 while (cinfo.output_scanline < cinfo.output_height) {
-                        uchar* write_row = img->data + cinfo.output_scanline * img->row_stride;
+                        uchar* write_row = img->data.uc + cinfo.output_scanline * img->row_stride;
                         jpeg_read_scanlines(&cinfo, &row_pointer, 1);
                         for(x = 0; x < img->width; ++x) {
                                 write_row[4*x]     = buffer[3*x];
@@ -200,6 +204,7 @@ void nx_image_xload_jpeg(struct NXImage *img, const char *filename,
 {
         NX_ASSERT_PTR(img);
         NX_ASSERT_PTR(filename);
+        NX_ASSERT_CUSTOM("Only UCHAR images can be loaded directly from JPEG files", img->dtype==NX_IMAGE_UCHAR);
 
         FILE *jpeg_stream = nx_xfopen(filename, "rb");
         if (load_as_jpeg(img, jpeg_stream, mode) != NX_OK)
@@ -212,6 +217,7 @@ NXResult nx_image_load_jpeg(struct NXImage *img, const char *filename,
 {
         NX_ASSERT_PTR(img);
         NX_ASSERT_PTR(filename);
+        NX_ASSERT_CUSTOM("Only UCHAR images can be loaded directly from JPEG files", img->dtype==NX_IMAGE_UCHAR);
 
         FILE *jpeg_stream = nx_fopen(filename, "rb");
         if (!jpeg_stream) {

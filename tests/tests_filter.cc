@@ -32,20 +32,17 @@ namespace {
 #define BN2 (((N+1)/2) + 2*N_BORDER)
 
 static const uchar TEST_DATA[N] = { 10, 20, 30, 40, 50 };
-static const short TEST_KERNEL_SI[KN] = { 3, 2, 1};
-static const short TEST_KERNEL_SI_SUM = 9;
 static const float TEST_KERNEL_S[KN] = { 3.0f/9.0f, 2.0f/9.0f, 1.0f/9.0f };
 
-static const uchar BUFFER_GT_BZ[BN] = { 0, 0, 10, 20, 30, 40, 50, 0, 0 };
-static const uchar BUFFER_GT_BR[BN] = { 10, 10, 10, 20, 30, 40, 50, 50, 50 };
-static const uchar BUFFER_GT_BM[BN] = { 30, 20, 10, 20, 30, 40, 50, 40, 30 };
+static const float BUFFER_GT_BZ[BN] = { 0.0f, 0.0f, 10.0f, 20.0f, 30.0f, 40.0f, 50.0f, 0.0f, 0.0f };
+static const float BUFFER_GT_BR[BN] = { 10.0f, 10.0f, 10.0f, 20.0f, 30.0f, 40.0f, 50.0f, 50.0f, 50.0f };
+static const float BUFFER_GT_BM[BN] = { 30.0f, 20.0f, 10.0f, 20.0f, 30.0f, 40.0f, 50.0f, 40.0f, 30.0f };
 
-static const uchar BUFFER2_GT_BZ[BN2] = { 0, 0, 10, 30, 50, 0, 0 };
-static const uchar BUFFER2_GT_BR[BN2] = { 10, 10, 10, 30, 50, 50, 50 };
-static const uchar BUFFER2_GT_BM[BN2] = { 50, 30, 10, 30, 50, 30, 10 };
+static const float BUFFER2_GT_BZ[BN2] = { 0.0f, 0.0f, 10.0f, 30.0f, 50.0f, 0.0f, 0.0f };
+static const float BUFFER2_GT_BR[BN2] = { 10.0f, 10.0f, 10.0f, 30.0f, 50.0f, 50.0f, 50.0f };
+static const float BUFFER2_GT_BM[BN2] = { 50.0f, 30.0f, 10.0f, 30.0f, 50.0f, 30.0f, 10.0f };
 
-static const uchar CONV_SYM_SI_GT[BN] = { 11, 20, 30, 33, 28, 40, 50, 0, 0 };
-static const uchar CONV_SYM_S_GT[BN]  = { 11, 20, 29, 33, 28, 40, 50, 0, 0 };
+static const float CONV_SYM_GT[BN]  = { 100.0/9.0f, 20.0f, 30.0f, 300.0f/9.0f, 260.0f/9.0f, 40.0f, 50.0f, 0.0f, 0.0f };
 
 
 class NXFilterTest : public ::testing::Test {
@@ -65,32 +62,32 @@ protected:
         nx_free(buffer_);
     }
 
-    uchar *buffer_;
+    float *buffer_;
 };
 
 TEST_F(NXFilterTest, BufferAlloc) {
-    memset(buffer_, 0, BN*sizeof(uchar));
+    memset(buffer_, 0, BN*sizeof(float));
 }
 
 TEST_F(NXFilterTest, BufferCopy1BorderZero) {
     nx_filter_copy_to_buffer1_uc(N, buffer_, TEST_DATA, N_BORDER, NX_BORDER_ZERO);
     for (int i = 0; i < BN; ++i)
         EXPECT_EQ(BUFFER_GT_BZ[i], buffer_[i]);
-    memset(buffer_, 0, BN*sizeof(uchar));
+    memset(buffer_, 0, BN*sizeof(float));
 }
 
 TEST_F(NXFilterTest, BufferCopy1BorderRepeat) {
     nx_filter_copy_to_buffer1_uc(N, buffer_, TEST_DATA, N_BORDER, NX_BORDER_REPEAT);
     for (int i = 0; i < BN; ++i)
         EXPECT_EQ(BUFFER_GT_BR[i], buffer_[i]);
-    memset(buffer_, 0, BN*sizeof(uchar));
+    memset(buffer_, 0, BN*sizeof(float));
 }
 
 TEST_F(NXFilterTest, BufferCopy1BorderMirror) {
     nx_filter_copy_to_buffer1_uc(N, buffer_, TEST_DATA, N_BORDER, NX_BORDER_MIRROR);
     for (int i = 0; i < BN; ++i)
         EXPECT_EQ(BUFFER_GT_BM[i], buffer_[i]);
-    memset(buffer_, 0, BN*sizeof(uchar));
+    memset(buffer_, 0, BN*sizeof(float));
 }
 
 TEST_F(NXFilterTest, BufferCopyBorderZero) {
@@ -114,20 +111,12 @@ TEST_F(NXFilterTest, BufferCopyBorderMirror) {
     memset(buffer_, 0, BN2*sizeof(uchar));
 }
 
-TEST_F(NXFilterTest, BufferConvolveSumSI) {
+TEST_F(NXFilterTest, BufferConvolveSym) {
     nx_filter_copy_to_buffer1_uc(N, buffer_, TEST_DATA, N_BORDER, NX_BORDER_ZERO);
-    nx_convolve_sym_si_uc(N, buffer_, KN, TEST_KERNEL_SI, TEST_KERNEL_SI_SUM);
+    nx_convolve_sym(N, buffer_, KN, TEST_KERNEL_S);
     for (int i = 0; i < BN; ++i)
-        EXPECT_EQ(CONV_SYM_SI_GT[i], buffer_[i]);
-    memset(buffer_, 0, BN*sizeof(uchar));
-}
-
-TEST_F(NXFilterTest, BufferConvolveSumS) {
-    nx_filter_copy_to_buffer1_uc(N, buffer_, TEST_DATA, N_BORDER, NX_BORDER_ZERO);
-    nx_convolve_sym_s_uc(N, buffer_, KN, TEST_KERNEL_S);
-    for (int i = 0; i < BN; ++i)
-        EXPECT_EQ(CONV_SYM_S_GT[i], buffer_[i]);
-    memset(buffer_, 0, BN*sizeof(uchar));
+        EXPECT_FLOAT_EQ(CONV_SYM_GT[i], buffer_[i]);
+    memset(buffer_, 0, BN*sizeof(float));
 }
 
 } // namespace
