@@ -20,7 +20,7 @@ __NX_BEGIN_DECL
 
 
 /**
- * Calculates the derivative images I_x^2, I_y^2, and I_xI_y and comvolves them
+ * Calculates the derivative images I_x^2, I_y^2, and I_xI_y and convolves them
  * with a Gaussian filter with standard deviation sigma_win.
  *
  * @param dimg      NXImage array of length 3, storing I_x^2, I_y^2, and I_xI_y consecutively. Images are created if necessary.

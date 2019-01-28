@@ -593,3 +593,80 @@ void nx_image_smooth(struct NXImage *dest, const struct NXImage *src,
         if (!filter_buffer)
                 nx_free(buffer);
 }
+
+#define DEFINE_DERIV_X_FUNC(F,T)                                        \
+        void nx_image_deriv_x_##F(struct NXImage *dest,                 \
+                                  const struct NXImage *src)            \
+        {                                                               \
+                NX_ASSERT_PTR(src);                                     \
+                NX_ASSERT_PTR(dest);                                    \
+                NX_IMAGE_ASSERT_GRAYSCALE(src);                         \
+                                                                        \
+                nx_image_resize(dest, src->width, src->height, NX_IMAGE_STRIDE_DEFAULT, \
+                                src->type, NX_IMAGE_FLOAT32);           \
+                nx_image_set_zero(dest);                                \
+                                                                        \
+                for (int y = 1; y < src->height-1; ++y) {                 \
+                        const T *src_row = src->data.F + y*src->row_stride; \
+                        float *dest_row = dest->data.f32 + y*dest->row_stride; \
+                        for (int x = 1; x < dest->width-1; ++x) {       \
+                                dest_row[x] = src_row[x+1]-src_row[x-1]; \
+                        }                                               \
+                }                                                       \
+        }
+
+DEFINE_DERIV_X_FUNC(uc,uchar)
+DEFINE_DERIV_X_FUNC(f32,float)
+#undef DEFINE_DERIV_X_FUNC
+
+void nx_image_deriv_x(struct NXImage *dest, const struct NXImage *src)
+{
+        NX_ASSERT_PTR(src);
+        NX_ASSERT_PTR(dest);
+        NX_IMAGE_ASSERT_GRAYSCALE(src);
+
+        switch (src->dtype) {
+        case NX_IMAGE_UCHAR: nx_image_deriv_x_uc(dest, src); break;
+        case NX_IMAGE_FLOAT32: nx_image_deriv_x_f32(dest, src); break;
+        default: NX_FATAL(NX_LOG_TAG, "Unhandled switch case for image data type");
+        }
+}
+
+#define DEFINE_DERIV_Y_FUNC(F,T)                                        \
+        void nx_image_deriv_y_##F(struct NXImage *dest,                 \
+                                  const struct NXImage *src)            \
+        {                                                               \
+                NX_ASSERT_PTR(src);                                     \
+                NX_ASSERT_PTR(dest);                                    \
+                NX_IMAGE_ASSERT_GRAYSCALE(src);                         \
+                                                                        \
+                nx_image_resize(dest, src->width, src->height, NX_IMAGE_STRIDE_DEFAULT, \
+                                src->type, NX_IMAGE_FLOAT32);           \
+                nx_image_set_zero(dest);                                \
+                                                                        \
+                for (int y = 1; y < src->height-1; ++y) {                 \
+                        const T *src_row_m = src->data.F + (y-1)*src->row_stride; \
+                        const T *src_row_p = src->data.F + (y+1)*src->row_stride; \
+                        float *dest_row = dest->data.f32 + y*dest->row_stride; \
+                        for (int x = 1; x < dest->width-1; ++x) {       \
+                                dest_row[x] = src_row_p[x]-src_row_m[x]; \
+                        }                                               \
+                }                                                       \
+        }
+
+DEFINE_DERIV_Y_FUNC(uc,uchar)
+DEFINE_DERIV_Y_FUNC(f32,float)
+#undef DEFINE_DERIV_Y_FUNC
+
+void nx_image_deriv_y(struct NXImage *dest, const struct NXImage *src)
+{
+        NX_ASSERT_PTR(src);
+        NX_ASSERT_PTR(dest);
+        NX_IMAGE_ASSERT_GRAYSCALE(src);
+
+        switch (src->dtype) {
+        case NX_IMAGE_UCHAR: nx_image_deriv_y_uc(dest, src); break;
+        case NX_IMAGE_FLOAT32: nx_image_deriv_y_f32(dest, src); break;
+        default: NX_FATAL(NX_LOG_TAG, "Unhandled switch case for image data type");
+        }
+}
