@@ -594,7 +594,7 @@ void nx_image_smooth(struct NXImage *dest, const struct NXImage *src,
                 nx_free(buffer);
 }
 
-#define DEFINE_DERIV_X_FUNC(F,T)                                        \
+#define DEFINE_DERIV_X_FUNC(F,T,S)                                       \
         void nx_image_deriv_x_##F(struct NXImage *dest,                 \
                                   const struct NXImage *src)            \
         {                                                               \
@@ -610,13 +610,13 @@ void nx_image_smooth(struct NXImage *dest, const struct NXImage *src,
                         const T *src_row = src->data.F + y*src->row_stride; \
                         float *dest_row = dest->data.f32 + y*dest->row_stride; \
                         for (int x = 1; x < dest->width-1; ++x) {       \
-                                dest_row[x] = src_row[x+1]-src_row[x-1]; \
+                                dest_row[x] = (src_row[x+1]-src_row[x-1])/S; \
                         }                                               \
                 }                                                       \
         }
 
-DEFINE_DERIV_X_FUNC(uc,uchar)
-DEFINE_DERIV_X_FUNC(f32,float)
+DEFINE_DERIV_X_FUNC(uc,uchar,255.0f)
+DEFINE_DERIV_X_FUNC(f32,float,1)
 #undef DEFINE_DERIV_X_FUNC
 
 void nx_image_deriv_x(struct NXImage *dest, const struct NXImage *src)
@@ -632,7 +632,7 @@ void nx_image_deriv_x(struct NXImage *dest, const struct NXImage *src)
         }
 }
 
-#define DEFINE_DERIV_Y_FUNC(F,T)                                        \
+#define DEFINE_DERIV_Y_FUNC(F,T,S)                                       \
         void nx_image_deriv_y_##F(struct NXImage *dest,                 \
                                   const struct NXImage *src)            \
         {                                                               \
@@ -649,13 +649,13 @@ void nx_image_deriv_x(struct NXImage *dest, const struct NXImage *src)
                         const T *src_row_p = src->data.F + (y+1)*src->row_stride; \
                         float *dest_row = dest->data.f32 + y*dest->row_stride; \
                         for (int x = 1; x < dest->width-1; ++x) {       \
-                                dest_row[x] = src_row_p[x]-src_row_m[x]; \
+                                dest_row[x] = (src_row_p[x]-src_row_m[x])/S; \
                         }                                               \
                 }                                                       \
         }
 
-DEFINE_DERIV_Y_FUNC(uc,uchar)
-DEFINE_DERIV_Y_FUNC(f32,float)
+DEFINE_DERIV_Y_FUNC(uc,uchar,255.0f)
+DEFINE_DERIV_Y_FUNC(f32,float,1)
 #undef DEFINE_DERIV_Y_FUNC
 
 void nx_image_deriv_y(struct NXImage *dest, const struct NXImage *src)
