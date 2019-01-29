@@ -20,8 +20,8 @@
 #include "virg/nexus/nx_alloc.h"
 #include "virg/nexus/nx_math.h"
 
-static void fill_buffer_border(int n, float *buffer, int n_border, enum NXBorderMode mode);
-static double kernel_value_gaussian(int i, double sigma);
+static inline void fill_buffer_border(int n, float *buffer, int n_border, enum NXBorderMode mode);
+static inline double kernel_value_sym_gaussian(int i, double sigma);
 
 /**
  * Calculates the lost area under the Gaussian curve by using a kernel of length n.
@@ -62,19 +62,9 @@ int nx_kernel_size_min_gaussian(double sigma, double loss_threshold)
         return n;
 }
 
-double kernel_value_gaussian(int i, double sigma)
+double kernel_value_sym_gaussian(int i, double sigma)
 {
-        NX_ASSERT(i >= 0);
-
-        double erf_f = 1.0 / (sqrt(2.0)*sigma);
-        double g_i_plus  = 0.5 * nx_erf((i + 0.5) * erf_f);
-
-        if (i == 0) {
-                return 2.0 * g_i_plus;
-        } else {
-                double g_i_minus = 0.5 * nx_erf((i - 0.5) * erf_f);
-                return g_i_plus - g_i_minus;
-        }
+        return exp(-0.5*i*i/(sigma*sigma));
 }
 
 
@@ -93,16 +83,15 @@ void nx_kernel_sym_gaussian(int n_k, float *kernel, float sigma)
         NX_ASSERT_PTR(kernel);
         NX_ASSERT(sigma > 0);
 
-        kernel[0] = kernel_value_gaussian(0, sigma);
+        kernel[0] = kernel_value_sym_gaussian(0, sigma);
         float sum = kernel[0];
         for (int i = 1; i < n_k; ++i) {
-                kernel[i] = kernel_value_gaussian(i, sigma);
+                kernel[i] = kernel_value_sym_gaussian(i, sigma);
                 sum += 2.0f * kernel[i];
         }
 
-        float sum_inv = 1.0f / sum;
         for (int i = 0; i < n_k; ++i) {
-                kernel[i] *= sum_inv;
+                kernel[i] /= sum;
         }
 }
 
