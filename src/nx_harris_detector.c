@@ -20,10 +20,12 @@ void nx_harris_deriv_images(struct NXImage **dimg,
                             float sigma_win)
 {
         NX_ASSERT_PTR(img);
+        NX_ASSERT_PTR(dimg);
         NX_IMAGE_ASSERT_GRAYSCALE_UCHAR(img);
 
-        if (!dimg)
-                dimg = NX_NEW(3, struct NXImage *);
+        for (int i = 0; i < 3; ++i)
+                if (!dimg[i])
+                        dimg[i] = nx_image_alloc();
 
         nx_image_deriv_x(dimg[0], img);
         nx_image_deriv_y(dimg[1], img);
