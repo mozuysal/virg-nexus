@@ -251,3 +251,21 @@ add_custom_target(unit-tests-valgrind valgrind ${valgrind-flags} bin/virg-nexus-
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   DEPENDS virg-nexus virg-nexus-tests
   COMMENT "Unit Testing with Valgrind")
+
+# ------------------------------- tools --------------------------------
+include_directories(${CMAKE_SOURCE_DIR}/tools/include)
+
+set(NEXUS_TOOLS
+  nx-harris-detector
+)
+
+add_executable(nx-harris-detector tools/nx_harris_detector_main.c)
+
+
+foreach(NEXUS_TOOL ${NEXUS_TOOLS})
+  target_link_libraries(${NEXUS_TOOL} virg-nexus ${EXEC_LIBRARIES})
+  set_target_properties(${NEXUS_TOOL} PROPERTIES RUNTIME_OUTPUT_DIRECTORY bin)
+endforeach(NEXUS_TOOL)
+
+install(TARGETS ${NEXUS_TOOLS} RUNTIME DESTINATION bin)
+
