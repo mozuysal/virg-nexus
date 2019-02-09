@@ -81,6 +81,11 @@ void nx_image_free(struct NXImage *img);
                 NX_ASSERT_CUSTOM("Image must be grayscale",img->type == NX_IMAGE_GRAYSCALE); \
         } while(0)
 
+#define NX_IMAGE_ASSERT_FLOAT32(img) \
+        do {                               \
+                NX_ASSERT_CUSTOM("Image data type must be single-precision floating point",img->dtype == NX_IMAGE_FLOAT32); \
+        } while(0)
+
 #define NX_IMAGE_ASSERT_GRAYSCALE_UCHAR(img)    \
         do {                               \
                 NX_ASSERT_CUSTOM("Image must be grayscale and its data type must be uchar",img->type == NX_IMAGE_GRAYSCALE && img->dtype == NX_IMAGE_UCHAR); \
