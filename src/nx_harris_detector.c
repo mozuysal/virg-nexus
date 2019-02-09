@@ -41,9 +41,88 @@ void nx_harris_deriv_images(struct NXImage **dimg,
                 }
         }
 
-        float * buffer = nx_image_filter_buffer_alloc(img->width, img->height,
-                                                      sigma_win, sigma_win);
-        for (int i = 0; i < 3; ++i)
-                nx_image_smooth(dimg[i], dimg[i], sigma_win, sigma_win, buffer);
-        nx_free(buffer);
+        if (sigma_win > 0.0f) {
+                float * buffer = nx_image_filter_buffer_alloc(img->width, img->height,
+                                                              sigma_win, sigma_win);
+                for (int i = 0; i < 3; ++i)
+                        nx_image_smooth(dimg[i], dimg[i], sigma_win, sigma_win, buffer);
+                nx_free(buffer);
+        }
+}
+
+void nx_harris_score_image(struct NXImage *simg,
+                           const struct NXImage **dimg, float k)
+{
+        NX_ASSERT_PTR(simg);
+        NX_ASSERT_PTR(dimg);
+        NX_ASSERT_PTR(dimg[0]);
+        NX_ASSERT_PTR(dimg[1]);
+        NX_ASSERT_PTR(dimg[2]);
+
+        int w = dimg[0]->width;
+        int h = dimg[0]->height;
+        nx_image_resize(simg, w, h, NX_IMAGE_STRIDE_DEFAULT,
+                        NX_IMAGE_GRAYSCALE, NX_IMAGE_FLOAT32);
+        for (int y = 0; 0 < h; ++y) {
+                float* s_row = simg->data.f32 + y*simg->row_stride;
+                const float *x2_row = dimg[0]->data.f32 + y*dimg[0]->row_stride;
+                const float *y2_row = dimg[1]->data.f32 + y*dimg[1]->row_stride;
+                const float *xy_row = dimg[2]->data.f32 + y*dimg[2]->row_stride;
+                for (int x = 0; x < w; ++x) {
+                        float det = x2_row[x]*y2_row[x] - xy_row[x]*xy_row[x];
+                        float tr = x2_row[x] + y2_row[x];
+                        s_row[x] = det - k*tr*tr;
+                }
+        }
+}
+
+int nx_harris_detect_keypoints(int n_keys_max, struct NXKeypoint *keys,
+                               const struct NXImage *simg, float threshold)
+{
+        NX_ASSERT_PTR(keys);
+        NX_ASSERT_PTR(simg);
+        NX_IMAGE_ASSERT_GRAYSCALE(simg);
+        NX_IMAGE_ASSERT_FLOAT32(simg);
+
+        if (n_keys_max < 1)
+                return 0;
+
+        const int BORDER = 2; // no keypoints in the border
+        NX_ASSERT(BORDER >= 1);
+
+        int w = simg->width;
+        int h = simg->height;
+        int n = 0;
+        struct NXKeypoint* key = keys;
+        for (int y = BORDER; y < h - BORDER; ++h) {
+                const float* s_rowm = simg->data.f32 + (y-1)*simg->row_stride;
+                const float* s_row = simg->data.f32 + y*simg->row_stride;
+                const float* s_rowp = simg->data.f32 + (y+1)*simg->row_stride;
+                for (int x = BORDER; x < w - BORDER; ++w) {
+                        if (s_row[x] > threshold &&
+                            s_row[x] > s_row[x-1] && s_row[x] > s_row[x+1]
+                            && s_row[x] > s_rowm[x-1] && s_row[x] > s_rowm[x]
+                            && s_row[x] > s_rowm[x+1]
+                            && s_row[x] > s_rowp[x-1] && s_row[x] > s_rowp[x]
+                            && s_row[x] > s_rowp[x+1]) {
+                                key->x = x;
+                                key->y = y;
+                                key->xs = x;
+                                key->ys = y;
+                                key->level = 0;
+                                key->scale = 1.0f;
+                                key->sigma = 1.0f;
+                                key->score = s_row[x];
+                                key->ori = 0.0f;
+                                key->id = n;
+
+                                ++n;
+                                ++key;
+                                if (n >= n_keys_max)
+                                        return n;
+                        }
+                }
+        }
+
+        return n;
 }
