@@ -30,6 +30,13 @@ __NX_BEGIN_DECL
 void nx_harris_deriv_images(struct NXImage **dimg, const struct NXImage *img, float sigma_win);
 
 
+void nx_harris_score_image(struct NXImage *simg, const struct NXImage **dimg, float k);
+
+int nx_harris_detect_keypoints(int n_keys_max, struct NXKeypoint *keys,
+                               const struct NXImage *simg, float threshold);
+
+
+
 __NX_END_DECL
 
 #endif
