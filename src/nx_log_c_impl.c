@@ -31,7 +31,7 @@
 
 static __NX_NO_RETURN void default_fatal_func(const char* function_name, int line_no, const char* tag, const char* msg, va_list prm);
 
-static const char *LOG_HEADER_FORMAT = "[nx%s][%s:%d][%s] ";
+static const char *LOG_HEADER_FORMAT = "[%s][%s:%d][%s] ";
 
 static enum NXLogVerbosity g_log_verbosity = NX_LOG_DEFAULT;
 static __NX_NO_RETURN_PTR NXLogFatalFuncP g_fatal_func = default_fatal_func;
@@ -74,7 +74,7 @@ void default_fatal_func(const char* function_name, int line_no, const char* tag,
         if (is_color_term) {
                 start_color_output(NX_FATAL_COLOR_CODE);
         }
-        fprintf(LOG_STREAM, LOG_HEADER_FORMAT, "fatal", function_name, line_no, tag);
+        fprintf(LOG_STREAM, LOG_HEADER_FORMAT, "F", function_name, line_no, tag);
         vfprintf(LOG_STREAM, msg, prm);
         if (is_color_term)
                 stop_color_output();
@@ -101,10 +101,10 @@ void nx_log_formatted(enum NXLogLevel log_level, const char* function_name, int 
                 }
                 const char *type_string;
                 switch(log_level) {
-                case NX_LOG_INFO: type_string = "info"; break;
-                case NX_LOG_NORMAL: type_string = "log"; break;
-                case NX_LOG_WARNING: type_string = "warning"; break;
-                case NX_LOG_ERROR: type_string = "error"; break;
+                case NX_LOG_INFO: type_string = "I"; break;
+                case NX_LOG_NORMAL: type_string = "L"; break;
+                case NX_LOG_WARNING: type_string = "W"; break;
+                case NX_LOG_ERROR: type_string = "E"; break;
                 }
                 fprintf(LOG_STREAM, LOG_HEADER_FORMAT, type_string, function_name, line_no, tag);
                 vfprintf(LOG_STREAM, msg, prm);
