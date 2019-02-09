@@ -27,8 +27,26 @@ struct NXOptions *nx_options_alloc();
 struct NXOptions *nx_options_new(const char *opt_format, ...);
 void nx_options_free(struct NXOptions *opt);
 
+/**
+ * Add switches to the options. There are five possible types. Use 'b' for
+ * boolean, 'i' for integer, 'd' for double, 's' for string options and 'r' for
+ * the special rest option. 'bids' takes three arguments of the following types:
+ *   char*: switches, '-<char>' for short form, '--<str>' for long form or '-<char>|--<str>' for both
+ *   char*: help string
+ *   NXBool|int|double|char*: default value
+ *
+ * rest takes only a char* that is the name of the help variable and gathers all unprocessed options.
+ *
+ * @param opt        variable holding options
+ * @param opt_format format string composed as described above
+ */
 void nx_options_add(struct NXOptions *opt, const char *opt_format, ...);
-void nx_options_add_help(struct NXOptions *opt);
+
+/**
+ * Adds the switches '-h|--help' that displays the usage message to options.
+ *
+ * @param opt variable holding options
+ */void nx_options_add_help(struct NXOptions *opt);
 
 void nx_options_set_from_args(struct NXOptions *opt, int argc, char **argv);
 
