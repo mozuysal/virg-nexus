@@ -12,6 +12,7 @@
  */
 #include "virg/nexus/nx_harris_detector.h"
 
+#include "virg/nexus/nx_mem_block.h"
 #include "virg/nexus/nx_assert.h"
 #include "virg/nexus/nx_alloc.h"
 
@@ -29,6 +30,7 @@ void nx_harris_deriv_images(struct NXImage **dimg,
 
         nx_image_deriv_x(dimg[0], img);
         nx_image_deriv_y(dimg[1], img);
+        nx_image_resize_like(dimg[2], dimg[0]);
 
         for (int y = 0; y < img->height; ++y) {
                 float *x2_row = dimg[0]->data.f32 + y*dimg[0]->row_stride;
@@ -50,8 +52,7 @@ void nx_harris_deriv_images(struct NXImage **dimg,
         }
 }
 
-void nx_harris_score_image(struct NXImage *simg,
-                           const struct NXImage **dimg, float k)
+void nx_harris_score_image(struct NXImage *simg, struct NXImage **dimg, float k)
 {
         NX_ASSERT_PTR(simg);
         NX_ASSERT_PTR(dimg);
@@ -63,7 +64,8 @@ void nx_harris_score_image(struct NXImage *simg,
         int h = dimg[0]->height;
         nx_image_resize(simg, w, h, NX_IMAGE_STRIDE_DEFAULT,
                         NX_IMAGE_GRAYSCALE, NX_IMAGE_FLOAT32);
-        for (int y = 0; 0 < h; ++y) {
+
+        for (int y = 0; y < h; ++y) {
                 float* s_row = simg->data.f32 + y*simg->row_stride;
                 const float *x2_row = dimg[0]->data.f32 + y*dimg[0]->row_stride;
                 const float *y2_row = dimg[1]->data.f32 + y*dimg[1]->row_stride;
@@ -94,11 +96,11 @@ int nx_harris_detect_keypoints(int n_keys_max, struct NXKeypoint *keys,
         int h = simg->height;
         int n = 0;
         struct NXKeypoint* key = keys;
-        for (int y = BORDER; y < h - BORDER; ++h) {
+        for (int y = BORDER; y < h - BORDER; ++y) {
                 const float* s_rowm = simg->data.f32 + (y-1)*simg->row_stride;
                 const float* s_row = simg->data.f32 + y*simg->row_stride;
                 const float* s_rowp = simg->data.f32 + (y+1)*simg->row_stride;
-                for (int x = BORDER; x < w - BORDER; ++w) {
+                for (int x = BORDER; x < w - BORDER; ++x) {
                         if (s_row[x] > threshold &&
                             s_row[x] > s_row[x-1] && s_row[x] > s_row[x+1]
                             && s_row[x] > s_rowm[x-1] && s_row[x] > s_rowm[x]

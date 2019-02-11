@@ -39,7 +39,7 @@ void nx_harris_deriv_images(struct NXImage **dimg, const struct NXImage *img, fl
  * @param dimg NXImage array of length 3, storing I_x^2, I_y^2, and I_xI_y consecutively.
  * @param k    Cornerness score parameter, around 0.04-0.06
  */
-void nx_harris_score_image(struct NXImage *simg, const struct NXImage **dimg, float k);
+void nx_harris_score_image(struct NXImage *simg, struct NXImage **dimg, float k);
 
 /**
  *
