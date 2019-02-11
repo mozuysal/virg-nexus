@@ -15,6 +15,7 @@
 
 #include "virg/nexus/nx_config.h"
 #include "virg/nexus/nx_image.h"
+#include "virg/nexus/nx_image_io.h"
 #include "virg/nexus/nx_keypoint.h"
 
 __NX_BEGIN_DECL
