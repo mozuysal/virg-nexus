@@ -66,6 +66,10 @@ struct NXImage *nx_image_new_gray_uc(int width, int height);
 
 struct NXImage *nx_image_new_rgba_uc(int width, int height);
 
+struct NXImage *nx_image_new_gray_f32(int width, int height);
+
+struct NXImage *nx_image_new_rgba_f32(int width, int height);
+
 /**
  * Creates and returns a new image with the same width, height, type, and dtype
  * as the source image. The row_stride of the created image does not necessarily

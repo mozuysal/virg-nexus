@@ -79,6 +79,16 @@ struct NXImage *nx_image_new_rgba_uc(int width, int height)
         return nx_image_new(width, height, NX_IMAGE_RGBA, NX_IMAGE_UCHAR);
 }
 
+struct NXImage *nx_image_new_gray_f32(int width, int height)
+{
+        return nx_image_new(width, height, NX_IMAGE_GRAYSCALE, NX_IMAGE_FLOAT32);
+}
+
+struct NXImage *nx_image_new_rgba_f32(int width, int height)
+{
+        return nx_image_new(width, height, NX_IMAGE_RGBA, NX_IMAGE_FLOAT32);
+}
+
 struct NXImage *nx_image_new_like(const struct NXImage* src)
 {
         NX_ASSERT_PTR(src);
@@ -121,6 +131,7 @@ void nx_image_resize(struct NXImage *img, int width, int height, int row_stride,
         img->height = height;
         img->type = type;
         img->n_channels = n_ch;
+        img->dtype = dtype;
         switch (dtype) {
         case NX_IMAGE_UCHAR: img->data.uc = (uchar *)img->mem->ptr; break;
         case NX_IMAGE_FLOAT32: img->data.f32 = (float *)img->mem->ptr; break;

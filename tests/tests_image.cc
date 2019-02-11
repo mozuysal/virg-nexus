@@ -18,6 +18,7 @@
 
 #include "gtest/gtest.h"
 
+#include "virg/nexus/nx_mem_block.h"
 #include "virg/nexus/nx_image.h"
 #include "virg/nexus/nx_image_io.h"
 
@@ -87,6 +88,8 @@ TEST_F(NXImageTest, ImageNewGrayUCFree) {
         EXPECT_EQ(640, img0_->width);
         EXPECT_EQ(480, img0_->height);
         EXPECT_EQ(1, img0_->n_channels);
+        EXPECT_EQ(NX_IMAGE_UCHAR, img0_->dtype);
+        EXPECT_EQ(640*480, static_cast<int>(img0_->mem->size));
         nx_image_free(img0_);
 }
 
@@ -98,6 +101,34 @@ TEST_F(NXImageTest, ImageNewRGBAUCFree) {
         EXPECT_EQ(640, img0_->width);
         EXPECT_EQ(480, img0_->height);
         EXPECT_EQ(4, img0_->n_channels);
+        EXPECT_EQ(NX_IMAGE_UCHAR, img0_->dtype);
+        EXPECT_EQ(4*640*480, static_cast<int>(img0_->mem->size));
+        nx_image_free(img0_);
+}
+
+TEST_F(NXImageTest, ImageNewGrayF32Free) {
+        img0_ = nx_image_new_gray_f32(640, 480);
+        EXPECT_TRUE(NULL != img0_);
+        EXPECT_TRUE(NULL != img0_->mem);
+        EXPECT_TRUE(NULL != img0_->data.f32);
+        EXPECT_EQ(640, img0_->width);
+        EXPECT_EQ(480, img0_->height);
+        EXPECT_EQ(1, img0_->n_channels);
+        EXPECT_EQ(NX_IMAGE_FLOAT32, img0_->dtype);
+        EXPECT_EQ(4*640*480, static_cast<int>(img0_->mem->size));
+        nx_image_free(img0_);
+}
+
+TEST_F(NXImageTest, ImageNewRGBAF32Free) {
+        img0_ = nx_image_new_rgba_f32(640, 480);
+        EXPECT_TRUE(NULL != img0_);
+        EXPECT_TRUE(NULL != img0_->mem);
+        EXPECT_TRUE(NULL != img0_->data.f32);
+        EXPECT_EQ(640, img0_->width);
+        EXPECT_EQ(480, img0_->height);
+        EXPECT_EQ(4, img0_->n_channels);
+        EXPECT_EQ(NX_IMAGE_FLOAT32, img0_->dtype);
+        EXPECT_EQ(4*4*640*480, static_cast<int>(img0_->mem->size));
         nx_image_free(img0_);
 }
 
