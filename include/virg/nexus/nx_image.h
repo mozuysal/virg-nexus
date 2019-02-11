@@ -138,6 +138,8 @@ struct NXImage *nx_image_copy0(const struct NXImage *img);
 
 void nx_image_copy(struct NXImage *dest, const struct NXImage *src);
 
+void nx_image_convert_type(struct NXImage* img, enum NXImageType type);
+
 void nx_image_set_zero(struct NXImage *img);
 
 void nx_image_wrap(struct NXImage *img, void *data, int width, int height,

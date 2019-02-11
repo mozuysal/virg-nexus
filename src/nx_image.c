@@ -187,6 +187,78 @@ void nx_image_copy(struct NXImage *dest, const struct NXImage *src)
         dest->row_stride = src->row_stride;
 }
 
+static inline void convert_image_gray_to_rgba(struct NXImage* dest,
+                                              const struct NXImage* src)
+{
+        NX_ASSERT(src->dtype == dest->dtype);
+
+        switch (src->dtype) {
+        case NX_IMAGE_UCHAR:
+                nx_convert_gray_to_rgba_uc(src->width, src->height,
+                                           dest->data.uc, dest->row_stride,
+                                           src->data.uc, src->row_stride);
+                break;
+        case NX_IMAGE_FLOAT32:
+                nx_convert_gray_to_rgba_f32(src->width, src->height,
+                                            dest->data.f32, dest->row_stride,
+                                            src->data.f32, src->row_stride);
+                break;
+        default:
+                NX_FATAL(NX_LOG_TAG, "Unhandled switch case for image data type");
+        }
+}
+
+static inline void convert_image_rgba_to_gray(struct NXImage* dest,
+                                              const struct NXImage* src)
+{
+        NX_ASSERT(src->dtype == dest->dtype);
+
+        switch (src->dtype) {
+        case NX_IMAGE_UCHAR:
+                nx_convert_rgba_to_gray_uc(src->width, src->height,
+                                           dest->data.uc, dest->row_stride,
+                                           src->data.uc, src->row_stride);
+                break;
+        case NX_IMAGE_FLOAT32:
+                nx_convert_rgba_to_gray_f32(src->width, src->height,
+                                            dest->data.f32, dest->row_stride,
+                                            src->data.f32, src->row_stride);
+                break;
+        default:
+                NX_FATAL(NX_LOG_TAG, "Unhandled switch case for image data type");
+        }
+}
+
+void nx_image_convert_type(struct NXImage* img, enum NXImageType type)
+{
+        NX_ASSERT_PTR(img);
+
+        if (img->type == type || img->data.v == NULL)
+                return;
+
+        struct NXImage* cpy = nx_image_copy0(img);
+        nx_image_resize(img, img->width, img->height, NX_IMAGE_STRIDE_DEFAULT,
+                        type, img->dtype);
+        if (cpy->type == NX_IMAGE_GRAYSCALE) {
+                if (img->type == NX_IMAGE_RGBA) {
+                        convert_image_gray_to_rgba(img, cpy);
+                } else {
+                        NX_FATAL(NX_LOG_TAG, "Unhandled target image type");
+                }
+        } else if (cpy->type == NX_IMAGE_RGBA) {
+                if (img->type == NX_IMAGE_GRAYSCALE) {
+                        convert_image_rgba_to_gray(img, cpy);
+                } else {
+                        NX_FATAL(NX_LOG_TAG, "Unhandled target image type");
+                }
+        } else {
+                NX_FATAL(NX_LOG_TAG, "Unhandled source image type");
+        }
+
+        nx_image_free(cpy);
+}
+
+
 void nx_image_set_zero(struct NXImage *img)
 {
         NX_ASSERT_PTR(img);
