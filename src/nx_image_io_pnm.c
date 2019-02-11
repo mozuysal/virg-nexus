@@ -125,7 +125,7 @@ static NXResult read_pnm_data(struct NXImage *img, enum NXImageType img_type,
                                         uchar value[3];
                                         if (fread((void*)&value, sizeof(uchar), 3, pnm) != 3)
                                                 return NX_FAIL;
-                                        row[x] = nx_rgb_to_gray(value[0], value[1], value[2]);
+                                        row[x] = nx_rgb_to_gray_uc(value[0], value[1], value[2]);
                                 }
                         }
                 } else if (img_type == NX_IMAGE_RGBA) {
