@@ -3,18 +3,28 @@
 nx-harris-detector \- detects Harris corner points
 .SH SYNOPSIS
 .B nx-harris-detector
+.BR \-i " " \fIfilename\fR 
 .RB [ \-\-sigma_int " " \fIintegration-scale\fR ]
 .RB [ \-k " " \fIcornerness-score-param\fR ]
+.RB [ \-N " " \fImax-n-keys\fR ]
 .RB [ \-v | \-\-verbose ]
 .SH DESCRIPTION
-.B nx-harris-detector
+\fBnx-harris-detector\fR is a tool for detecting Harris corner points in images.
+It can be customized to output the detected keypoints in various formats.
+It can also output diagnostic information such as derivative and score images.
 .SH OPTIONS
+.TP
+.BR \-i " " \fIfilename\fR
+Sets the name of the image file to load.
 .TP
 .BR \-\-sigma_int " " \fIintegration-scale\fR
 Sets the size of the Gaussian window for integrating the auto-corrlation matrix elements.
 .TP
 .BR \-k " " \fIcornerness-score-param\fR
 Sets the value of the parameter \fIk\fR in the Harris cornerness score function.
+.TP
+.BR \-N " " \fImax-n-keys\fR
+Sets the maximum number of keypoints to be detected.
 .TP
 .BR \-v ", " \-\-verbose
 Enables more detailed log messages.

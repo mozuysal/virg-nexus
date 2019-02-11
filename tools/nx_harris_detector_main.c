@@ -19,10 +19,11 @@
 
 int main(int argc, char** argv)
 {
-        struct NXOptions* opt = nx_options_new("Sddb",
+        struct NXOptions* opt = nx_options_new("Sddib",
                                                "-i", "input IMAGE", "",
                                                "--sigma_int", "integration scale", 3.0,
                                                "-k", "Harris corner score parameter", 0.06,
+                                               "-N", "maximum number of keypoints", 1000,
                                                "-v|--verbose", "log more information to stderr", NX_FALSE);
         nx_options_add_help(opt);
         nx_options_set_usage_header(opt, "Detects Harris corner points.\n\n");
@@ -32,6 +33,7 @@ int main(int argc, char** argv)
         const char* input_name = nx_options_get_string(opt, "-i");
         float sigma_win = nx_options_get_double(opt, "--sigma_int");
         float k = nx_options_get_double(opt, "-k");
+        int n_keys_max = nx_options_get_int(opt, "-N");
         NXBool is_verbose = nx_options_get_bool(opt, "-v");
 
         if (is_verbose)
@@ -52,7 +54,7 @@ int main(int argc, char** argv)
         struct NXImage* simg = nx_image_alloc();
         nx_harris_score_image(simg, dimg, k);
 
-        int n_keys_max = 1000;
+
         struct NXKeypoint* keys = NX_NEW(n_keys_max, struct NXKeypoint);
         int n_keys = nx_harris_detect_keypoints(n_keys_max, keys, simg, 0);
 
