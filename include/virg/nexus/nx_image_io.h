@@ -17,8 +17,6 @@
 
 __NX_BEGIN_DECL
 
-#include "virg/nexus/nx_config.h"
-
 #include "virg/nexus/nx_image_io_params.h"
 #include "virg/nexus/nx_image_io_pnm.h"
 #include "virg/nexus/nx_image_io_jpeg.h"
