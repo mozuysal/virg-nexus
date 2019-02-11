@@ -197,7 +197,7 @@ endif (VIRG_NEXUS_USE_TUNED_LAPACK)
 include_directories(${LAPACK_INCLUDE_DIR})
 link_directories(${LAPACK_LIBRARY_DIRS})
 
-set(EXEC_LIBRARIES  ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LAPACK_LIBRARIES})
+set(EXEC_LIBRARIES  ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LAPACK_LIBRARIES} -lm)
 # --------------------------------- Goggle Test ----------------------------------
 if (CMAKE_USE_PTHREADS_INIT)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGTEST_HAS_PTHREAD=1")
@@ -253,14 +253,19 @@ add_custom_target(unit-tests-valgrind valgrind ${valgrind-flags} bin/virg-nexus-
   COMMENT "Unit Testing with Valgrind")
 
 # ------------------------------- tools --------------------------------
-include_directories(${CMAKE_SOURCE_DIR}/tools/include)
+set(TOOL_DIR ${CMAKE_SOURCE_DIR}/tools)
+set(TOOL_INCLUDE_DIR ${TOOL_DIR}/include)
+set(TOOL_MAN_DIR ${TOOL_DIR}/man)
+set(TOOL_MAN_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/share/man)
+
+include_directories(${TOOL_INCLUDE_DIR})
 
 set(NEXUS_TOOLS
   nx-harris-detector
 )
 
 add_executable(nx-harris-detector tools/nx_harris_detector_main.c)
-
+install(FILES ${TOOL_MAN_DIR}/nx-harris-detector.1 DESTINATION ${TOOL_MAN_INSTALL_DIR}/man1)
 
 foreach(NEXUS_TOOL ${NEXUS_TOOLS})
   target_link_libraries(${NEXUS_TOOL} virg-nexus ${EXEC_LIBRARIES})
@@ -268,4 +273,3 @@ foreach(NEXUS_TOOL ${NEXUS_TOOLS})
 endforeach(NEXUS_TOOL)
 
 install(TARGETS ${NEXUS_TOOLS} RUNTIME DESTINATION bin)
-

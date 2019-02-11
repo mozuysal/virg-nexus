@@ -1,0 +1,21 @@
+.TH NX-HARRIS-DETECTOR 1 2019-02-11
+.SH NAME
+nx-harris-detector \- detects Harris corner points
+.SH SYNOPSIS
+.B nx-harris-detector
+.RB [ \-\-sigma_int " " \fIintegration-scale\fR ]
+.RB [ \-k " " \fIcornerness-score-param\fR ]
+.RB [ \-v | \-\-verbose ]
+.SH DESCRIPTION
+.B nx-harris-detector
+.SH OPTIONS
+.TP
+.BR \-\-sigma_int " " \fIintegration-scale\fR
+Sets the size of the Gaussian window for integrating the auto-corrlation matrix elements.
+.TP
+.BR \-k " " \fIcornerness-score-param\fR
+Sets the value of the parameter \fIk\fR in the Harris cornerness score function.
+.TP
+.BR \-v ", " \-\-verbose
+Enables more detailed log messages.
+These are written to \fIstderr\fR.
