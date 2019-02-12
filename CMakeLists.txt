@@ -27,6 +27,7 @@ set(virg_nexus_SOURCES
   src/nx_json_bundle.c
   src/nx_json_log.c
   src/nx_plotter.c
+  src/nx_gc_cairo_imp.c
   src/nx_filter.c
   src/nx_image.c
   src/nx_image_io_pnm.c
@@ -78,6 +79,7 @@ set(virg_nexus_HEADERS
   include/virg/nexus/nx_json_bundle.h
   include/virg/nexus/nx_json_log.h
   include/virg/nexus/nx_plotter.h
+  include/virg/nexus/nx_gc.h
   include/virg/nexus/nx_filter.h
   include/virg/nexus/nx_image.h
   include/virg/nexus/nx_image_io.h
@@ -144,7 +146,6 @@ set(CMAKE_BUILD_TYPE Debug)
 # set(CMAKE_BUILD_TYPE Release)
 # set(CMAKE_BUILD_TYPE RelWithDebInfo)
 
-configure_file(virg-nexus.pc.in ${CMAKE_SOURCE_DIR}/lib/pkgconfig/virg-nexus.pc @ONLY)
 # -------------------------- install target ----------------------------
 install(TARGETS virg-nexus ARCHIVE DESTINATION lib)
 install(TARGETS virg-nexus-shared LIBRARY DESTINATION lib)
@@ -181,6 +182,7 @@ include_directories(${JPEG_INCLUDE_DIR})
 
 link_directories(${PNG_LIBRARY_DIR})
 link_directories(${JPEG_LIBRARY_DIR})
+
 # --------------------------------- cblas/lapack ----------------------------------
 option(VIRG_NEXUS_USE_TUNED_LAPACK "Use ATLAS generated cblas/lapack version" OFF)
 
@@ -197,7 +199,16 @@ endif (VIRG_NEXUS_USE_TUNED_LAPACK)
 include_directories(${LAPACK_INCLUDE_DIR})
 link_directories(${LAPACK_LIBRARY_DIRS})
 
-set(EXEC_LIBRARIES  ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LAPACK_LIBRARIES} -lm)
+# ------------------------------------ Cairo -------------------------------------
+include(FindPkgConfig)
+
+pkg_check_modules(CAIRO REQUIRED cairo)
+include_directories(${CAIRO_INCLUDE_DIRS})
+link_directories(${CAIRO_LIBRARY_DIRS})
+# -------------------------------- Dependencies ----------------------------------
+set(EXEC_LIBRARIES ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LAPACK_LIBRARIES} ${CAIRO_LIBRARIES} -lm)
+configure_file(virg-nexus.pc.in ${CMAKE_SOURCE_DIR}/lib/pkgconfig/virg-nexus.pc @ONLY)
+
 # --------------------------------- Goggle Test ----------------------------------
 if (CMAKE_USE_PTHREADS_INIT)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGTEST_HAS_PTHREAD=1")
@@ -230,6 +241,7 @@ set(test_SOURCES
   tests/tests_json_lexer.cc
   tests/tests_csv_lexer.cc
   tests/tests_csv_parser.cc
+  tests/tests_gc.cc
   tests/tests_camera.cc
 )
 
