@@ -82,7 +82,12 @@ void nx_image_free(struct NXImage *img);
 
 #define NX_IMAGE_ASSERT_GRAYSCALE(img) \
         do {                               \
-                NX_ASSERT_CUSTOM("Image must be grayscale",img->type == NX_IMAGE_GRAYSCALE); \
+                NX_ASSERT_CUSTOM("Image must be of type grayscale",img->type == NX_IMAGE_GRAYSCALE); \
+        } while(0)
+
+#define NX_IMAGE_ASSERT_RGBA(img) \
+        do {                               \
+                NX_ASSERT_CUSTOM("Image must be of type RGBA",img->type == NX_IMAGE_RGBA); \
         } while(0)
 
 #define NX_IMAGE_ASSERT_FLOAT32(img) \
