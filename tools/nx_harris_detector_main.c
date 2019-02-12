@@ -16,14 +16,16 @@
 #include "virg/nexus/nx_alloc.h"
 #include "virg/nexus/nx_image.h"
 #include "virg/nexus/nx_harris_detector.h"
+#include "virg/nexus/nx_gc.h"
 
 int main(int argc, char** argv)
 {
-        struct NXOptions* opt = nx_options_new("Sddib",
+        struct NXOptions* opt = nx_options_new("Sddisb",
                                                "-i", "input IMAGE", "",
                                                "--sigma_int", "integration scale", 3.0,
                                                "-k", "Harris corner score parameter", 0.06,
                                                "-N", "maximum number of keypoints", 1000,
+                                               "--key-image", "draw keypoints and save the image to named file", NULL,
                                                "-v|--verbose", "log more information to stderr", NX_FALSE);
         nx_options_add_help(opt);
         nx_options_set_usage_header(opt, "Detects Harris corner points.\n\n");
@@ -34,6 +36,7 @@ int main(int argc, char** argv)
         float sigma_win = nx_options_get_double(opt, "--sigma_int");
         float k = nx_options_get_double(opt, "-k");
         int n_keys_max = nx_options_get_int(opt, "-N");
+        const char* key_image = nx_options_get_string(opt, "--key-image");
         NXBool is_verbose = nx_options_get_bool(opt, "-v");
 
         if (is_verbose)
@@ -56,10 +59,28 @@ int main(int argc, char** argv)
 
 
         struct NXKeypoint* keys = NX_NEW(n_keys_max, struct NXKeypoint);
-        int n_keys = nx_harris_detect_keypoints(n_keys_max, keys, simg, 0);
+        int n_keys = nx_harris_detect_keypoints(n_keys_max, keys, simg, 0.0005);
 
         if (is_verbose)
                 NX_LOG("HARRIS", "Detected %d keypoints.", n_keys);
+
+        if (key_image != NULL) {
+                struct NXImage* kimg = nx_image_copy0(img);
+                nx_image_convert_type(kimg, NX_IMAGE_RGBA);
+                struct NXGC* gc = nx_gc_new(kimg);
+                nx_gc_set_color(gc, 0.0, 1.0, 0.0, 1.0);
+                for (int i = 0; i < n_keys; ++i) {
+                        double x = keys[i].x;
+                        double y = keys[i].y;
+                        nx_gc_new_path(gc);
+                        nx_gc_circle(gc, x, y, 3);
+                        nx_gc_stroke(gc);
+                }
+                nx_gc_flush(gc);
+                nx_image_xsave(kimg, key_image);
+                nx_gc_free(gc);
+                nx_image_free(kimg);
+        }
 
         nx_free(keys);
         nx_image_free(simg);
