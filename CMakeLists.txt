@@ -206,7 +206,10 @@ pkg_check_modules(CAIRO REQUIRED cairo)
 include_directories(${CAIRO_INCLUDE_DIRS})
 link_directories(${CAIRO_LIBRARY_DIRS})
 # -------------------------------- Dependencies ----------------------------------
-set(EXEC_LIBRARIES ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LAPACK_LIBRARIES} ${CAIRO_LIBRARIES} -lm)
+set(EXEC_LIBRARIES ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LAPACK_LIBRARIES} ${CAIRO_LDFLAGS} -lm)
+foreach(LIB ${EXEC_LIBRARIES})
+  set(MODULE_LIBS "${MODULE_LIBS} ${LIB}")
+endforeach()
 configure_file(virg-nexus.pc.in ${CMAKE_SOURCE_DIR}/lib/pkgconfig/virg-nexus.pc @ONLY)
 
 # --------------------------------- Goggle Test ----------------------------------
