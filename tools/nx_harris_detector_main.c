@@ -20,11 +20,12 @@
 
 int main(int argc, char** argv)
 {
-        struct NXOptions* opt = nx_options_new("Sddisb",
+        struct NXOptions* opt = nx_options_new("Sddidsb",
                                                "-i", "input IMAGE", "",
-                                               "--sigma_int", "integration scale", 3.0,
+                                               "--sigma-int", "integration scale", 1.2,
                                                "-k", "Harris corner score parameter", 0.06,
-                                               "-N", "maximum number of keypoints", 1000,
+                                               "-N", "maximum number of keypoints", 2000,
+                                               "-t", "threshold for acceptable keypoint scores", 0.00005,
                                                "--key-image", "draw keypoints and save the image to named file", NULL,
                                                "-v|--verbose", "log more information to stderr", NX_FALSE);
         nx_options_add_help(opt);
@@ -33,8 +34,9 @@ int main(int argc, char** argv)
 
         nx_options_set_from_args(opt, argc, argv);
         const char* input_name = nx_options_get_string(opt, "-i");
-        float sigma_win = nx_options_get_double(opt, "--sigma_int");
+        float sigma_win = nx_options_get_double(opt, "--sigma-int");
         float k = nx_options_get_double(opt, "-k");
+        double threshold = nx_options_get_double(opt, "-t");
         int n_keys_max = nx_options_get_int(opt, "-N");
         const char* key_image = nx_options_get_string(opt, "--key-image");
         NXBool is_verbose = nx_options_get_bool(opt, "-v");
@@ -59,7 +61,7 @@ int main(int argc, char** argv)
 
 
         struct NXKeypoint* keys = NX_NEW(n_keys_max, struct NXKeypoint);
-        int n_keys = nx_harris_detect_keypoints(n_keys_max, keys, simg, 0.0005);
+        int n_keys = nx_harris_detect_keypoints(n_keys_max, keys, simg, threshold);
 
         if (is_verbose)
                 NX_LOG("HARRIS", "Detected %d keypoints.", n_keys);
