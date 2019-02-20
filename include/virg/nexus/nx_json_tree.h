@@ -72,9 +72,6 @@ struct NXJSONNode *nx_json_object_fget(struct NXJSONNode *jobject, const char *n
 void nx_json_tree_print(struct NXJSONNode *root, int pretty_print_level);
 void nx_json_tree_fprint(FILE *stream, struct NXJSONNode *root, int pretty_print_level);
 
-void nx_json_tree_print(struct NXJSONNode *root, int pretty_print_level);
-void nx_json_tree_fprint(FILE *stream, struct NXJSONNode *root, int pretty_print_level);
-
 __NX_END_DECL
 
 #endif

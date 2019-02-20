@@ -101,6 +101,32 @@ struct NXJSONNode *nx_json_bundle_string_array(int n, char **x)
         return jarray;
 }
 
+struct NXJSONNode *nx_json_bundle_keypoint(const struct NXKeypoint* key)
+{
+        struct NXJSONNode* jkey = nx_json_node_new_object();
+        nx_json_object_add(jkey, "x", nx_json_bundle_int(key->x));
+        nx_json_object_add(jkey, "y", nx_json_bundle_int(key->y));
+        nx_json_object_add(jkey, "xs", nx_json_bundle_double(key->xs));
+        nx_json_object_add(jkey, "ys", nx_json_bundle_double(key->ys));
+        nx_json_object_add(jkey, "level", nx_json_bundle_int(key->level));
+        nx_json_object_add(jkey, "scale", nx_json_bundle_double(key->scale));
+        nx_json_object_add(jkey, "sigma", nx_json_bundle_double(key->sigma));
+        nx_json_object_add(jkey, "score", nx_json_bundle_double(key->score));
+        nx_json_object_add(jkey, "ori", nx_json_bundle_double(key->ori));
+        nx_json_object_add(jkey, "id", nx_json_bundle_int(key->id));
+
+        return jkey;
+}
+
+struct NXJSONNode *nx_json_bundle_keypoint_array(int n, struct NXKeypoint* key)
+{
+        struct NXJSONNode *jarray = nx_json_node_new_array();
+        for (int i = 0; i < n; ++i)
+                nx_json_array_add(jarray, nx_json_bundle_keypoint(&key[i]));
+        return jarray;
+}
+
+
 NXBool nx_json_unbundle_bool(struct NXJSONNode *node)
 {
         NX_ASSERT_PTR(node);
@@ -212,7 +238,6 @@ char **nx_json_unbundle_string_array(struct NXJSONNode *jarray, int *n)
         for (int i = 0; i < *n; ++i)
                 sa[i] = nx_json_unbundle_string(nx_json_array_fget(jarray, i, NX_JNT_STRING));
         return sa;
-
 }
 
 struct NXStringArray *nx_json_unbundle_as_string_array(struct NXJSONNode *jarray)
@@ -227,4 +252,37 @@ struct NXStringArray *nx_json_unbundle_as_string_array(struct NXJSONNode *jarray
                 nx_string_array_set(sa, i, nx_json_node_text(e));
         }
         return sa;
+}
+
+struct NXKeypoint nx_json_unbundle_keypoint(struct NXJSONNode* node)
+{
+        NX_ASSERT_PTR(node);
+        NX_ASSERT(nx_json_node_is_a(node, NX_JNT_OBJECT));
+
+        struct NXKeypoint key;
+        key.x = nx_json_unbundle_int(nx_json_object_fget(node, "x", NX_JNT_INTEGER));
+        key.y = nx_json_unbundle_int(nx_json_object_fget(node, "y", NX_JNT_INTEGER));
+        key.xs = nx_json_unbundle_double(nx_json_object_fget(node, "xs", NX_JNT_FPNUMBER));
+        key.ys = nx_json_unbundle_double(nx_json_object_fget(node, "ys", NX_JNT_FPNUMBER));
+        key.level = nx_json_unbundle_int(nx_json_object_fget(node, "level", NX_JNT_INTEGER));
+        key.scale = nx_json_unbundle_double(nx_json_object_fget(node, "scale", NX_JNT_FPNUMBER));
+        key.sigma = nx_json_unbundle_double(nx_json_object_fget(node, "sigma",  NX_JNT_FPNUMBER));
+        key.score = nx_json_unbundle_double(nx_json_object_fget(node, "score",  NX_JNT_FPNUMBER));
+        key.ori = nx_json_unbundle_double(nx_json_object_fget(node, "ori",  NX_JNT_FPNUMBER));
+        key.id = nx_json_unbundle_int(nx_json_object_fget(node, "id",  NX_JNT_INTEGER));
+
+        return key;
+}
+
+struct NXKeypoint *nx_json_unbundle_keypoint_array(struct NXJSONNode* jarray, int* n)
+{
+        NX_ASSERT_PTR(jarray);
+        NX_ASSERT(nx_json_node_is_a(jarray, NX_JNT_ARRAY));
+
+        *n = nx_json_node_n_children(jarray);
+        struct NXKeypoint* keys = NX_NEW(*n, struct NXKeypoint);
+        for (int i = 0; i < *n; ++i)
+                keys[i] = nx_json_unbundle_keypoint(nx_json_array_fget(jarray, i, NX_JNT_OBJECT));
+        return keys;
+
 }
