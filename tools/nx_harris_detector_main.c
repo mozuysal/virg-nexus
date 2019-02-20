@@ -17,6 +17,8 @@
 #include "virg/nexus/nx_image.h"
 #include "virg/nexus/nx_harris_detector.h"
 #include "virg/nexus/nx_gc.h"
+#include "virg/nexus/nx_json_tree.h"
+#include "virg/nexus/nx_json_bundle.h"
 
 int main(int argc, char** argv)
 {
@@ -65,6 +67,19 @@ int main(int argc, char** argv)
 
         if (is_verbose)
                 NX_LOG("HARRIS", "Detected %d keypoints.", n_keys);
+
+        struct NXJSONNode* jopt = nx_json_node_new_object();
+        nx_json_object_add(jopt, "image", nx_json_bundle_string(input_name));
+        nx_json_object_add(jopt, "integration-scale", nx_json_bundle_float(sigma_win));
+        nx_json_object_add(jopt, "k", nx_json_bundle_double(k));
+        nx_json_object_add(jopt, "threshold", nx_json_bundle_double(threshold));
+        nx_json_object_add(jopt, "max-n-keys", nx_json_bundle_int(n_keys_max));
+        struct NXJSONNode* jkeys = nx_json_bundle_keypoint_array(n_keys, keys);
+        struct NXJSONNode* jout = nx_json_node_new_object();
+        nx_json_object_add(jout, "options", jopt);
+        nx_json_object_add(jout, "keypoints", jkeys);
+        nx_json_tree_print(jout, 2);
+        nx_json_tree_free(jout);
 
         if (key_image != NULL) {
                 struct NXImage* kimg = nx_image_copy0(img);
