@@ -33,7 +33,7 @@ struct NXKeypoint {
         float score;
         float ori; // in radians
 
-        long id;
+        int id;
 };
 
 static inline int nx_keypoint_x0(struct NXKeypoint *key)
