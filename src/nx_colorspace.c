@@ -83,3 +83,27 @@ void nx_convert_gray_to_rgba_f32(int width, int height, float *rgba, int rgba_st
                 }
         }
 }
+
+void nx_color_map_apply(uchar* red, uchar* green, uchar* blue,
+                        float value, enum NXColorMap map)
+{
+        switch (map) {
+        case NX_COLOR_MAP_RED_BLUE:
+                if (value > 0.5f) {
+                        *red   = 0;
+                        *green = 0;
+                        *blue  = 2.0f*(value-0.5f)*255;
+                } else {
+                        *red   = (1.0f - 2.0f*value)*255;
+                        *green = 0;
+                        *blue  = 0;
+                }
+                break;
+        case NX_COLOR_MAP_GRAY:
+        default:
+                *red   = value*255;
+                *green = value*255;
+                *blue  = value*255;
+                break;
+        }
+}
