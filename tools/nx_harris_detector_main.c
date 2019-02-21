@@ -104,7 +104,7 @@ int main(int argc, char** argv)
                 struct NXImage* debug_img = nx_image_alloc();
                 const char* score_image_filename = "/tmp/harris_score.ppm";
                 nx_image_normalize_to_zero_one(simg, NX_FALSE);
-                nx_image_apply_colormap(debug_img, simg, NX_COLOR_MAP_GRAY);
+                nx_image_apply_colormap(debug_img, simg, NX_COLOR_MAP_CUBEHELIX);
                 nx_image_xsave_pnm(debug_img, score_image_filename);
                 nx_image_free(debug_img);
         }
