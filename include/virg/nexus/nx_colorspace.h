@@ -56,7 +56,10 @@ void nx_convert_gray_to_rgba_f32(int width, int height, float *rgba, int rgba_st
 
 enum NXColorMap {
         NX_COLOR_MAP_GRAY = 0,
-        NX_COLOR_MAP_RED_BLUE
+        NX_COLOR_MAP_VIRIDIS,
+        NX_COLOR_MAP_PLASMA,
+        NX_COLOR_MAP_MAGMA,
+        NX_COLOR_MAP_CUBEHELIX
 };
 
 void nx_color_map_apply(uchar* red, uchar* green, uchar* blue,

@@ -14,6 +14,8 @@
 
 #include "virg/nexus/nx_assert.h"
 
+#include "nx_color_map_data.h"
+
 void nx_convert_rgba_to_gray_uc(int width, int height, uchar *gray, int gray_stride,
                                 const uchar *rgba, int rgba_stride)
 {
@@ -84,20 +86,60 @@ void nx_convert_gray_to_rgba_f32(int width, int height, float *rgba, int rgba_st
         }
 }
 
+static void interpolate_color_map_data(float *rgb, float value,
+                                       int n, float color_map_data[][3])
+{
+        int k = (n-1)*value;
+        float alpha = (n-1)*value - k;
+
+        if (k == (n-1)) {
+                rgb[0] = color_map_data[k][0];
+                rgb[1] = color_map_data[k][1];
+                rgb[2] = color_map_data[k][2];
+                return;
+        }
+
+        rgb[0] = (1.0f-alpha)*color_map_data[k][0] + alpha*color_map_data[k+1][0];
+        rgb[1] = (1.0f-alpha)*color_map_data[k][1] + alpha*color_map_data[k+1][1];
+        rgb[2] = (1.0f-alpha)*color_map_data[k][2] + alpha*color_map_data[k+1][2];
+}
+
 void nx_color_map_apply(uchar* red, uchar* green, uchar* blue,
                         float value, enum NXColorMap map)
 {
+        float rgb[3];
         switch (map) {
-        case NX_COLOR_MAP_RED_BLUE:
-                if (value > 0.5f) {
-                        *red   = 0;
-                        *green = 0;
-                        *blue  = 2.0f*(value-0.5f)*255;
-                } else {
-                        *red   = (1.0f - 2.0f*value)*255;
-                        *green = 0;
-                        *blue  = 0;
-                }
+        case NX_COLOR_MAP_VIRIDIS:
+                interpolate_color_map_data(&rgb[0], value,
+                                           nx_color_map_data_viridis_size,
+                                           nx_color_map_data_viridis);
+                *red   = rgb[0]*255;
+                *green = rgb[1]*255;
+                *blue  = rgb[2]*255;
+                break;
+        case NX_COLOR_MAP_PLASMA:
+                interpolate_color_map_data(&rgb[0], value,
+                                           nx_color_map_data_plasma_size,
+                                           nx_color_map_data_plasma);
+                *red   = rgb[0]*255;
+                *green = rgb[1]*255;
+                *blue  = rgb[2]*255;
+                break;
+        case NX_COLOR_MAP_MAGMA:
+                interpolate_color_map_data(&rgb[0], value,
+                                           nx_color_map_data_magma_size,
+                                           nx_color_map_data_magma);
+                *red   = rgb[0]*255;
+                *green = rgb[1]*255;
+                *blue  = rgb[2]*255;
+                break;
+        case NX_COLOR_MAP_CUBEHELIX:
+                interpolate_color_map_data(&rgb[0], value,
+                                           nx_color_map_data_cubehelix_size,
+                                           nx_color_map_data_cubehelix);
+                *red   = rgb[0]*255;
+                *green = rgb[1]*255;
+                *blue  = rgb[2]*255;
                 break;
         case NX_COLOR_MAP_GRAY:
         default:
