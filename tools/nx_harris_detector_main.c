@@ -102,10 +102,27 @@ int main(int argc, char** argv)
 
         if (is_debug) {
                 struct NXImage* debug_img = nx_image_alloc();
+
                 const char* score_image_filename = "/tmp/harris_score.ppm";
                 nx_image_normalize_to_zero_one(simg, NX_FALSE);
                 nx_image_apply_colormap(debug_img, simg, NX_COLOR_MAP_CUBEHELIX);
                 nx_image_xsave_pnm(debug_img, score_image_filename);
+
+                const char* x2_image_filename = "/tmp/harris_deriv_x2.ppm";
+                nx_image_normalize_to_zero_one(dimg[0], NX_FALSE);
+                nx_image_apply_colormap(debug_img, dimg[0], NX_COLOR_MAP_CUBEHELIX);
+                nx_image_xsave_pnm(debug_img, x2_image_filename);
+
+                const char* y2_image_filename = "/tmp/harris_deriv_y2.ppm";
+                nx_image_normalize_to_zero_one(dimg[1], NX_FALSE);
+                nx_image_apply_colormap(debug_img, dimg[1], NX_COLOR_MAP_CUBEHELIX);
+                nx_image_xsave_pnm(debug_img, y2_image_filename);
+
+                const char* xy_image_filename = "/tmp/harris_deriv_xy.ppm";
+                nx_image_normalize_to_zero_one(dimg[2], NX_FALSE);
+                nx_image_apply_colormap(debug_img, dimg[2], NX_COLOR_MAP_CUBEHELIX);
+                nx_image_xsave_pnm(debug_img, xy_image_filename);
+
                 nx_image_free(debug_img);
         }
 
