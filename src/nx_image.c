@@ -14,6 +14,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <float.h>
 
 #include "virg/nexus/nx_assert.h"
 #include "virg/nexus/nx_alloc.h"
@@ -187,6 +188,109 @@ void nx_image_copy(struct NXImage *dest, const struct NXImage *src)
         dest->row_stride = src->row_stride;
 }
 
+void nx_image_normalize_to_zero_one(struct NXImage *img, NXBool symmetric_around_zero)
+{
+        NX_ASSERT(img);
+        NX_IMAGE_ASSERT_FLOAT32(img);
+
+        float vmin = FLT_MAX;
+        float vmax = -FLT_MAX;
+        int nc = nx_image_n_channels(img->type);
+        for (int y = 0; y < img->height; ++y) {
+                float *row = img->data.f32 + y*img->row_stride;
+                for (int x = 0; x < img->width; ++x) {
+                        for (int c = 0; c < nc; ++c)
+                                if (row[nc*x+c] < vmin)
+                                        vmin = row[nc*x+c];
+                                else if (row[nc*x+c] > vmax)
+                                        vmax = row[nc*x+c];
+                }
+        }
+        /* NX_LOG("D", "min and max values are %.12f and %.12f", vmin, vmax); */
+
+        float a = 1.0f;
+        float y = 0.0f;
+        if (symmetric_around_zero) {
+                // v = v/(2.0f*t)+0.5f; symmetric
+                float tmin = fabs(vmin);
+                float tmax = fabs(vmax);
+                float t = (tmin > tmax) ? tmin : tmax;
+                a = 1.0f/(2.0f*t);
+                y = 0.5f;
+        } else {
+                // v = (v-vmin)/(vmax-vmin); not symmetric
+                a = 1.0f/(vmax-vmin);
+                y = -vmin/(vmax-vmin);
+        }
+        /* NX_LOG("D", "a and y values are %.12f and %.12f", a, y); */
+        nx_image_axpy(img, a, y);
+
+        for (int y = 0; y < img->height; ++y) {
+                float *row = img->data.f32 + y*img->row_stride;
+                for (int x = 0; x < img->width; ++x) {
+                        for (int c = 0; c < nc; ++c)
+                                if (row[nc*x+c] < 0.0f)
+                                        row[nc*x+c] = 0.0f;
+                                else if (row[nc*x+c] > 1.0f)
+                                        row[nc*x+c] = 1.0f;
+                }
+        }
+}
+
+void nx_image_axpy_uc(struct NXImage *img, float a, float y)
+{
+        NX_ASSERT(img);
+        NX_IMAGE_ASSERT_UCHAR(img);
+
+        int nc = nx_image_n_channels(img->type);
+        for (int y = 0; y < img->height; ++y) {
+                uchar *row = img->data.uc + y*img->row_stride;
+                for (int x = 0; x < img->width; ++x) {
+                        for (int c = 0; c < nc; ++c) {
+                                int p = a*row[nc*x+c]+y;
+                                if (p < 0)
+                                        p = 0;
+                                else if (p > 255) {
+                                        p = 255;
+                                }
+                                row[nc*x+c] = p;
+                        }
+                }
+        }
+}
+
+void nx_image_axpy_f32(struct NXImage *img, float a, float y)
+{
+        NX_ASSERT(img);
+        NX_IMAGE_ASSERT_FLOAT32(img);
+
+        int nc = nx_image_n_channels(img->type);
+        for (int yc = 0; yc < img->height; ++yc) {
+                float *row = img->data.f32 + yc*img->row_stride;
+                for (int xc = 0; xc < img->width; ++xc) {
+                        for (int c = 0; c < nc; ++c) {
+                                row[nc*xc+c] = a*row[nc*xc+c]+y;
+                        }
+                }
+        }
+}
+
+void nx_image_axpy(struct NXImage *img, float a, float y)
+{
+        NX_ASSERT_PTR(img);
+
+        switch (img->dtype) {
+        case NX_IMAGE_UCHAR:
+                nx_image_axpy_uc(img, a, y);
+                break;
+        case NX_IMAGE_FLOAT32:
+                nx_image_axpy_f32(img, a, y);
+                break;
+        default:
+                NX_FATAL(NX_LOG_TAG, "Unhandled switch case for image data type");
+        }
+}
+
 static inline void convert_image_gray_to_rgba(struct NXImage* dest,
                                               const struct NXImage* src)
 {
@@ -258,6 +362,56 @@ void nx_image_convert_type(struct NXImage* img, enum NXImageType type)
         nx_image_free(cpy);
 }
 
+void nx_image_apply_colormap(struct NXImage* color, struct NXImage* gray,
+                             enum NXColorMap map)
+{
+        NX_ASSERT_PTR(color);
+        NX_ASSERT_PTR(gray);
+        NX_IMAGE_ASSERT_GRAYSCALE(gray);
+
+        nx_image_resize(color, gray->width, gray->height,
+                        NX_IMAGE_STRIDE_DEFAULT,
+                        NX_IMAGE_RGBA, NX_IMAGE_UCHAR);
+
+        int x, y;
+        union {
+                uchar* uc;
+                float* f32;
+        } gray_row;
+        uchar* color_row = NULL;
+        switch (gray->dtype) {
+        case NX_IMAGE_UCHAR:
+                for (y = 0; y < gray->height; ++y) {
+                        gray_row.uc = gray->data.uc + y*gray->row_stride;
+                        color_row = color->data.uc + y*color->row_stride;
+                        for (x = 0; x < gray->width; ++x) {
+                                nx_color_map_apply(color_row + 4*x,
+                                                   color_row + 4*x+1,
+                                                   color_row + 4*x+2,
+                                                   gray_row.uc[x]/255.0f,
+                                                   map);
+                                color_row[4*x+3] = 255;
+                        }
+                }
+                break;
+        case NX_IMAGE_FLOAT32:
+                for (y = 0; y < gray->height; ++y) {
+                        gray_row.f32 = gray->data.f32 + y*gray->row_stride;
+                        color_row = color->data.uc + y*color->row_stride;
+                        for (x = 0; x < gray->width; ++x) {
+                                nx_color_map_apply(color_row + 4*x,
+                                                   color_row + 4*x+1,
+                                                   color_row + 4*x+2,
+                                                   gray_row.f32[x],
+                                                   map);
+                                color_row[4*x+3] = 255;
+                        }
+                }
+                break;
+        default:
+                NX_FATAL(NX_LOG_TAG, "Unhandled switch case for image data type");
+        }
+}
 
 void nx_image_set_zero(struct NXImage *img)
 {

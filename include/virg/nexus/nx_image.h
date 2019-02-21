@@ -17,6 +17,7 @@
 #include "virg/nexus/nx_types.h"
 #include "virg/nexus/nx_assert.h"
 #include "virg/nexus/nx_image_warp.h"
+#include "virg/nexus/nx_colorspace.h"
 
 __NX_BEGIN_DECL
 
@@ -90,7 +91,12 @@ void nx_image_free(struct NXImage *img);
                 NX_ASSERT_CUSTOM("Image must be of type RGBA",img->type == NX_IMAGE_RGBA); \
         } while(0)
 
-#define NX_IMAGE_ASSERT_FLOAT32(img) \
+#define NX_IMAGE_ASSERT_UCHAR(img) \
+        do {                               \
+                NX_ASSERT_CUSTOM("Image data type must be unsigned char",img->dtype == NX_IMAGE_UCHAR); \
+        } while(0)
+
+#define NX_IMAGE_ASSERT_FLOAT32(img)       \
         do {                               \
                 NX_ASSERT_CUSTOM("Image data type must be single-precision floating point",img->dtype == NX_IMAGE_FLOAT32); \
         } while(0)
@@ -145,7 +151,14 @@ void nx_image_copy(struct NXImage *dest, const struct NXImage *src);
 
 void nx_image_convert_type(struct NXImage* img, enum NXImageType type);
 
+void nx_image_apply_colormap(struct NXImage* color, struct NXImage* gray,
+                             enum NXColorMap map);
+
 void nx_image_set_zero(struct NXImage *img);
+
+void nx_image_normalize_to_zero_one(struct NXImage *img, NXBool symmetric_around_zero);
+
+void nx_image_axpy(struct NXImage *img, float a, float y);
 
 void nx_image_wrap(struct NXImage *img, void *data, int width, int height,
                    int row_stride, enum NXImageType type,
