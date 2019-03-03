@@ -58,8 +58,10 @@ struct NXDataColumn {
 
 static struct NXDataColumn *nx_data_column_alloc(enum NXDataColumnType type, const char *label)
 {
-        struct NXDataColumn *dc = NULL;
-        NX_NEW_ARRAY_STRUCT(dc,elems,5);
+        struct NXDataColumn *dc = NX_NEW(1, struct NXDataColumn);
+        dc->size = 0;
+        dc->capacity = 0;
+        dc->elems = NULL;
         dc->type = type;
         dc->label = nx_strdup(label);
         if (dc->type == NX_DCT_FACTOR)
@@ -104,7 +106,10 @@ static void nx_data_column_free(struct NXDataColumn *dc)
                         nx_free(dc->elems[i]);
                 nx_free(dc->label);
                 nx_string_array_free(dc->levels);
-                NX_FREE_ARRAY_STRUCT(dc,elems);
+                if (dc) {
+                        nx_free(dc->elems);
+                        nx_free(dc);
+                }
         }
 }
 
@@ -133,7 +138,10 @@ struct NXDataFrame *nx_data_frame_alloc()
 {
         struct NXDataFrame *df = NX_NEW(1, struct NXDataFrame);
         df->n_rows = 0;
-        NX_NEW_ARRAY_STRUCT(df->columns,elems,3);
+        df->columns = NX_NEW(1, struct NXDataColumnArray);
+        df->columns->size = 0;
+        df->columns->capacity = 0;
+        df->columns->elems = NULL;
 
         return df;
 }
@@ -143,7 +151,10 @@ void nx_data_frame_free(struct NXDataFrame *df)
         if (df != NULL) {
                 for (int i = 0; i < df->columns->size; ++i)
                         nx_data_column_free(df->columns->elems[i]);
-                NX_FREE_ARRAY_STRUCT(df->columns,elems);
+                if (df->columns) {
+                        nx_free(df->columns->elems);
+                        nx_free(df->columns);
+                }
                 nx_free(df);
         }
 }
@@ -154,7 +165,8 @@ void nx_data_frame_add_column(struct NXDataFrame *df, enum NXDataColumnType type
         NX_ASSERT_PTR(label);
 
         struct NXDataColumn *dc = nx_data_column_new(type,label,df->n_rows);
-        NX_APPEND_TO_ARRAY_STRUCT(df->columns,elems,dc);
+        NX_ENSURE_CAPACITY(df->columns->elems, df->columns->capacity, df->columns->size+1);
+        df->columns->elems[df->columns->size++] = dc;
 }
 
 void nx_data_frame_make_factor(struct NXDataFrame *df, int col_id)

@@ -70,7 +70,6 @@ void nx_string_array_resize(struct NXStringArray *sa, int new_size)
                         nx_free(sa->elems[i]);
                         sa->elems[i] = NULL;
                 }
-                NX_SHRINK_CAPACITY(sa->elems, sa->capacity, new_size);
         } else {
                 NX_ENSURE_CAPACITY(sa->elems, sa->capacity, new_size);
                 for (int i = sa->size; i < new_size; ++i)

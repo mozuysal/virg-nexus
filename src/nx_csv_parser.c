@@ -98,8 +98,10 @@ static void nx_csv_data_add_record(struct NXCSVData *data, struct NXCSVRecord *r
 
 static struct NXCSVRecord *nx_csv_record_new(struct NXCSVData *parent)
 {
-        struct NXCSVRecord *r = NULL;
-        NX_NEW_ARRAY_STRUCT(r,fields,5);
+        struct NXCSVRecord *r = NX_NEW(1, struct NXCSVRecord);
+        r->size = 0;
+        r->capacity = 0;
+        r->fields = NULL;
         nx_csv_data_add_record(parent, r);
         return r;
 }
@@ -109,14 +111,18 @@ static void nx_csv_record_free(struct NXCSVRecord *r)
         if (r) {
                 for (int i = 0; i < r->size; ++i)
                         nx_csv_field_free(r->fields[i]);
-                NX_FREE_ARRAY_STRUCT(r,fields);
+                if (r) {
+                        nx_free(r->fields);
+                        nx_free(r);
+                }
         }
 }
 
 static void nx_csv_record_add_field_from_token(struct NXCSVRecord *r, struct NXCSVToken *t)
 {
         struct NXCSVField *f = nx_csv_field_new(t);
-        NX_APPEND_TO_ARRAY_STRUCT(r,fields,f);
+        NX_ENSURE_CAPACITY(r->fields, r->capacity, r->size+1);
+        r->fields[r->size++] = f;
 }
 
 struct NXCSVData {
@@ -129,8 +135,10 @@ struct NXCSVData {
 
 static struct NXCSVData *nx_csv_data_alloc()
 {
-        struct NXCSVData *data = NULL;
-        NX_NEW_ARRAY_STRUCT(data,records,5);
+        struct NXCSVData *data = NX_NEW(1, struct NXCSVData);
+        data->size = 0;
+        data->capacity = 0;
+        data->records = NULL;
         data->n_columns = 0;
 
         return data;
@@ -141,13 +149,15 @@ static void nx_csv_data_free(struct NXCSVData *data)
         if (data) {
                 for (int i = 0; i < data->size; ++i)
                         nx_csv_record_free(data->records[i]);
-                NX_FREE_ARRAY_STRUCT(data,records);
+                nx_free(data->records);
+                nx_free(data);
         }
 }
 
 static void nx_csv_data_add_record(struct NXCSVData *data, struct NXCSVRecord *r)
 {
-        NX_APPEND_TO_ARRAY_STRUCT(data,records,r);
+        NX_ENSURE_CAPACITY(data->records, data->capacity, data->size+1);
+        data->records[data->size++] = r;
 }
 
 // STRING > BOOL > DOUBLE > INT, BOOL && (DOUBLE || INT) ==> STRING

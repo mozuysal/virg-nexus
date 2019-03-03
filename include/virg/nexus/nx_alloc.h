@@ -47,42 +47,14 @@ void nx_free(void *ptr);
 #define NX_NEW_S(n)    NX_NEW((n),float)
 #define NX_NEW_D(n)    NX_NEW((n),double)
 
-#define NX_ENSURE_CAPACITY(x, cap, sz) do {                     \
-                if (cap < (sz)) {                               \
-                        cap *= 2;                               \
-                        if (cap < (sz))                         \
-                                cap = (sz);                     \
-                        x = nx_xrealloc((x), cap*sizeof(*(x))); \
-                }                                               \
-        } while (0)
-
-#define NX_SHRINK_CAPACITY(x, cap, sz) do {                     \
-                if (cap > 2*(sz)) {                             \
-                        cap /= 2;                               \
-                        if (cap > 2*(sz))                       \
-                                cap = (sz);                     \
-                        x = nx_xrealloc((x), cap*sizeof(*(x))); \
-                }                                               \
-        } while (0)
-
-#define NX_NEW_ARRAY_STRUCT(sp,arr_name,init_cap) do {                  \
-                sp = nx_xmalloc(sizeof(*sp));                           \
-                sp->size = 0;                                           \
-                sp->capacity = init_cap;                                \
-                sp->arr_name = nx_xmalloc(init_cap*sizeof(*(sp->arr_name))); \
-        } while (0)
-
-#define NX_GROW_ARRAY_STRUCT(sp,arr_name) \
-        NX_ENSURE_CAPACITY(sp->arr_name,sp->capacity,(sp->size)+1)
-
-#define NX_APPEND_TO_ARRAY_STRUCT(sp,arr_name,item) do { \
-                NX_GROW_ARRAY_STRUCT(sp,arr_name);       \
-                (sp)->arr_name[(sp)->size++] = item;     \
-        } while(0)
-
-#define NX_FREE_ARRAY_STRUCT(sp,arr_name) do {    \
-                nx_free(sp->arr_name);            \
-                nx_free(sp);                      \
+#define NX_ENSURE_CAPACITY(x, cap, req_cap) do {                        \
+                if ((cap) < (req_cap)) {                                \
+                        if (((cap)+8)*3/2 < (req_cap))                  \
+                                cap = (req_cap);                        \
+                        else                                            \
+                                cap = ((cap)+8)*3/2;                    \
+                        x = nx_xrealloc((x), (cap)*sizeof(*(x)));       \
+                }                                                       \
         } while (0)
 
 __NX_END_DECL
