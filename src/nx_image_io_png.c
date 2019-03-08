@@ -1,0 +1,142 @@
+/**
+ * @file nx_image_io_png.c
+ *
+ * This file is part of the IYTE Visual Intelligence Research Group Software Library
+ *
+ * Copyright (C) 2019 Mustafa Ozuysal. All rights reserved.
+ *
+ * @author Mustafa Ozuysal
+ *
+ * Contact mustafaozuysal@iyte.edu.tr for comments and bug reports.
+ *
+ */
+#include "virg/nexus/nx_image_io_png.h"
+
+#include <png.h>
+
+#ifndef png_jmpbuf
+#  define png_jmpbuf(png_ptr) ((png_ptr)->jmpbuf)
+#endif
+
+#include "virg/nexus/nx_assert.h"
+#include "virg/nexus/nx_alloc.h"
+#include "virg/nexus/nx_log.h"
+#include "virg/nexus/nx_io.h"
+
+
+
+NXResult save_as_png(const struct NXImage *img, FILE *fout)
+{
+        NX_ASSERT_PTR(img);
+        NX_IMAGE_ASSERT_UCHAR(img);
+        NX_ASSERT_PTR(img->data.uc);
+        NX_ASSERT_PTR(fout);
+
+        png_structp png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, 0, 0, 0);
+        if (!png_ptr) {
+                NX_ERROR(NX_LOG_TAG, "Could not create PNG write structure");
+                return NX_FAIL;
+        }
+
+        png_infop info_ptr = png_create_info_struct(png_ptr);
+        if (!info_ptr) {
+                NX_ERROR(NX_LOG_TAG, "Could not create PNG info pointer");
+                png_destroy_write_struct(&png_ptr,  png_infopp_NULL);
+                return NX_FAIL;
+        }
+
+        if (setjmp(png_jmpbuf(png_ptr))) {
+                NX_ERROR(NX_LOG_TAG, "Error creating jump for PNG pointer");
+                png_destroy_write_struct(&png_ptr, &info_ptr);
+                return NX_FAIL;
+        }
+
+        int color_type;
+        switch (img->type) {
+        case NX_IMAGE_GRAYSCALE: color_type = PNG_COLOR_TYPE_GRAY; break;
+        case NX_IMAGE_RGBA: color_type = PNG_COLOR_TYPE_RGBA; break;
+        default:
+                NX_ERROR(NX_LOG_TAG, "Unsupported image type for saving as PNG!");
+                png_destroy_write_struct(&png_ptr, &info_ptr);
+                return NX_FAIL;
+        }
+
+        /* png_set_compression_level(png_ptr, 1); // Set to lowest compression level */
+
+        png_init_io(png_ptr, fout);
+        png_set_IHDR(png_ptr, info_ptr, img->width, img->height, 8,
+                     color_type, PNG_INTERLACE_NONE,
+                     PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
+        png_write_info(png_ptr, info_ptr);
+
+        if ((unsigned int)img->height > PNG_UINT_32_MAX/png_sizeof(png_bytep)) {
+                png_error(png_ptr, "Image is too tall to process in memory");
+                return NX_FAIL;
+        }
+
+        png_bytepp row_pointers = NX_NEW(img->height, png_bytep);
+        if (!row_pointers) {
+                NX_ERROR(NX_LOG_TAG, "Error creating PNG row pointers");
+                png_destroy_write_struct(&png_ptr, &info_ptr);
+                return NX_FAIL;
+        }
+
+        for (png_int_32 k = 0; k < img->height; k++) {
+                row_pointers[k] = (unsigned char*)(img->data.uc + k*img->row_stride);
+        }
+
+        png_write_image(png_ptr, row_pointers);
+        png_write_end(png_ptr, info_ptr);
+
+        png_destroy_write_struct(&png_ptr, &info_ptr);
+        nx_free(row_pointers);
+
+        return NX_OK;
+}
+
+void nx_image_xsave_png(const struct NXImage *img, const char *filename)
+{
+        NX_ASSERT_PTR(img);
+        NX_ASSERT_PTR(filename);
+        NX_ASSERT_CUSTOM("Only UCHAR images can be saved directly as PNG files", img->dtype==NX_IMAGE_UCHAR);
+
+        FILE *png_stream = nx_xfopen(filename, "wb");
+
+        if (save_as_png(img, png_stream) != NX_OK) {
+                NX_FATAL(NX_LOG_TAG, "Can not save image as PNG to %s", filename);
+        }
+
+        nx_xfclose(png_stream, filename);
+}
+
+void nx_image_xload_png(struct NXImage *img, const char *filename, enum NXImageLoadMode mode)
+{
+        NX_FATAL(NX_LOG_TAG, "PNG Loading not supported");
+}
+
+NXResult nx_image_save_png(const struct NXImage *img, const char *filename)
+{
+        NX_ASSERT_PTR(img);
+        NX_ASSERT_PTR(filename);
+        NX_ASSERT_CUSTOM("Only UCHAR images can be saved directly as PNG files", img->dtype==NX_IMAGE_UCHAR);
+
+        FILE *png_stream = nx_fopen(filename, "wb");
+        if (!png_stream) {
+                return NX_FAIL;
+        }
+
+        if (save_as_png(img, png_stream) != NX_OK) {
+                NX_ERROR(NX_LOG_TAG, "Can not save image as PNG to %s", filename);
+                fclose(png_stream);
+                return NX_FAIL;
+        }
+
+        NXResult res = nx_fclose(png_stream, filename);
+        return res;
+}
+
+NXResult nx_image_load_png(struct NXImage *img, const char *filename, enum NXImageLoadMode mode)
+{
+        return NX_FAIL;
+}
+

@@ -17,9 +17,11 @@
 
 __NX_BEGIN_DECL
 
+#include "virg/nexus/nx_image.h"
 #include "virg/nexus/nx_image_io_params.h"
 #include "virg/nexus/nx_image_io_pnm.h"
 #include "virg/nexus/nx_image_io_jpeg.h"
+#include "virg/nexus/nx_image_io_png.h"
 
 enum NXImageFileFormat {
         NX_IMAGE_FILE_FORMAT_UNKNOWN = 0,

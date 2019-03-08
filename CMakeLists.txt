@@ -32,6 +32,7 @@ set(virg_nexus_SOURCES
   src/nx_image.c
   src/nx_image_io_pnm.c
   src/nx_image_io_jpeg.c
+  src/nx_image_io_png.c
   src/nx_image_io.c
   src/nx_image_warp.c
   src/nx_affine_warp_processor.c
@@ -86,6 +87,7 @@ set(virg_nexus_HEADERS
   include/virg/nexus/nx_image_io_params.h
   include/virg/nexus/nx_image_io_pnm.h
   include/virg/nexus/nx_image_io_jpeg.h
+  include/virg/nexus/nx_image_io_png.h
   include/virg/nexus/nx_image_warp.h
   include/virg/nexus/nx_affine_warp_processor.h
   include/virg/nexus/nx_homography.h

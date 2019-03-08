@@ -94,8 +94,7 @@ NXResult nx_image_save(const struct NXImage *img, const char *filename)
         case NX_IMAGE_FILE_FORMAT_JPEG:
                 return nx_image_save_jpeg(img, filename);
         case NX_IMAGE_FILE_FORMAT_PNG:
-                NX_ERROR(NX_LOG_TAG, "Saving of PNG files is not supported");
-                return NX_FAIL;
+                return nx_image_save_png(img, filename);
         default:
                 NX_WARNING(NX_LOG_TAG, "Unknown/Unsupported file format: Trying to save image as PNM to %s", filename);
         }
@@ -116,8 +115,7 @@ NXResult nx_image_load(struct NXImage *img, const char *filename, enum NXImageLo
         case NX_IMAGE_FILE_FORMAT_JPEG:
                 return nx_image_load_jpeg(img, filename, mode);
         case NX_IMAGE_FILE_FORMAT_PNG:
-                NX_ERROR(NX_LOG_TAG, "Loading of PNG files is not supported");
-                return NX_FAIL;
+                return nx_image_load_png(img, filename, mode);
         default:
                 NX_ERROR(NX_LOG_TAG, "Unknown file format: Trying to load image from %s", filename);
                 return NX_FAIL;
