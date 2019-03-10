@@ -736,11 +736,14 @@ void nx_image_smooth(struct NXImage *dest, const struct NXImage *src,
         NX_ASSERT_PTR(dest);
         NX_IMAGE_ASSERT_GRAYSCALE(src);
 
-        int dest_width = src->width;
-        int dest_height = src->height;
-        int n_ch = nx_image_n_channels(src->type);
-        int dest_row_stride = dest_width*n_ch;
-        nx_image_resize(dest, dest_width, dest_height, dest_row_stride, src->type, src->dtype);
+        if (dest != src) {
+                int dest_width = src->width;
+                int dest_height = src->height;
+                int n_ch = nx_image_n_channels(src->type);
+                int dest_row_stride = dest_width*n_ch;
+                nx_image_resize(dest, dest_width, dest_height,
+                                dest_row_stride, src->type, src->dtype);
+        }
 
         float *buffer = filter_buffer;
         if (!buffer) {
@@ -825,6 +828,138 @@ void nx_image_smooth(struct NXImage *dest, const struct NXImage *src,
         }
 
         nx_free(kernel);
+
+        // Clean-up if allocated buffer
+        if (!filter_buffer)
+                nx_free(buffer);
+}
+
+void nx_image_filter_box_x(struct NXImage *dest, const struct NXImage *src,
+                           int sum_radius, float *filter_buffer)
+{
+        NX_ASSERT_PTR(src);
+        NX_ASSERT_PTR(dest);
+        NX_IMAGE_ASSERT_GRAYSCALE(src);
+
+        if (dest != src)
+                nx_image_resize(dest, src->width, src->height,
+                                NX_IMAGE_STRIDE_DEFAULT, src->type, src->dtype);
+
+        float *buffer = filter_buffer;
+        if (!buffer) {
+                buffer = nx_filter_buffer_alloc(src->width, sum_radius);
+        }
+
+        for (int y = 0; y < src->height; ++y) {
+                switch (src->dtype) {
+                case NX_IMAGE_UCHAR:
+                        nx_filter_copy_to_buffer1_uc(src->width, buffer,
+                                                     src->data.uc + y * src->row_stride,
+                                                     sum_radius, NX_BORDER_MIRROR);
+                        break;
+                case NX_IMAGE_FLOAT32:
+                        nx_filter_copy_to_buffer1(src->width, buffer,
+                                                  src->data.f32 + y * src->row_stride,
+                                                  sum_radius, NX_BORDER_MIRROR);
+                        break;
+                default:
+                        NX_FATAL(NX_LOG_TAG, "Unhandled switch case for image data type");
+                }
+                nx_convolve_box(src->width, buffer, sum_radius);
+                switch (src->dtype) {
+                case NX_IMAGE_UCHAR:
+                        for (int x = 0; x < dest->width; ++x)
+                                dest->data.uc[y*dest->row_stride+x] = (uchar)buffer[x];
+                        break;
+                case NX_IMAGE_FLOAT32:
+                        memcpy(dest->data.f32 + y*dest->row_stride, buffer,
+                               dest->width*dest->n_channels*sizeof(float));
+                        break;
+                default:
+                        NX_FATAL(NX_LOG_TAG, "Unhandled switch case for image data type");
+                }
+        }
+
+        if (!filter_buffer)
+                nx_free(buffer);
+}
+
+void nx_image_filter_box_y(struct NXImage *dest, const struct NXImage *src,
+                           int sum_radius, float *filter_buffer)
+{
+        NX_ASSERT_PTR(src);
+        NX_ASSERT_PTR(dest);
+        NX_IMAGE_ASSERT_GRAYSCALE(src);
+
+        if (dest != src)
+                nx_image_resize(dest, src->width, src->height,
+                                NX_IMAGE_STRIDE_DEFAULT, src->type, src->dtype);
+
+        float *buffer = filter_buffer;
+        if (!buffer) {
+                buffer = nx_filter_buffer_alloc(src->height, sum_radius);
+        }
+
+        for (int x = 0; x < dest->width; ++x) {
+                switch (src->dtype) {
+                case NX_IMAGE_UCHAR:
+                        nx_filter_copy_to_buffer_uc(src->height, buffer,
+                                                    src->data.uc + x,
+                                                    src->row_stride, sum_radius,
+                                                    NX_BORDER_MIRROR);
+                        break;
+                case NX_IMAGE_FLOAT32:
+                        nx_filter_copy_to_buffer(src->height, buffer,
+                                                 src->data.f32 + x,
+                                                 src->row_stride, sum_radius,
+                                                 NX_BORDER_MIRROR);
+                        break;
+                default:
+                        NX_FATAL(NX_LOG_TAG, "Unhandled switch case for image data type");
+                }
+
+                nx_convolve_box(dest->height, buffer, sum_radius);
+
+                switch (dest->dtype) {
+                case NX_IMAGE_UCHAR:
+                        for (int y = 0; y < dest->height; ++y)
+                                dest->data.uc[x + y*dest->row_stride] = (uchar)buffer[y];
+                        break;
+                case NX_IMAGE_FLOAT32:
+                        for (int y = 0; y < dest->height; ++y)
+                                dest->data.f32[x + y*dest->row_stride] = buffer[y];
+                        break;
+                default:
+                        NX_FATAL(NX_LOG_TAG, "Unhandled switch case for image data type");
+                }
+        }
+
+        // Clean-up if allocated buffer
+        if (!filter_buffer)
+                nx_free(buffer);
+}
+
+void nx_image_filter_box(struct NXImage *dest, const struct NXImage *src,
+                         int sum_radius_x, int sum_radius_y,
+                         float *filter_buffer)
+{
+        NX_ASSERT_PTR(src);
+        NX_ASSERT_PTR(dest);
+        NX_IMAGE_ASSERT_GRAYSCALE(src);
+
+        if (dest != src)
+                nx_image_resize(dest, src->width, src->height,
+                                NX_IMAGE_STRIDE_DEFAULT, src->type, src->dtype);
+
+        float *buffer = filter_buffer;
+        if (!buffer) {
+                int n = nx_max_i(src->width, src->height);
+                int r = nx_max_i(sum_radius_x, sum_radius_y);
+                buffer = nx_filter_buffer_alloc(n, r);
+        }
+
+        nx_image_filter_box_x(dest, src, sum_radius_x, buffer);
+        nx_image_filter_box_y(dest, dest, sum_radius_y, buffer);
 
         // Clean-up if allocated buffer
         if (!filter_buffer)

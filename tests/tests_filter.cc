@@ -27,9 +27,11 @@ namespace {
 
 #define N 5
 #define KN 3
+#define KR 2
 #define N_BORDER (KN-1)
 #define BN ((N) + 2*N_BORDER)
 #define BN2 (((N+1)/2) + 2*N_BORDER)
+#define BRN ((N)+2*KR)
 
 static const uchar TEST_DATA[N] = { 10, 20, 30, 40, 50 };
 static const float TEST_KERNEL_S[KN] = { 3.0f/9.0f, 2.0f/9.0f, 1.0f/9.0f };
@@ -43,26 +45,27 @@ static const float BUFFER2_GT_BR[BN2] = { 10.0f, 10.0f, 10.0f, 30.0f, 50.0f, 50.
 static const float BUFFER2_GT_BM[BN2] = { 50.0f, 30.0f, 10.0f, 30.0f, 50.0f, 30.0f, 10.0f };
 
 static const float CONV_SYM_GT[BN]  = { 100.0/9.0f, 20.0f, 30.0f, 300.0f/9.0f, 260.0f/9.0f, 40.0f, 50.0f, 0.0f, 0.0f };
-
+static const float CONV_BOX_GT[BRN]  = { 60.0f/5.0f, 100.0f/5.0f, 150.0f/5.0f, 140.0f/5.0f, 120.0f/5.0f, 40.0f, 50.0f, 0.0f, 0.0f };
 
 class NXFilterTest : public ::testing::Test {
 protected:
-    NXFilterTest()
-    {
-        buffer_ = NULL;
-    }
+        NXFilterTest() {
+                buffer_ = NULL;
+                box_buffer_ = NULL;
+        }
 
-    virtual void SetUp()
-    {
-        buffer_ = nx_filter_buffer_alloc(N, N_BORDER);
-    }
+        virtual void SetUp() {
+                buffer_ = nx_filter_buffer_alloc(N, N_BORDER);
+                box_buffer_ = nx_filter_buffer_alloc(N, KR);
+        }
 
-    virtual void TearDown()
-    {
-        nx_free(buffer_);
-    }
+        virtual void TearDown() {
+                nx_free(buffer_);
+                nx_free(box_buffer_);
+        }
 
-    float *buffer_;
+        float *buffer_;
+        float *box_buffer_;
 };
 
 TEST_F(NXFilterTest, BufferAlloc) {
@@ -117,6 +120,14 @@ TEST_F(NXFilterTest, BufferConvolveSym) {
     for (int i = 0; i < BN; ++i)
         EXPECT_FLOAT_EQ(CONV_SYM_GT[i], buffer_[i]);
     memset(buffer_, 0, BN*sizeof(float));
+}
+
+TEST_F(NXFilterTest, BufferConvolveBox) {
+    nx_filter_copy_to_buffer1_uc(N, box_buffer_, TEST_DATA, KR, NX_BORDER_ZERO);
+    nx_convolve_box(N, box_buffer_, KR);
+    for (int i = 0; i < BRN; ++i)
+        EXPECT_FLOAT_EQ(CONV_BOX_GT[i], box_buffer_[i]);
+    memset(box_buffer_, 0, BRN*sizeof(float));
 }
 
 } // namespace

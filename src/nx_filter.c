@@ -121,6 +121,24 @@ void nx_convolve_sym(int n, float *data, int n_k, const float *kernel)
         }
 }
 
+void nx_convolve_box(int n, float *data, int n_r)
+{
+        NX_ASSERT(n > 1);
+        NX_ASSERT_PTR(data);
+        NX_ASSERT(n_r >= 1);
+
+        float prev = data[0];
+        for (int i = -n_r+1; i <= n_r; ++i)
+                data[0] += data[i + n_r];
+        for (int i = 1; i < n; ++i) {
+                float di = data[i];
+                data[i] = data[i-1] - prev + data[i+2*n_r];
+                prev = di;
+        }
+        for (int i = 0; i < n; ++i)
+                data[i] /= (2*n_r+1);
+}
+
 void fill_buffer_border(int n, float *buffer, int n_border, enum NXBorderMode mode)
 {
         float buffer_b;

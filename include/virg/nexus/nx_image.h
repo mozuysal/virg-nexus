@@ -16,7 +16,6 @@
 #include "virg/nexus/nx_config.h"
 #include "virg/nexus/nx_types.h"
 #include "virg/nexus/nx_assert.h"
-#include "virg/nexus/nx_image_warp.h"
 #include "virg/nexus/nx_colorspace.h"
 
 __NX_BEGIN_DECL
@@ -106,6 +105,11 @@ void nx_image_free(struct NXImage *img);
                 NX_ASSERT_CUSTOM("Image must be grayscale and its data type must be uchar",img->type == NX_IMAGE_GRAYSCALE && img->dtype == NX_IMAGE_UCHAR); \
         } while(0)
 
+#define NX_IMAGE_ASSERT_GRAYSCALE_FLOAT32(img)    \
+        do {                               \
+                NX_ASSERT_CUSTOM("Image must be grayscale and its data type must be single-precision floating point",img->type == NX_IMAGE_GRAYSCALE && img->dtype == NX_IMAGE_FLOAT32); \
+        } while(0)
+
 #define NX_IMAGE_ASSERT_EQUAL_TYPES_AND_DTYPES(img0,img1)  \
         do {                               \
                 NX_ASSERT_CUSTOM("Images must be of the same type and dtype",img0->type == img1->type && img0->dtype == img1->dtype); \
@@ -180,6 +184,14 @@ float *nx_image_filter_buffer_alloc(int width, int height,
 
 void nx_image_smooth(struct NXImage *dest, const struct NXImage *src,
                      float sigma_x, float sigma_y, float *filter_buffer);
+
+void nx_image_filter_box_x(struct NXImage *dest, const struct NXImage *src,
+                           int sum_radius, float *filter_buffer);
+void nx_image_filter_box_y(struct NXImage *dest, const struct NXImage *src,
+                           int sum_radius, float *filter_buffer);
+void nx_image_filter_box(struct NXImage *dest, const struct NXImage *src,
+                         int sum_radius_x, int sum_radius_y,
+                         float *filter_buffer);
 
 void nx_image_deriv_x(struct NXImage *dest, const struct NXImage *src);
 

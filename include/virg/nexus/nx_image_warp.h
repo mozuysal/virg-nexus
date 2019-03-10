@@ -15,6 +15,7 @@
 
 #include "virg/nexus/nx_config.h"
 #include "virg/nexus/nx_types.h"
+#include "virg/nexus/nx_image.h"
 
 __NX_BEGIN_DECL
 
@@ -25,6 +26,8 @@ enum NXImageWarpBackgroundMode {
         NX_IMAGE_WARP_REPEAT,
         NX_IMAGE_WARP_MIRROR
 };
+
+void nx_image_rotate45(struct NXImage *dest, struct NXImage *src, NXBool cw);
 
 void nx_image_warp_affine_bilinear(int dest_w, int dest_h, uchar *dest, int dest_stride,
                                    int src_w, int src_h, const uchar *src, int src_stride,

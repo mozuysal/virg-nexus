@@ -13,6 +13,7 @@
 #include "virg/nexus/nx_image_warp.h"
 
 #include <float.h>
+#include <math.h>
 
 #include "virg/nexus/nx_assert.h"
 #include "virg/nexus/nx_log.h"
@@ -124,5 +125,116 @@ void nx_image_warp_affine_bilinear(int dest_w, int dest_h, uchar *dest, int dest
 
                         drow[x] = I;
                 }
+        }
+}
+
+static void nx_image_rotate45_uc(struct NXImage *dest, struct NXImage *src, NXBool cw)
+{
+        NX_ASSERT_PTR(dest);
+        NX_ASSERT_PTR(src);
+        NX_IMAGE_ASSERT_GRAYSCALE_UCHAR(src);
+        NX_IMAGE_ASSERT_GRAYSCALE_UCHAR(dest);
+
+        const float CW = cw ? +1.0f : -1.0f;
+        const float SQRT2_INV = 1.0f / sqrt(2.0);
+        const float TX = (src->width  - SQRT2_INV*(dest->width+CW*dest->height))*0.5f;
+        const float TY = (src->height + SQRT2_INV*(CW*dest->width-dest->height))*0.5f;
+        const int LAST_X = src->width - 1;
+        const int LAST_Y = src->height - 1;
+
+        for (int y = 0; y < dest->height; ++y) {
+                uchar *drow = dest->data.uc + y*dest->row_stride;
+                float xp = CW*y*SQRT2_INV + TX;
+                float yp = y*SQRT2_INV + TY;
+                for (int x = 0; x < dest->width;
+                     ++x, xp += SQRT2_INV, yp -= CW*SQRT2_INV) {
+                        int xpi = xp;
+                        int ypi = yp;
+
+                        float u = xp-xpi;
+                        float v = yp-ypi;
+                        float up = 1.0f - u;
+                        float vp = 1.0f - v;
+
+                        int idx[2] = { xpi, xpi + 1};
+                        int idy[2] = { ypi, ypi + 1};
+
+                        if (idx[0] < 0 || idx[0] >= LAST_X
+                            || idy[0] < 0 || idy[0] >= LAST_Y) {
+                                drow[x] = 0;
+                                continue;
+                        }
+                        const uchar *p0 = src->data.uc + idy[0]*src->row_stride;
+                        const uchar *p1 = src->data.uc + idy[1]*src->row_stride;
+                        int I = vp*(up*p0[idx[0]] + u*p0[idx[1]])
+                                + v*(up*p1[idx[0]] + u*p1[idx[1]]);
+
+                        if (I < 0)
+                                I = 0;
+                        else if (I > 255)
+                                I = 255;
+
+                        drow[x] = I;
+                }
+        }
+}
+
+static void nx_image_rotate45_f32(struct NXImage *dest, struct NXImage *src, NXBool cw)
+{
+        NX_ASSERT_PTR(dest);
+        NX_ASSERT_PTR(src);
+        NX_IMAGE_ASSERT_GRAYSCALE_FLOAT32(dest);
+        NX_IMAGE_ASSERT_GRAYSCALE_FLOAT32(src);
+
+        const float CW = cw ? +1.0f : -1.0f;
+        const float SQRT2_INV = 1.0f / sqrt(2.0);
+        const float TX = (src->width  - SQRT2_INV*(dest->width+CW*dest->height))*0.5f;
+        const float TY = (src->height + SQRT2_INV*(CW*dest->width-dest->height))*0.5f;
+        const int LAST_X = src->width - 1;
+        const int LAST_Y = src->height - 1;
+
+        for (int y = 0; y < dest->height; ++y) {
+                float *drow = dest->data.f32 + y*dest->row_stride;
+                float xp = CW*y*SQRT2_INV + TX;
+                float yp = y*SQRT2_INV + TY;
+                for (int x = 0; x < dest->width;
+                     ++x, xp += SQRT2_INV, yp -= CW*SQRT2_INV) {
+                        int xpi = xp;
+                        int ypi = yp;
+
+                        float u = xp-xpi;
+                        float v = yp-ypi;
+                        float up = 1.0f - u;
+                        float vp = 1.0f - v;
+
+                        int idx[2] = { xpi, xpi + 1};
+                        int idy[2] = { ypi, ypi + 1};
+
+                        if (idx[0] < 0 || idx[0] >= LAST_X
+                            || idy[0] < 0 || idy[0] >= LAST_Y) {
+                                drow[x] = 0;
+                                continue;
+                        }
+                        const float *p0 = src->data.f32 + idy[0]*src->row_stride;
+                        const float *p1 = src->data.f32 + idy[1]*src->row_stride;
+                        int I = vp*(up*p0[idx[0]] + u*p0[idx[1]])
+                                + v*(up*p1[idx[0]] + u*p1[idx[1]]);
+
+                        drow[x] = I;
+                }
+        }
+}
+
+void nx_image_rotate45(struct NXImage *dest, struct NXImage *src, NXBool cw)
+{
+        NX_ASSERT_PTR(src);
+        NX_ASSERT_PTR(dest);
+        NX_IMAGE_ASSERT_GRAYSCALE(src);
+        NX_IMAGE_ASSERT_GRAYSCALE(dest);
+
+        switch (src->dtype) {
+        case NX_IMAGE_UCHAR: nx_image_rotate45_uc(dest, src, cw); break;
+        case NX_IMAGE_FLOAT32: nx_image_rotate45_f32(dest, src, cw); break;
+        default: NX_FATAL(NX_LOG_TAG, "Unhandled switch case for image data type");
         }
 }

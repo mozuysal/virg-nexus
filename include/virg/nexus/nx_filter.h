@@ -35,6 +35,8 @@ void nx_kernel_sym_gaussian(int n_k, float *kernel, float sigma);
 
 void nx_convolve_sym(int n, float *data, int n_k, const float *kernel);
 
+void nx_convolve_box(int n, float *data, int n_r);
+
 void nx_filter_copy_to_buffer1_uc(int n, float *buffer, const uchar *data, int n_border, enum NXBorderMode mode);
 
 void nx_filter_copy_to_buffer_uc(int n, float *buffer, const uchar *data, int stride, int n_border, enum NXBorderMode mode);
