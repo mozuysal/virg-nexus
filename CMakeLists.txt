@@ -45,6 +45,7 @@ set(virg_nexus_SOURCES
   src/fast/fast_nonmax.c
   src/nx_fast_detector.c
   src/nx_harris_detector.c
+  src/nx_checkerboard_detector.c
   src/nx_keypoint_vector.c
   src/nx_brief_extractor.c
   src/nx_data_frame.c
@@ -98,6 +99,7 @@ set(virg_nexus_HEADERS
   include/virg/nexus/nx_keypoint_vector.h
   include/virg/nexus/nx_fast_detector.h
   include/virg/nexus/nx_harris_detector.h
+  include/virg/nexus/nx_checkerboard_detector.h
   include/virg/nexus/nx_brief_extractor.h
   include/virg/nexus/nx_data_frame.h
   include/virg/nexus/nx_csv_lexer.h
@@ -118,6 +120,7 @@ include_directories(include)
 
 # --------------------------- configuration ----------------------------
 set(CMAKE_INSTALL_PREFIX "$ENV{DEVEL_DIR}")
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(VIRG_NEXUS_USE_SIMD "Enable SIMD flags"  ON)
 
