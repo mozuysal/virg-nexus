@@ -18,6 +18,14 @@
 #  define png_jmpbuf(png_ptr) ((png_ptr)->jmpbuf)
 #endif
 
+#ifndef png_infopp_NULL
+#  define png_infopp_NULL (png_infopp)NULL
+#endif
+
+#ifndef int_p_NULL
+# define int_p_NULL (int*)NULL
+#endif
+
 #include "virg/nexus/nx_assert.h"
 #include "virg/nexus/nx_alloc.h"
 #include "virg/nexus/nx_log.h"
@@ -67,7 +75,7 @@ static NXResult save_as_png(const struct NXImage *img, FILE *fout)
                      PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
         png_write_info(png_ptr, info_ptr);
 
-        if ((unsigned int)img->height > PNG_UINT_32_MAX/png_sizeof(png_bytep)) {
+        if ((unsigned int)img->height > PNG_UINT_32_MAX/sizeof(png_bytep)) {
                 png_error(png_ptr, "Image is too tall to process in memory");
                 return NX_FAIL;
         }
@@ -138,9 +146,7 @@ static NXResult load_as_png(struct NXImage *img, FILE *fin,
                 png_set_palette_to_rgb(png_ptr);
         }
 
-        if (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8) {
-                png_set_gray_1_2_4_to_8(png_ptr);
-        }
+        png_set_expand(png_ptr);
 
         enum NXImageType output_type = NX_IMAGE_RGBA;
         if (mode == NX_IMAGE_LOAD_GRAYSCALE) {
