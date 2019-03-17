@@ -1,5 +1,5 @@
 /**
- * @file nx_harris_detector_main.c
+ * @File nx_harris_detector_main.c
  *
  * This file is part of the IYTE Visual Intelligence Research Group Software Library
  *
@@ -12,6 +12,7 @@
  */
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
 
 #include "virg/nexus/nx_options.h"
 #include "virg/nexus/nx_alloc.h"
@@ -25,10 +26,12 @@
 #include "virg/nexus/nx_json_tree.h"
 #include "virg/nexus/nx_json_bundle.h"
 
+static void generate_random_checkerboard(struct NXImage *img);
+
 int main(int argc, char** argv)
 {
         struct NXOptions* opt = nx_options_new("Sddidsbb",
-                                               "-i", "input IMAGE", "",
+                                               "-i", "input IMAGE or \"synthetic\"", "",
                                                "--sigma-int", "integration scale", 1.2,
                                                "-k", "Harris corner score parameter", 0.06,
                                                "-N", "maximum number of keypoints", 2000,
@@ -54,7 +57,11 @@ int main(int argc, char** argv)
                 nx_options_print_values(opt, stderr);
 
         struct NXImage* img = nx_image_alloc();
-        nx_image_xload(img, input_name, NX_IMAGE_LOAD_GRAYSCALE);
+
+        if (!strcmp(input_name, "synthetic"))
+                generate_random_checkerboard(img);
+        else
+                nx_image_xload(img, input_name, NX_IMAGE_LOAD_GRAYSCALE);
 
         if (is_verbose)
                 NX_LOG("HARRIS", "Loaded image of size %dx%d from file %s.",
@@ -157,4 +164,8 @@ int main(int argc, char** argv)
         nx_options_free(opt);
 
         return EXIT_SUCCESS;
+}
+
+void generate_random_checkerboard(struct NXImage *img) {
+        nx_image_set_zero(img);
 }
