@@ -282,10 +282,14 @@ include_directories(${TOOL_INCLUDE_DIR})
 
 set(NEXUS_TOOLS
   nx-harris-detector
+  nx-warp-image
 )
 
 add_executable(nx-harris-detector tools/nx_harris_detector_main.c)
 install(FILES ${TOOL_MAN_DIR}/nx-harris-detector.1 DESTINATION ${TOOL_MAN_INSTALL_DIR}/man1)
+
+add_executable(nx-warp-image tools/nx_warp_image_main.c)
+install(FILES ${TOOL_MAN_DIR}/nx-warp-image.1 DESTINATION ${TOOL_MAN_INSTALL_DIR}/man1)
 
 foreach(NEXUS_TOOL ${NEXUS_TOOLS})
   target_link_libraries(${NEXUS_TOOL} virg-nexus ${EXEC_LIBRARIES})
