@@ -46,7 +46,8 @@ void nx_options_add(struct NXOptions *opt, const char *opt_format, ...);
  * Adds the switches '-h|--help' that displays the usage message to options.
  *
  * @param opt variable holding options
- */void nx_options_add_help(struct NXOptions *opt);
+ */
+void nx_options_add_help(struct NXOptions *opt);
 
 void nx_options_set_from_args(struct NXOptions *opt, int argc, char **argv);
 

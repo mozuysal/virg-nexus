@@ -6,7 +6,7 @@ set(VERSION 1.0)
 
 option(VIRG_NEXUS_PC_LINUX "Enable Linux Compilation"  ON)
 
-set(virg_nexus_SOURCES
+set(virg_nexus_C_SOURCES
   src/nx_alloc.c
   src/nx_mem_block.c
   src/SFMT/SFMT.c
@@ -55,7 +55,7 @@ set(virg_nexus_SOURCES
   src/nx_camera.c
 )
 
-set(virg_nexus_HEADERS
+set(virg_nexus_C_HEADERS
   include/virg/nexus/nx_config.h
   include/virg/nexus/nx_types.h
   include/virg/nexus/nx_assert.h
@@ -107,20 +107,28 @@ set(virg_nexus_HEADERS
   include/virg/nexus/nx_camera.h
 )
 
-add_library(virg-nexus STATIC ${virg_nexus_SOURCES})
+set(virg_nexus_CXX_SOURCES
+  src/vg_options.cc
+)
+
+set(virg_nexus_CXX_HEADERS
+  include/virg/nexus/vg_options.hpp
+)
+
+add_library(virg-nexus STATIC ${virg_nexus_C_SOURCES} ${virg_nexus_CXX_SOURCES})
 set_target_properties(virg-nexus PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 
-add_library(virg-nexus-shared SHARED ${virg_nexus_SOURCES})
+add_library(virg-nexus-shared SHARED ${virg_nexus_C_SOURCES} ${virg_nexus_CXX_SOURCES})
 target_link_libraries(virg-nexus-shared -lm -llapack)
 set_target_properties(virg-nexus-shared PROPERTIES OUTPUT_NAME virg-nexus)
 set_target_properties(virg-nexus-shared PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR} )
-include_directories(include)
 
 # --------------------------- configuration ----------------------------
 set(CMAKE_INSTALL_PREFIX "$ENV{DEVEL_DIR}")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR} )
+include_directories(include)
 
 option(VIRG_NEXUS_USE_SIMD "Enable SIMD flags"  ON)
 
@@ -154,7 +162,7 @@ set(CMAKE_BUILD_TYPE Debug)
 # -------------------------- install target ----------------------------
 install(TARGETS virg-nexus ARCHIVE DESTINATION lib)
 install(TARGETS virg-nexus-shared LIBRARY DESTINATION lib)
-foreach(virg_nexus_header ${virg_nexus_HEADERS})
+foreach(virg_nexus_header ${virg_nexus_C_HEADERS} ${virg_nexus_CXX_HEADERS})
   get_filename_component(install_RELPATH ${virg_nexus_header} PATH)
   install(FILES ${virg_nexus_header} DESTINATION ${install_RELPATH})
 endforeach(virg_nexus_header)
