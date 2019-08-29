@@ -109,10 +109,12 @@ set(virg_nexus_C_HEADERS
 
 set(virg_nexus_CXX_SOURCES
   src/vg_options.cc
+  src/vg_image.cc
 )
 
 set(virg_nexus_CXX_HEADERS
   include/virg/nexus/vg_options.hpp
+  include/virg/nexus/vg_image.hpp
 )
 
 add_library(virg-nexus STATIC ${virg_nexus_C_SOURCES} ${virg_nexus_CXX_SOURCES})
