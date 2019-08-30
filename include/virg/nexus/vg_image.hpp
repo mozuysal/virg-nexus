@@ -13,9 +13,12 @@
 #ifndef VIRG_NEXUS_VG_IMAGE_HPP
 #define VIRG_NEXUS_VG_IMAGE_HPP
 
+#include <string>
+
 #include "virg/nexus/nx_config.h"
 #include "virg/nexus/nx_log.h"
 #include "virg/nexus/nx_image.h"
+#include "virg/nexus/nx_image_io.h"
 
 namespace virg {
 namespace nexus {
@@ -24,6 +27,8 @@ class VGImage {
 public:
         enum Type { GRAYSCALE, RGBA };
         enum DataType { UCHAR, FLOAT32 };
+        enum LoadMode { LOAD_AS_IS = -1, LOAD_GRAYSCALE = 0, LOAD_RGBA };
+
         static const int STRIDE_DEFAULT = NX_IMAGE_STRIDE_DEFAULT;
 
         VGImage();
@@ -54,8 +59,11 @@ public:
         int n_channels() const { return m_img->n_channels; }
         int row_stride() const { return m_img->row_stride; }
 
-        template <typename T> inline T* data() ;
+        template <typename T> inline       T* data() ;
         template <typename T> inline const T* data() const ;
+
+        struct NXImage*       nx_img()       { return m_img; }
+        const struct NXImage* nx_img() const { return m_img; }
 
         void set_zero();
         void normalize_to_zero_one(bool symmetric_around_zero);
@@ -70,36 +78,42 @@ public:
         void deriv_x_of(const VGImage& src);
         void deriv_y_of(const VGImage& src);
 
+        void xsave(const std::string& filename);
+        bool save(const std::string& filename);
+        void xload(const std::string& filename, enum LoadMode mode);
+        bool load(const std::string& filename, enum LoadMode mode);
+
         static inline Type     type_from_nx_image_type(enum NXImageType nx_type);
         static inline DataType data_type_from_nx_image_data_type(enum NXImageDataType nx_data_type);
         static inline enum NXImageType type_to_nx_image_type(Type vg_type);
         static inline enum NXImageDataType data_type_to_nx_image_data_type(DataType vg_data_type);
+        static inline enum NXImageLoadMode load_mode_to_nx_load_mode(LoadMode mode);
 
 private:
         struct NXImage * m_img;
 };
 
-template <> const uchar* VGImage::data<uchar>() const
+template <> inline const uchar* VGImage::data<uchar>() const
 {
         return m_img->data.uc;
 }
 
-template <> const float* VGImage::data<float>() const
+template <> inline const float* VGImage::data<float>() const
 {
         return m_img->data.f32;
 }
 
-template <> uchar* VGImage::data<uchar>()
+template <> inline uchar* VGImage::data<uchar>()
 {
         return m_img->data.uc;
 }
 
-template <> float* VGImage::data<float>()
+template <> inline float* VGImage::data<float>()
 {
         return m_img->data.f32;
 }
 
-VGImage::Type VGImage::type_from_nx_image_type(enum NXImageType nx_type) {
+inline VGImage::Type VGImage::type_from_nx_image_type(enum NXImageType nx_type) {
         switch(nx_type) {
         case NX_IMAGE_GRAYSCALE: return GRAYSCALE;
         case NX_IMAGE_RGBA: return RGBA;
@@ -108,7 +122,7 @@ VGImage::Type VGImage::type_from_nx_image_type(enum NXImageType nx_type) {
         }
 }
 
-VGImage::DataType VGImage::data_type_from_nx_image_data_type(enum NXImageDataType nx_data_type) {
+inline VGImage::DataType VGImage::data_type_from_nx_image_data_type(enum NXImageDataType nx_data_type) {
         switch(nx_data_type) {
         case NX_IMAGE_UCHAR: return UCHAR;
         case NX_IMAGE_FLOAT32: return FLOAT32;
@@ -117,7 +131,7 @@ VGImage::DataType VGImage::data_type_from_nx_image_data_type(enum NXImageDataTyp
         }
 }
 
-enum NXImageType VGImage::type_to_nx_image_type(VGImage::Type vg_type)
+inline enum NXImageType VGImage::type_to_nx_image_type(VGImage::Type vg_type)
 {
         switch(vg_type) {
         case GRAYSCALE: return NX_IMAGE_GRAYSCALE;
@@ -127,13 +141,24 @@ enum NXImageType VGImage::type_to_nx_image_type(VGImage::Type vg_type)
         }
 }
 
-enum NXImageDataType VGImage::data_type_to_nx_image_data_type(VGImage::DataType vg_data_type)
+inline enum NXImageDataType VGImage::data_type_to_nx_image_data_type(VGImage::DataType vg_data_type)
 {
         switch(vg_data_type) {
         case UCHAR: return NX_IMAGE_UCHAR;
         case FLOAT32: return NX_IMAGE_FLOAT32;
         default:
                 NX_FATAL(VG_LOG_TAG, "Unknown VGImage::DataType!");
+        }
+}
+
+inline enum NXImageLoadMode VGImage::load_mode_to_nx_load_mode(VGImage::LoadMode mode)
+{
+        switch(mode) {
+        case LOAD_AS_IS: return NX_IMAGE_LOAD_AS_IS;
+        case LOAD_GRAYSCALE: return NX_IMAGE_LOAD_GRAYSCALE;
+        case LOAD_RGBA: return NX_IMAGE_LOAD_RGBA;
+        default:
+                NX_FATAL(VG_LOG_TAG, "Unknown VGImage::LoadMode!");
         }
 }
 

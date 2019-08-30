@@ -157,5 +157,25 @@ void VGImage::deriv_y_of(const VGImage& src)
         nx_image_deriv_y(m_img, src.m_img);
 }
 
+void VGImage::xsave(const std::string& filename)
+{
+        nx_image_xsave(m_img, filename.c_str());
+}
+
+bool VGImage::save(const std::string& filename)
+{
+        return NX_OK == nx_image_save(m_img, filename.c_str());
+}
+
+void VGImage::xload(const std::string& filename, enum VGImage::LoadMode mode)
+{
+        nx_image_xload(m_img, filename.c_str(), VGImage::load_mode_to_nx_load_mode(mode));
+}
+
+bool VGImage::load(const std::string& filename, enum VGImage::LoadMode mode)
+{
+        return NX_OK == nx_image_load(m_img, filename.c_str(), VGImage::load_mode_to_nx_load_mode(mode));
+}
+
 }
 }
