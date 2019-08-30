@@ -1,0 +1,21 @@
+.TH VG-STEREO-MATCHER 1 2019-08-30
+.SH NAME
+vg-stereo-matcher \- match points in a given pair of images and estimate scene geometry
+.SH SYNOPSIS
+.B vg-stereo-matcher
+.BR \-l " " \fIleft-image\fR 
+.BR \-r " " \fIright-image\fR 
+.RB [ \-v | \-\-verbose ]
+.SH DESCRIPTION
+\fBvg-stereo-matcher\fR is a tool for matching to images.
+.SH OPTIONS
+.TP
+.BR \-l " " \fIleft-image\fR
+Sets the name of the image file to load for the left image.
+.TP
+.BR \-r " " \fIright-image\fR
+Sets the name of the image file to load for the right image.
+.TP
+.BR \-v ", " \-\-verbose
+Enables more detailed log messages.
+These are written to \fIstderr\fR.
