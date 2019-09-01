@@ -14,6 +14,7 @@
 #define VIRG_NEXUS_VG_IMAGE_HPP
 
 #include <string>
+#include <memory>
 
 #include "virg/nexus/nx_config.h"
 #include "virg/nexus/nx_log.h"
@@ -32,25 +33,19 @@ public:
         static const int STRIDE_DEFAULT = NX_IMAGE_STRIDE_DEFAULT;
 
         VGImage();
-        VGImage(const VGImage& img) = delete;
-        VGImage(const VGImage&& img) = delete;
+        VGImage(struct NXImage* nx_img, bool own_memory);
         ~VGImage();
 
-        VGImage& operator=(const VGImage& img) = delete;
-        VGImage& operator=(const VGImage&& img) = delete;
-
-        void create(int width, int height, int row_stride,
-                    Type type, DataType dtype);
-        void create_gray(int width, int height, DataType dtype);
-        void create_rgba(int width, int height, DataType dtype);
-        void create_like(const VGImage& src);
-        void copy_of(const VGImage& img);
-        void swap_with(VGImage& img);
-        template <typename T> void wrap(T* data, int width, int height,
-                                        int row_stride, Type type,
-                                        DataType dtype, bool own_memory);
-        void convert_type_to(Type type);
-        void release();
+        void    create(int width, int height, int row_stride,
+                       Type type, DataType dtype);
+        void    create_gray(int width, int height, DataType dtype);
+        void    create_rgba(int width, int height, DataType dtype);
+        void    create_like(const VGImage& src);
+        void    copy_of(const VGImage& img);
+        VGImage clone() const;
+        void    swap_with(VGImage& img);
+        void    convert_type_to(Type type);
+        void    release();
 
         int width () const { return m_img->width; }
         int height() const { return m_img->height; }
@@ -62,8 +57,12 @@ public:
         template <typename T> inline       T* data() ;
         template <typename T> inline const T* data() const ;
 
-        struct NXImage*       nx_img()       { return m_img; }
-        const struct NXImage* nx_img() const { return m_img; }
+        struct NXImage*       nx_img()       { return m_img.get(); }
+        const struct NXImage* nx_img() const { return m_img.get(); }
+        void wrap(struct NXImage* img, bool own_memory);
+        template <typename T> void wrap(T* data, int width, int height,
+                                        int row_stride, Type type,
+                                        DataType dtype, bool own_memory);
 
         void set_zero();
         void normalize_to_zero_one(bool symmetric_around_zero);
@@ -90,7 +89,7 @@ public:
         static inline enum NXImageLoadMode load_mode_to_nx_load_mode(LoadMode mode);
 
 private:
-        struct NXImage * m_img;
+        std::shared_ptr<struct NXImage> m_img;
 };
 
 template <> inline const uchar* VGImage::data<uchar>() const
