@@ -131,10 +131,10 @@ void VGImageAnnotator::draw_keypoints(int n_keys, struct NXKeypoint *key,
                                       bool single_color)
 {
         for (int i = 0; i < n_keys; ++i) {
-                struct NXKeypoint* key = key + i;
+                struct NXKeypoint* k = key + i;
                 VGColor color = single_color ? VGColor::white()
-                        : color_from_keypoint_level(key->level);
-                draw_keypoint(key, color);
+                        : color_from_keypoint_level(k->level);
+                draw_keypoint(k, color);
         }
 }
 

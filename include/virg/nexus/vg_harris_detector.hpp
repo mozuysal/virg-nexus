@@ -35,8 +35,8 @@ public:
         int detect_pyr(const VGImagePyr& pyr, int n_key_levels,
                        int max_n_keys, bool adapt_threshold);
 
-        std::vector<NXKeypoint>& keys();
-        const std::vector<NXKeypoint>& keys() const;
+        std::vector<NXKeypoint>& keys() { return m_keys; }
+        const std::vector<NXKeypoint>& keys() const { return m_keys; }
 private:
         void update_score_image(const VGImage& image);
         float adapt_threshold(float threshold, int n_keys, int max_n_keys);

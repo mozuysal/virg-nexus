@@ -20,7 +20,8 @@ namespace nexus {
 
 class VGColor {
 public:
-        VGColor(double red, double green, double blue, double alpha);
+        VGColor(double red, double green, double blue, double alpha)
+                : m_color{red, green, blue, alpha} {}
 
         static inline VGColor red() { return VGColor(1.0, 0.0, 0.0, 1.0); }
         static inline VGColor green() { return VGColor(0.0, 1.0, 0.0, 1.0); }

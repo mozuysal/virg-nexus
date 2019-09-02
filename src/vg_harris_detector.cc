@@ -118,9 +118,9 @@ int VGHarrisDetector::detect_pyr(const VGImagePyr& pyr, int n_key_levels,
         }
 
         if (adapt_threshold) {
-                NX_LOG(VG_LOG_TAG, "adapting threshold with %d keys %d max %.10f threshold", total_n_keys, max_n_keys, m_threshold);
+                // NX_LOG(VG_LOG_TAG, "adapting threshold with %d keys %d max %.10f threshold", total_n_keys, max_n_keys, m_threshold);
                 m_threshold = this->adapt_threshold(m_threshold, total_n_keys, max_n_keys);
-                NX_LOG(VG_LOG_TAG, "   adapted to %.10f", m_threshold);
+                // NX_LOG(VG_LOG_TAG, "   adapted to %.10f", m_threshold);
         }
 
         if (total_n_keys > max_n_keys)

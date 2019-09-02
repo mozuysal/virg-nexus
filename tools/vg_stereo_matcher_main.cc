@@ -22,13 +22,16 @@
 #include "virg/nexus/vg_image.hpp"
 #include "virg/nexus/vg_image_pyr.hpp"
 #include "virg/nexus/vg_harris_detector.hpp"
+#include "virg/nexus/vg_image_annotator.hpp"
 
 using namespace std;
 
 using virg::nexus::VGOptions;
+using virg::nexus::VGColor;
 using virg::nexus::VGImage;
 using virg::nexus::VGImagePyr;
 using virg::nexus::VGHarrisDetector;
+using virg::nexus::VGImageAnnotator;
 
 static const char* LOG_TAG = "STEREO";
 static const int MAX_N_KEYS = 2000;
@@ -72,6 +75,19 @@ int main(int argc, char** argv)
                                 break;
                 }
                 if (is_verbose) NX_LOG(LOG_TAG, "  Detected %d keypoints", n_keys);
+        }
+
+        if (is_verbose) {
+                NX_LOG(LOG_TAG, "Saving keypoint images to /tmp");
+                VGImageAnnotator ia(images[0]);
+                vector<NXKeypoint>& v = detector[0].keys();
+                ia.draw_keypoints(static_cast<int>(v.size()), &v[0], false);
+                ia.get_canvas().xsave("/tmp/left_keys.png");
+
+                ia.set_image(images[1]);
+                v = detector[1].keys();
+                ia.draw_keypoints(static_cast<int>(v.size()), &v[0], false);
+                ia.get_canvas().xsave("/tmp/right_keys.png");
         }
 
         return EXIT_SUCCESS;
