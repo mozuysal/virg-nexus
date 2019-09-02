@@ -20,16 +20,20 @@
 
 #include "virg/nexus/vg_options.hpp"
 #include "virg/nexus/vg_image.hpp"
+#include "virg/nexus/vg_image_pyr.hpp"
 #include "virg/nexus/vg_harris_detector.hpp"
 
 using namespace std;
 
 using virg::nexus::VGOptions;
 using virg::nexus::VGImage;
+using virg::nexus::VGImagePyr;
 using virg::nexus::VGHarrisDetector;
 
 static const char* LOG_TAG = "STEREO";
 static const int MAX_N_KEYS = 2000;
+static const int N_PYR_LEVELS = 5;
+static const float SIGMA0 = 1.2f;
 
 int main(int argc, char** argv)
 {
@@ -53,12 +57,17 @@ int main(int argc, char** argv)
                 NX_LOG(LOG_TAG, "Loaded %dx%d image from %s.", images[1].width(), images[1].height(), right_image.c_str());
         }
 
+        VGImagePyr pyr[2] = {
+                VGImagePyr::build_fast_from(images[0], N_PYR_LEVELS, SIGMA0),
+                VGImagePyr::build_fast_from(images[1], N_PYR_LEVELS, SIGMA0)
+        };
+
         VGHarrisDetector detector[2];
         for (int i = 0; i < 2; ++i) {
                 if (is_verbose) NX_LOG(LOG_TAG, "Processing image %d/2", i+1);
                 int n_keys;
                 for (int k = 0; k < 20; ++k) {
-                        n_keys = detector[i].detect(images[i], MAX_N_KEYS, true);
+                        n_keys = detector[i].detect_pyr(pyr[i], N_PYR_LEVELS-2, MAX_N_KEYS, true);
                         if (n_keys < MAX_N_KEYS && n_keys >= 0.95*MAX_N_KEYS)
                                 break;
                 }

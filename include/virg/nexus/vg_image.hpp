@@ -56,6 +56,8 @@ public:
 
         template <typename T> inline       T* data() ;
         template <typename T> inline const T* data() const ;
+        template <typename T> inline       T* data(int y) ;
+        template <typename T> inline const T* data(int y) const ;
 
         struct NXImage*       nx_img()       { return m_img.get(); }
         const struct NXImage* nx_img() const { return m_img.get(); }
@@ -110,6 +112,26 @@ template <> inline uchar* VGImage::data<uchar>()
 template <> inline float* VGImage::data<float>()
 {
         return m_img->data.f32;
+}
+
+template <> inline uchar* VGImage::data<uchar>(int y)
+{
+        return m_img->data.uc + y*m_img->row_stride;
+}
+
+template <> inline const uchar* VGImage::data<uchar>(int y) const
+{
+        return m_img->data.uc + y*m_img->row_stride;
+}
+
+template <> inline float* VGImage::data<float>(int y)
+{
+        return m_img->data.f32 + y*m_img->row_stride;
+}
+
+template <> inline const float* VGImage::data<float>(int y) const
+{
+        return m_img->data.f32 + y*m_img->row_stride;
 }
 
 inline VGImage::Type VGImage::type_from_nx_image_type(enum NXImageType nx_type) {

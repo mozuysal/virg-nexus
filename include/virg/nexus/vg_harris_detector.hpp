@@ -17,6 +17,7 @@
 
 #include "virg/nexus/nx_keypoint.h"
 #include "virg/nexus/vg_image.hpp"
+#include "virg/nexus/vg_image_pyr.hpp"
 
 namespace virg {
 namespace nexus {
@@ -30,11 +31,16 @@ public:
         void set_k(float k);
         void set_threshold(float threshold);
 
-        int detect(VGImage& image, int max_n_keys, bool adapt_threshold);
+        int detect(const VGImage& image, int max_n_keys, bool adapt_threshold);
+        int detect_pyr(const VGImagePyr& pyr, int n_key_levels,
+                       int max_n_keys, bool adapt_threshold);
 
         std::vector<NXKeypoint>& keys();
         const std::vector<NXKeypoint>& keys() const;
 private:
+        void update_score_image(const VGImage& image);
+        float adapt_threshold(float threshold, int n_keys, int max_n_keys);
+
         float m_sigma_win;
         float m_k;
         float m_threshold;
