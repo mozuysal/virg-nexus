@@ -21,6 +21,8 @@
 #include "virg/nexus/nx_image.h"
 #include "virg/nexus/nx_image_io.h"
 
+#include "virg/nexus/vg_color_map.hpp"
+
 namespace virg {
 namespace nexus {
 
@@ -36,16 +38,16 @@ public:
         VGImage(struct NXImage* nx_img, bool own_memory);
         ~VGImage();
 
-        void    create(int width, int height, int row_stride,
+        VGImage& create(int width, int height, int row_stride,
                        Type type, DataType dtype);
-        void    create_gray(int width, int height, DataType dtype);
-        void    create_rgba(int width, int height, DataType dtype);
-        void    create_like(const VGImage& src);
-        void    copy_of(const VGImage& img);
-        VGImage clone() const;
-        void    swap_with(VGImage& img);
-        void    convert_type_to(Type type);
-        void    release();
+        VGImage& create_gray(int width, int height, DataType dtype);
+        VGImage& create_rgba(int width, int height, DataType dtype);
+        VGImage& create_like(const VGImage& src);
+        VGImage& copy_of(const VGImage& img);
+        VGImage  clone() const;
+        VGImage& swap_with(VGImage& img);
+        VGImage& convert_type_to(Type type);
+        VGImage& release();
 
         int width () const { return m_img->width; }
         int height() const { return m_img->height; }
@@ -61,26 +63,28 @@ public:
 
         struct NXImage*       nx_img()       { return m_img.get(); }
         const struct NXImage* nx_img() const { return m_img.get(); }
-        void wrap(struct NXImage* img, bool own_memory);
-        template <typename T> void wrap(T* data, int width, int height,
-                                        int row_stride, Type type,
-                                        DataType dtype, bool own_memory);
+        VGImage& wrap(struct NXImage* img, bool own_memory);
+        template <typename T> VGImage& wrap(T* data, int width, int height,
+                                            int row_stride, Type type,
+                                            DataType dtype, bool own_memory);
 
-        void set_zero();
-        void normalize_to_zero_one(bool symmetric_around_zero);
-        void axpy(float a, float y);
+        VGImage& set_zero();
+        VGImage& normalize_to_zero_one(bool symmetric_around_zero);
+        VGImage& axpy(float a, float y);
+        VGImage& apply_colormap(VGImage& color, VGImage& gray,
+                                VGColorMap::Type map);
 
-        void scaled_of(const VGImage& src, float scale_f);
-        void downsampled_from(const VGImage& src);
-        void filter_box(const VGImage& src, int sum_radius_x, int sum_radius_y);
-        void filter_box_y(const VGImage& src, int sum_radius);
-        void filter_box_x(const VGImage& src, int sum_radius);
-        void smooth(const VGImage& src, float sigma_x, float sigma_y);
-        void deriv_x_of(const VGImage& src);
-        void deriv_y_of(const VGImage& src);
+        VGImage& scaled_of(const VGImage& src, float scale_f);
+        VGImage& downsampled_from(const VGImage& src);
+        VGImage& filter_box(const VGImage& src, int sum_radius_x, int sum_radius_y);
+        VGImage& filter_box_y(const VGImage& src, int sum_radius);
+        VGImage& filter_box_x(const VGImage& src, int sum_radius);
+        VGImage& smooth(const VGImage& src, float sigma_x, float sigma_y);
+        VGImage& deriv_x_of(const VGImage& src);
+        VGImage& deriv_y_of(const VGImage& src);
 
-        void xsave(const std::string& filename);
-        bool save(const std::string& filename);
+        void xsave(const std::string& filename) const;
+        bool save(const std::string& filename) const;
         void xload(const std::string& filename, enum LoadMode mode);
         bool load(const std::string& filename, enum LoadMode mode);
 

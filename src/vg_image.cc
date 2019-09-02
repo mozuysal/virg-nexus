@@ -31,35 +31,40 @@ VGImage::VGImage(struct NXImage* nx_img, bool own_memory)
 VGImage::~VGImage()
 {}
 
-void VGImage::create(int width, int height,
-                     int row_stride, VGImage::Type type,
-                     VGImage::DataType dtype)
+VGImage& VGImage::create(int width, int height,
+                         int row_stride, VGImage::Type type,
+                         VGImage::DataType dtype)
 {
         nx_image_resize(m_img.get(), width, height, row_stride,
                         VGImage::type_to_nx_image_type(type),
                         VGImage::data_type_to_nx_image_data_type(dtype));
+        return *this;
 }
 
-void VGImage::create_gray(int width, int height, VGImage::DataType dtype)
+VGImage& VGImage::create_gray(int width, int height, VGImage::DataType dtype)
 {
         this->create(width, height, VGImage::STRIDE_DEFAULT, VGImage::GRAYSCALE, dtype);
+        return *this;
 }
 
-void VGImage::create_rgba(int width, int height, VGImage::DataType dtype)
+VGImage& VGImage::create_rgba(int width, int height, VGImage::DataType dtype)
 {
         this->create(width, height, VGImage::STRIDE_DEFAULT, VGImage::RGBA, dtype);
+        return *this;
 }
 
-void VGImage::create_like(const VGImage& src)
+VGImage& VGImage::create_like(const VGImage& src)
 {
         this->create(src.width(), src.height(), src.row_stride(),
                      src.type(), src.data_type());
+        return *this;
 }
 
-void VGImage::copy_of(const VGImage& img)
+VGImage& VGImage::copy_of(const VGImage& img)
 {
         if (&img != this)
                 nx_image_copy(m_img.get(), img.m_img.get());
+        return *this;
 }
 
 VGImage VGImage::clone() const
@@ -70,17 +75,18 @@ VGImage VGImage::clone() const
 }
 
 template <>
-void VGImage::wrap<uchar>(uchar* data, int width, int height,
-                          int row_stride, VGImage::Type type,
-                          VGImage::DataType dtype, bool own_memory)
+VGImage& VGImage::wrap<uchar>(uchar* data, int width, int height,
+                              int row_stride, VGImage::Type type,
+                              VGImage::DataType dtype, bool own_memory)
 {
         nx_image_wrap(m_img.get(), static_cast<void*>(data), width, height, row_stride,
                       VGImage::type_to_nx_image_type(type),
                       VGImage::data_type_to_nx_image_data_type(dtype),
                       static_cast<NXBool>(own_memory));
+        return *this;
 }
 
-void VGImage::wrap(struct NXImage* img, bool own_memory)
+VGImage& VGImage::wrap(struct NXImage* img, bool own_memory)
 {
         if (own_memory) {
                 shared_ptr<struct NXImage> ptr(img, nx_image_free);
@@ -89,103 +95,122 @@ void VGImage::wrap(struct NXImage* img, bool own_memory)
                 shared_ptr<struct NXImage> ptr(img, [](struct NXImage *ptr) {});
                 m_img = ptr;
         }
+        return *this;
 }
 
 template <>
-void VGImage::wrap<float>(float* data, int width, int height,
-                          int row_stride, VGImage::Type type,
-                          VGImage::DataType dtype, bool own_memory)
+VGImage& VGImage::wrap<float>(float* data, int width, int height,
+                              int row_stride, VGImage::Type type,
+                              VGImage::DataType dtype, bool own_memory)
 {
         nx_image_wrap(m_img.get(), static_cast<void*>(data), width, height, row_stride,
                       VGImage::type_to_nx_image_type(type),
                       VGImage::data_type_to_nx_image_data_type(dtype),
                       static_cast<NXBool>(own_memory));
+        return *this;
 }
 
-void VGImage::swap_with(VGImage& img)
+VGImage& VGImage::swap_with(VGImage& img)
 {
         std::swap(m_img, img.m_img);
+        return *this;
 }
 
 
-void VGImage::release()
+VGImage& VGImage::release()
 {
         nx_image_release(m_img.get());
+        return *this;
 }
 
 
-void VGImage::convert_type_to(VGImage::Type type)
+VGImage& VGImage::convert_type_to(VGImage::Type type)
 {
         nx_image_convert_type(m_img.get(), VGImage::type_to_nx_image_type(type));
+        return *this;
 }
 
 
-/*
-void VGImage::apply_colormap(struct NXImage* color, struct NXImage* gray,
-                             enum NXColorMap map);
-*/
+VGImage& VGImage::apply_colormap(VGImage& color, VGImage& gray,
+                                 VGColorMap::Type map)
+{
+        nx_image_apply_colormap(color.nx_img(), gray.nx_img(),
+                                VGColorMap::type_to_nx_type(map));
+        return *this;
+}
 
-void VGImage::set_zero()
+VGImage& VGImage::set_zero()
 {
         nx_image_set_zero(m_img.get());
+        return *this;
 }
 
-void VGImage::normalize_to_zero_one(bool symmetric_around_zero)
+VGImage& VGImage::normalize_to_zero_one(bool symmetric_around_zero)
 {
         nx_image_normalize_to_zero_one(m_img.get(), static_cast<NXBool>(symmetric_around_zero));
+        return *this;
 }
 
-void VGImage::axpy(float a, float y)
+VGImage& VGImage::axpy(float a, float y)
 {
         nx_image_axpy(m_img.get(), a, y);
+        return *this;
 }
 
-void VGImage::scaled_of(const VGImage& src, float scale_f)
+VGImage& VGImage::scaled_of(const VGImage& src, float scale_f)
 {
         nx_image_scale(m_img.get(), src.m_img.get(), scale_f);
+        return *this;
 }
 
-void VGImage::downsampled_from(const VGImage& src)
+VGImage& VGImage::downsampled_from(const VGImage& src)
 {
         nx_image_downsample(m_img.get(), src.m_img.get());
+        return *this;
 }
 
-void VGImage::smooth(const VGImage& src, float sigma_x, float sigma_y)
+VGImage& VGImage::smooth(const VGImage& src, float sigma_x, float sigma_y)
 {
         nx_image_smooth(m_img.get(), src.m_img.get(), sigma_x, sigma_y, NULL);
+        return *this;
 }
 
-void VGImage::filter_box_x(const VGImage& src, int sum_radius)
+VGImage& VGImage::filter_box_x(const VGImage& src, int sum_radius)
 {
         nx_image_filter_box_x(m_img.get(), src.m_img.get(), sum_radius, NULL);
+        return *this;
 }
 
-void VGImage::filter_box_y(const VGImage& src, int sum_radius)
+VGImage& VGImage::filter_box_y(const VGImage& src, int sum_radius)
 {
         nx_image_filter_box_y(m_img.get(), src.m_img.get(), sum_radius, NULL);
+        return *this;
 }
 
-void VGImage::filter_box(const VGImage& src, int sum_radius_x, int sum_radius_y)
+VGImage& VGImage::filter_box(const VGImage& src, int sum_radius_x, int sum_radius_y)
 {
         nx_image_filter_box(m_img.get(), src.m_img.get(), sum_radius_x, sum_radius_y, NULL);
+        return *this;
 }
 
-void VGImage::deriv_x_of(const VGImage& src)
+VGImage& VGImage::deriv_x_of(const VGImage& src)
 {
         nx_image_deriv_x(m_img.get(), src.m_img.get());
+        return *this;
 }
 
-void VGImage::deriv_y_of(const VGImage& src)
+VGImage& VGImage::deriv_y_of(const VGImage& src)
 {
         nx_image_deriv_y(m_img.get(), src.m_img.get());
+        return *this;
 }
 
-void VGImage::xsave(const std::string& filename)
+void VGImage::xsave(const std::string& filename) const
 {
         nx_image_xsave(m_img.get(), filename.c_str());
 }
 
-bool VGImage::save(const std::string& filename)
+bool VGImage::save(const std::string& filename) const
 {
         return NX_OK == nx_image_save(m_img.get(), filename.c_str());
 }
