@@ -113,6 +113,7 @@ set(virg_nexus_CXX_SOURCES
   src/vg_image_pyr.cc
   src/vg_harris_detector.cc
   src/vg_brief_extractor.cc
+  src/vg_descriptor_map.cc
   src/vg_graphics_context.cc
   src/vg_image_annotator.cc
 )
@@ -123,6 +124,7 @@ set(virg_nexus_CXX_HEADERS
   include/virg/nexus/vg_image_pyr.hpp
   include/virg/nexus/vg_harris_detector.hpp
   include/virg/nexus/vg_brief_extractor.hpp
+  include/virg/nexus/vg_descriptor_map.hpp
   include/virg/nexus/vg_color.hpp
   include/virg/nexus/vg_color_map.hpp
   include/virg/nexus/vg_graphics_context.hpp
