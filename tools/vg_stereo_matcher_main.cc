@@ -65,12 +65,13 @@ int main(int argc, char** argv)
                 VGImagePyr::build_fast_from(images[1], N_PYR_LEVELS, SIGMA0)
         };
 
-        VGHarrisDetector detector[2];
+        VGHarrisDetector detector;
+        vector<struct NXKeypoint> keys[2];
         for (int i = 0; i < 2; ++i) {
                 if (is_verbose) NX_LOG(LOG_TAG, "Processing image %d/2", i+1);
                 int n_keys;
                 for (int k = 0; k < 20; ++k) {
-                        n_keys = detector[i].detect_pyr(pyr[i], N_PYR_LEVELS-2, MAX_N_KEYS, true);
+                        n_keys = detector.detect_pyr(pyr[i], keys[i], N_PYR_LEVELS-2, MAX_N_KEYS, true);
                         if (n_keys < MAX_N_KEYS && n_keys >= 0.95*MAX_N_KEYS)
                                 break;
                 }
@@ -80,13 +81,11 @@ int main(int argc, char** argv)
         if (is_verbose) {
                 NX_LOG(LOG_TAG, "Saving keypoint images to /tmp");
                 VGImageAnnotator ia(images[0]);
-                vector<NXKeypoint>& v = detector[0].keys();
-                ia.draw_keypoints(static_cast<int>(v.size()), &v[0], false);
+                ia.draw_keypoints(static_cast<int>(keys[0].size()), &keys[0][0], false);
                 ia.get_canvas().xsave("/tmp/left_keys.png");
 
                 ia.set_image(images[1]);
-                v = detector[1].keys();
-                ia.draw_keypoints(static_cast<int>(v.size()), &v[0], false);
+                ia.draw_keypoints(static_cast<int>(keys[1].size()), &keys[1][0], false);
                 ia.get_canvas().xsave("/tmp/right_keys.png");
         }
 

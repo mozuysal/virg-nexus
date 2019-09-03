@@ -31,12 +31,10 @@ public:
         void set_k(float k);
         void set_threshold(float threshold);
 
-        int detect(const VGImage& image, int max_n_keys, bool adapt_threshold);
-        int detect_pyr(const VGImagePyr& pyr, int n_key_levels,
-                       int max_n_keys, bool adapt_threshold);
-
-        std::vector<NXKeypoint>& keys() { return m_keys; }
-        const std::vector<NXKeypoint>& keys() const { return m_keys; }
+        int detect(const VGImage& image, std::vector<NXKeypoint> &keys,
+                   int max_n_keys, bool adapt_threshold);
+        int detect_pyr(const VGImagePyr& pyr, std::vector<NXKeypoint> &keys,
+                       int n_key_levels, int max_n_keys, bool adapt_threshold);
 private:
         void update_score_image(const VGImage& image);
         float adapt_threshold(float threshold, int n_keys, int max_n_keys);
@@ -47,8 +45,6 @@ private:
 
         VGImage m_dimg[3];
         VGImage m_simg;
-
-        std::vector<NXKeypoint> m_keys;
 };
 
 }

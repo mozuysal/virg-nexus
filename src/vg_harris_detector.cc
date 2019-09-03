@@ -23,9 +23,7 @@ VGHarrisDetector::VGHarrisDetector()
         : m_sigma_win(1.2f),
           m_k(0.06f),
           m_threshold(0.000005f)
-{
-        m_keys.reserve(1000);
-}
+{}
 
 VGHarrisDetector::~VGHarrisDetector()
 {
@@ -63,14 +61,14 @@ void VGHarrisDetector::update_score_image(const VGImage& image)
         nx_harris_score_image(m_simg.nx_img(), dimg, m_k);
 }
 
-int VGHarrisDetector::detect(const VGImage& image, int max_n_keys, bool adapt_threshold)
+int VGHarrisDetector::detect(const VGImage& image, std::vector<NXKeypoint> &keys, int max_n_keys, bool adapt_threshold)
 {
         NX_ASSERT(max_n_keys > 0);
 
         update_score_image(image);
 
-        m_keys.resize(2*max_n_keys);
-        int n_keys = nx_harris_detect_keypoints(2*max_n_keys, &m_keys[0], m_simg.nx_img(), m_threshold);
+        keys.resize(2*max_n_keys);
+        int n_keys = nx_harris_detect_keypoints(2*max_n_keys, &keys[0], m_simg.nx_img(), m_threshold);
 
         if (adapt_threshold) {
                 // NX_LOG(VG_LOG_TAG, "adapting threshold with %d keys %d max %.10f threshold", n_keys, max_n_keys, m_threshold);
@@ -80,12 +78,12 @@ int VGHarrisDetector::detect(const VGImage& image, int max_n_keys, bool adapt_th
 
         if (n_keys > max_n_keys)
                 n_keys = max_n_keys;
-        m_keys.resize(n_keys);
+        keys.resize(n_keys);
         return n_keys;
 }
 
-int VGHarrisDetector::detect_pyr(const VGImagePyr& pyr, int n_key_levels,
-                                 int max_n_keys, bool adapt_threshold)
+int VGHarrisDetector::detect_pyr(const VGImagePyr& pyr, std::vector<NXKeypoint> &keys,
+                                 int n_key_levels, int max_n_keys, bool adapt_threshold)
 {
         NX_ASSERT(n_key_levels > 0);
         NX_ASSERT(pyr.n_levels() >= n_key_levels);
@@ -93,22 +91,22 @@ int VGHarrisDetector::detect_pyr(const VGImagePyr& pyr, int n_key_levels,
 
         int total_n_keys = 0;
         int buffer_sz = 2*max_n_keys;
-        m_keys.resize(buffer_sz);
+        keys.resize(buffer_sz);
         while (n_key_levels > 0 && buffer_sz > 0) {
                 const int level = n_key_levels-1;
                 const int k = total_n_keys;
 
                 update_score_image(pyr[level]);
                 int n_keys = nx_harris_detect_keypoints(buffer_sz,
-                                                        &m_keys[k],
+                                                        &keys[k],
                                                         m_simg.nx_img(),
                                                         m_threshold);
 
                 for (int i = k; i < k+n_keys; ++i) {
-                        m_keys[i].level = level;
-                        m_keys[i].scale = pyr.level_scale(level);
-                        m_keys[i].sigma = pyr.level_sigma(level);
-                        m_keys[i].id = i;
+                        keys[i].level = level;
+                        keys[i].scale = pyr.level_scale(level);
+                        keys[i].sigma = pyr.level_sigma(level);
+                        keys[i].id = i;
 
                 }
 
@@ -125,7 +123,7 @@ int VGHarrisDetector::detect_pyr(const VGImagePyr& pyr, int n_key_levels,
 
         if (total_n_keys > max_n_keys)
                 total_n_keys = max_n_keys;
-        m_keys.resize(total_n_keys);
+        keys.resize(total_n_keys);
         return total_n_keys;
 }
 
