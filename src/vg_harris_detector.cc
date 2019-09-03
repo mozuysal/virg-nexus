@@ -61,18 +61,23 @@ void VGHarrisDetector::update_score_image(const VGImage& image)
         nx_harris_score_image(m_simg.nx_img(), dimg, m_k);
 }
 
-int VGHarrisDetector::detect(const VGImage& image, std::vector<NXKeypoint> &keys, int max_n_keys, bool adapt_threshold)
+int VGHarrisDetector::detect(const VGImage& image,
+                             std::vector<struct NXKeypoint> &keys,
+                             int max_n_keys, bool adapt_threshold)
 {
         NX_ASSERT(max_n_keys > 0);
 
         update_score_image(image);
 
         keys.resize(2*max_n_keys);
-        int n_keys = nx_harris_detect_keypoints(2*max_n_keys, &keys[0], m_simg.nx_img(), m_threshold);
+        int n_keys = nx_harris_detect_keypoints(2*max_n_keys, &keys[0],
+                                                m_simg.nx_img(), m_threshold);
 
         if (adapt_threshold) {
-                // NX_LOG(VG_LOG_TAG, "adapting threshold with %d keys %d max %.10f threshold", n_keys, max_n_keys, m_threshold);
-                m_threshold = this->adapt_threshold(m_threshold, n_keys, max_n_keys);
+                // NX_LOG(VG_LOG_TAG, "adapting threshold with %d keys %d max %.10f threshold",
+                       // n_keys, max_n_keys, m_threshold);
+                m_threshold = this->adapt_threshold(m_threshold,
+                                                    n_keys, max_n_keys);
                 // NX_LOG(VG_LOG_TAG, "   adapted to %.10f", m_threshold);
         }
 
@@ -82,8 +87,10 @@ int VGHarrisDetector::detect(const VGImage& image, std::vector<NXKeypoint> &keys
         return n_keys;
 }
 
-int VGHarrisDetector::detect_pyr(const VGImagePyr& pyr, std::vector<NXKeypoint> &keys,
-                                 int n_key_levels, int max_n_keys, bool adapt_threshold)
+int VGHarrisDetector::detect_pyr(const VGImagePyr& pyr,
+                                 std::vector<struct NXKeypoint> &keys,
+                                 int n_key_levels, int max_n_keys,
+                                 bool adapt_threshold)
 {
         NX_ASSERT(n_key_levels > 0);
         NX_ASSERT(pyr.n_levels() >= n_key_levels);
@@ -116,8 +123,10 @@ int VGHarrisDetector::detect_pyr(const VGImagePyr& pyr, std::vector<NXKeypoint> 
         }
 
         if (adapt_threshold) {
-                // NX_LOG(VG_LOG_TAG, "adapting threshold with %d keys %d max %.10f threshold", total_n_keys, max_n_keys, m_threshold);
-                m_threshold = this->adapt_threshold(m_threshold, total_n_keys, max_n_keys);
+                // NX_LOG(VG_LOG_TAG, "adapting threshold with %d keys %d max %.10f threshold",
+                       // total_n_keys, max_n_keys, m_threshold);
+                m_threshold = this->adapt_threshold(m_threshold,
+                                                    total_n_keys, max_n_keys);
                 // NX_LOG(VG_LOG_TAG, "   adapted to %.10f", m_threshold);
         }
 

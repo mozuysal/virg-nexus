@@ -47,6 +47,9 @@ public:
         float         level_scale(int idx) const { return m_pyr->levels[idx].scale; }
         VGImage       operator[] (int idx)       { VGImage l(m_pyr->levels[idx].img, false); return l; }
         const VGImage operator[] (int idx) const { VGImage l(m_pyr->levels[idx].img, false); return l; }
+
+        const struct NXImagePyr* nx_pyr() const { return m_pyr.get(); }
+        struct NXImagePyr*       nx_pyr()       { return m_pyr.get(); }
 private:
         VGImagePyr();
 
