@@ -40,6 +40,7 @@ static const char* LOG_TAG = "STEREO";
 static const int MAX_N_KEYS = 2000;
 static const int N_PYR_LEVELS = 5;
 static const float SIGMA0 = 1.2f;
+static const int   N_OCTETS = 32;
 
 int main(int argc, char** argv)
 {
@@ -92,7 +93,10 @@ int main(int argc, char** argv)
                 ia.get_canvas().xsave("/tmp/right_keys.png");
         }
 
-        
+        VGBriefExtractor be(N_OCTETS);
+        VGDescriptorMap dm[2] = { VGDescriptorMap(N_OCTETS), VGDescriptorMap(N_OCTETS) };
+        be.compute_pyr(pyr[0], static_cast<int>(keys[0].size()), keys[0].data(), dm[0]);
+        be.compute_pyr(pyr[1], static_cast<int>(keys[1].size()), keys[1].data(), dm[1]);
 
         return EXIT_SUCCESS;
 }

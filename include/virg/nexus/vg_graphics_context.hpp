@@ -32,8 +32,10 @@ public:
         ~VGGraphicsContext();
 
         static VGGraphicsContext new_from_image(VGImage rgba);
-        static VGGraphicsContext new_pdf(const std::string& filename, double width, double height);
-        static VGGraphicsContext new_svg(const std::string& filename, double width, double height);
+        static VGGraphicsContext new_pdf(const std::string& filename,
+                                         double width, double height);
+        static VGGraphicsContext new_svg(const std::string& filename,
+                                         double width, double height);
 
         void clear   () { nx_gc_clear(m_gc.get()); }
         void new_path() { nx_gc_new_path(m_gc.get()); }
