@@ -21,7 +21,7 @@
 
 #define LOG_STREAM stderr
 
-#define NX_INFO_COLOR_CODE "\x1b[37m"
+#define NX_INFO_COLOR_CODE "\x1b[34;1m"
 #define NX_LOG_COLOR_CODE "\x1b[36m"
 #define NX_WARNING_COLOR_CODE "\x1b[33m"
 #define NX_ERROR_COLOR_CODE "\x1b[31;1m"
