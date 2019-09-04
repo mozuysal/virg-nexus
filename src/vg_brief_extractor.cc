@@ -13,6 +13,7 @@
 #include "virg/nexus/vg_brief_extractor.hpp"
 
 using std::shared_ptr;
+using std::unique_ptr;
 
 namespace virg {
 namespace nexus {
@@ -28,6 +29,21 @@ VGBriefExtractor& VGBriefExtractor::resize(int n_octets, int radius)
                                          nx_brief_extractor_free);
         m_be = ptr;
         return *this;
+}
+
+void VGBriefExtractor::compute_pyr(const VGImagePyr& pyr, int n_keys,
+                                   const struct NXKeypoint* keys,
+                                   VGDescriptorMap& desc_map)
+{
+        NX_ASSERT(desc_map.n_octets() == m_be->n_octets);
+
+        unique_ptr<uchar[]> desc(new uchar[m_be->n_octets]);
+        for (int i = 0; i < n_keys; ++i) {
+                if (check_keypoint_pyr(pyr, keys[i])) {
+                        compute_pyr(pyr, keys[i], desc.get());
+                        desc_map.add(keys[i].id, desc.get());
+                }
+        }
 }
 
 }

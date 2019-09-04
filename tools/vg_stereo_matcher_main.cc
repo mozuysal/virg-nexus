@@ -22,6 +22,7 @@
 #include "virg/nexus/vg_image.hpp"
 #include "virg/nexus/vg_image_pyr.hpp"
 #include "virg/nexus/vg_harris_detector.hpp"
+#include "virg/nexus/vg_brief_extractor.hpp"
 #include "virg/nexus/vg_image_annotator.hpp"
 
 using namespace std;
@@ -31,6 +32,8 @@ using virg::nexus::VGColor;
 using virg::nexus::VGImage;
 using virg::nexus::VGImagePyr;
 using virg::nexus::VGHarrisDetector;
+using virg::nexus::VGBriefExtractor;
+using virg::nexus::VGDescriptorMap;
 using virg::nexus::VGImageAnnotator;
 
 static const char* LOG_TAG = "STEREO";
@@ -88,6 +91,8 @@ int main(int argc, char** argv)
                 ia.draw_keypoints(static_cast<int>(keys[1].size()), &keys[1][0], false);
                 ia.get_canvas().xsave("/tmp/right_keys.png");
         }
+
+        
 
         return EXIT_SUCCESS;
 }
