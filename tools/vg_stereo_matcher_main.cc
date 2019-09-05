@@ -23,6 +23,7 @@
 #include "virg/nexus/vg_image_pyr.hpp"
 #include "virg/nexus/vg_harris_detector.hpp"
 #include "virg/nexus/vg_brief_extractor.hpp"
+#include "virg/nexus/vg_point_correspondence_2d.hpp"
 #include "virg/nexus/vg_image_annotator.hpp"
 
 using namespace std;
@@ -34,6 +35,7 @@ using virg::nexus::VGImagePyr;
 using virg::nexus::VGHarrisDetector;
 using virg::nexus::VGBriefExtractor;
 using virg::nexus::VGDescriptorMap;
+using virg::nexus::VGPointCorrespondence2D;
 using virg::nexus::VGImageAnnotator;
 
 static const char* LOG_TAG = "STEREO";
@@ -42,18 +44,18 @@ static const int N_PYR_LEVELS = 5;
 static const float SIGMA0 = 1.2f;
 static const int   N_OCTETS = 32;
 
-int main(int argc, char** argv)
-{
+struct StereoFrame {
         VGOptions opt;
-        opt.add_string("-l", "image file for the left image.", VGOptions::REQUIRED, "");
-        opt.add_string("-r", "image file for the right image.", VGOptions::REQUIRED, "");
-        opt.add_bool("-v|--verbose", "display more information.", VGOptions::NOT_REQUIRED, false);
-        opt.add_help();
-        opt.set_from_args(argc, argv);
+        VGImagePyr pyr[2];
+        std::vector<struct NXKeypoint> keys[2];
+        VGDescriptorMap dmap[2];
+        VGPointCorrespondence2D corr;
+};
 
-        string left_image = opt.get_string("-l");
-        string right_image = opt.get_string("-r");
-        bool is_verbose = opt.get_bool("-v");
+static void load_images(StereoFrame& sf) {
+        string left_image  = sf.opt.get_string("-l");
+        string right_image = sf.opt.get_string("-r");
+        bool is_verbose = sf.opt.get_bool("-v");
 
         VGImage images[2];
         images[0].xload(left_image, VGImage::LOAD_GRAYSCALE);
@@ -64,18 +66,19 @@ int main(int argc, char** argv)
                 NX_LOG(LOG_TAG, "Loaded %dx%d image from %s.", images[1].width(), images[1].height(), right_image.c_str());
         }
 
-        VGImagePyr pyr[2] = {
-                VGImagePyr::build_fast_from(images[0], N_PYR_LEVELS, SIGMA0),
-                VGImagePyr::build_fast_from(images[1], N_PYR_LEVELS, SIGMA0)
-        };
+        sf.pyr[0] = VGImagePyr::build_fast_from(images[0], N_PYR_LEVELS, SIGMA0);
+        sf.pyr[1] = VGImagePyr::build_fast_from(images[1], N_PYR_LEVELS, SIGMA0);
+}
+
+static void detect_keypoints(StereoFrame& sf) {
+        bool is_verbose = sf.opt.get_bool("-v");
 
         VGHarrisDetector detector;
-        vector<struct NXKeypoint> keys[2];
         for (int i = 0; i < 2; ++i) {
                 if (is_verbose) NX_LOG(LOG_TAG, "Processing image %d/2", i+1);
                 int n_keys;
                 for (int k = 0; k < 20; ++k) {
-                        n_keys = detector.detect_pyr(pyr[i], keys[i], N_PYR_LEVELS-2, MAX_N_KEYS, true);
+                        n_keys = detector.detect_pyr(sf.pyr[i], sf.keys[i], N_PYR_LEVELS-2, MAX_N_KEYS, true);
                         if (n_keys < MAX_N_KEYS && n_keys >= 0.95*MAX_N_KEYS)
                                 break;
                 }
@@ -84,19 +87,38 @@ int main(int argc, char** argv)
 
         if (is_verbose) {
                 NX_LOG(LOG_TAG, "Saving keypoint images to /tmp");
-                VGImageAnnotator ia(images[0]);
-                ia.draw_keypoints(static_cast<int>(keys[0].size()), &keys[0][0], false);
+                VGImageAnnotator ia(sf.pyr[0][0]);
+                ia.draw_keypoints(static_cast<int>(sf.keys[0].size()), &sf.keys[0][0], false);
                 ia.get_canvas().xsave("/tmp/left_keys.png");
 
-                ia.set_image(images[1]);
-                ia.draw_keypoints(static_cast<int>(keys[1].size()), &keys[1][0], false);
+                ia.set_image(sf.pyr[1][0]);
+                ia.draw_keypoints(static_cast<int>(sf.keys[1].size()), &sf.keys[1][0], false);
                 ia.get_canvas().xsave("/tmp/right_keys.png");
         }
+}
 
+static void compute_descriptors(StereoFrame& sf) {
         VGBriefExtractor be(N_OCTETS);
-        VGDescriptorMap dm[2] = { VGDescriptorMap(N_OCTETS), VGDescriptorMap(N_OCTETS) };
-        be.compute_pyr(pyr[0], static_cast<int>(keys[0].size()), keys[0].data(), dm[0]);
-        be.compute_pyr(pyr[1], static_cast<int>(keys[1].size()), keys[1].data(), dm[1]);
+        sf.dmap[0].set_n_octets(N_OCTETS);
+        sf.dmap[1].set_n_octets(N_OCTETS);
+
+        be.compute_pyr(sf.pyr[0], static_cast<int>(sf.keys[0].size()), sf.keys[0].data(), sf.dmap[0]);
+        be.compute_pyr(sf.pyr[1], static_cast<int>(sf.keys[1].size()), sf.keys[1].data(), sf.dmap[1]);
+}
+
+int main(int argc, char** argv)
+{
+        StereoFrame sf;
+        sf.opt.add_string("-l", "image file for the left image.", VGOptions::REQUIRED, "");
+        sf.opt.add_string("-r", "image file for the right image.", VGOptions::REQUIRED, "");
+        sf.opt.add_bool("-v|--verbose", "display more information.", VGOptions::NOT_REQUIRED, false);
+        sf.opt.add_help();
+        sf.opt.set_from_args(argc, argv);
+
+        load_images(sf);
+        detect_keypoints(sf);
+        compute_descriptors(sf);
+        // match_keypoints(sf);
 
         return EXIT_SUCCESS;
 }
