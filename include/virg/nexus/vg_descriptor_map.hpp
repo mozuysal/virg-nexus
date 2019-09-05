@@ -28,13 +28,14 @@ public:
                 float match_cost;
         };
 
-        VGDescriptorMap(int n_octets);
+        VGDescriptorMap(int n_octets=32);
 
         void clear();
         void reserve(int n_descriptors);
 
         int size    () const { return static_cast<int>(m_ids.size()); }
         int n_octets() const { return m_n_octets; }
+        void set_n_octets(int n_octets) { this->clear(); m_n_octets = n_octets; }
 
         int add(uint64_t id, const uchar* desc);
 

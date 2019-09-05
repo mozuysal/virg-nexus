@@ -18,6 +18,8 @@ namespace virg {
 namespace nexus {
 
 VGImagePyr::VGImagePyr()
+        : m_pyr(nx_image_pyr_alloc(), nx_image_pyr_free),
+          m_builder(nx_image_pyr_builder_alloc(), nx_image_pyr_builder_free)
 {}
 
 VGImagePyr::~VGImagePyr()

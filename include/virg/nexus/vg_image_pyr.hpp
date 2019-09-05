@@ -27,6 +27,7 @@ namespace nexus {
 class VGImagePyr {
 public:
         enum Type { FAST, FINE, SCALED };
+        VGImagePyr();
         ~VGImagePyr();
 
         static VGImagePyr build_fast_from  (const VGImage& image, int n_levels, float sigma0);
@@ -51,8 +52,6 @@ public:
         const struct NXImagePyr* nx_pyr() const { return m_pyr.get(); }
         struct NXImagePyr*       nx_pyr()       { return m_pyr.get(); }
 private:
-        VGImagePyr();
-
         std::shared_ptr<struct NXImagePyr> m_pyr;
         std::shared_ptr<struct NXImagePyrBuilder> m_builder;
 };
