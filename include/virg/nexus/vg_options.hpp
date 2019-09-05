@@ -15,6 +15,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 
 #include "virg/nexus/nx_options.h"
 
@@ -52,7 +53,7 @@ public:
         void set_usage_footer(const std::string& footer);
 
 private:
-        struct NXOptions* m_opt;
+        std::shared_ptr<struct NXOptions> m_opt;
 };
 
 }
