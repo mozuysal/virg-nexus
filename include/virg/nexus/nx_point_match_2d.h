@@ -34,10 +34,10 @@ nx_point_match_2d_from_keypoints(int id,  const struct NXKeypoint *k,
                                  float sigma0,
                                  float match_cost) {
         struct NXPointMatch2D pm2d;
-        pm2d.x[0] = nx_keypoint_x0(k);
-        pm2d.x[1] = nx_keypoint_y0(k);
-        pm2d.xp[0] = nx_keypoint_x0(kp);
-        pm2d.xp[1] = nx_keypoint_y0(kp);
+        pm2d.x[0] = nx_keypoint_xs0(k);
+        pm2d.x[1] = nx_keypoint_ys0(k);
+        pm2d.xp[0] = nx_keypoint_xs0(kp);
+        pm2d.xp[1] = nx_keypoint_ys0(kp);
         pm2d.match_cost = match_cost;
         pm2d.sigma_x = sigma0*k->scale;
         pm2d.sigma_xp = sigma0*kp->scale;

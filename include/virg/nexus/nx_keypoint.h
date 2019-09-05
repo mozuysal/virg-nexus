@@ -36,22 +36,22 @@ struct NXKeypoint {
         int id;
 };
 
-static inline int nx_keypoint_x0(struct NXKeypoint *key)
+static inline int nx_keypoint_x0(const struct NXKeypoint *key)
 {
         return key->x * key->scale;
 }
 
-static inline int nx_keypoint_y0(struct NXKeypoint *key)
+static inline int nx_keypoint_y0(const struct NXKeypoint *key)
 {
         return key->y * key->scale;
 }
 
-static inline float nx_keypoint_xs0(struct NXKeypoint *key)
+static inline float nx_keypoint_xs0(const struct NXKeypoint *key)
 {
         return key->xs * key->scale;
 }
 
-static inline float nx_keypoint_ys0(struct NXKeypoint *key)
+static inline float nx_keypoint_ys0(const struct NXKeypoint *key)
 {
         return key->ys * key->scale;
 }

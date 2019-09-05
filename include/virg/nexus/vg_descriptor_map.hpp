@@ -14,6 +14,7 @@
 #define VIRG_NEXUS_VG_DESCRIPTOR_MAP_HPP
 
 #include <vector>
+#include <tuple>
 
 #include "virg/nexus/nx_types.h"
 
@@ -23,8 +24,8 @@ namespace nexus {
 class VGDescriptorMap {
 public:
         struct SearchResult {
-                std::vector<int>   ids;
-                std::vector<float> distances;
+                int id;
+                float match_cost;
         };
 
         VGDescriptorMap(int n_octets);
@@ -42,7 +43,6 @@ public:
          */
         SearchResult search_nn(const uchar* desc);
         const uchar* search_by_id(int id);
-
 private:
         int m_n_octets;
         std::vector<int>   m_ids;

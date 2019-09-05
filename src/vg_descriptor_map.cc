@@ -18,6 +18,7 @@
 
 using std::memcpy;
 using std::vector;
+using std::make_tuple;
 
 namespace virg {
 namespace nexus {
@@ -65,10 +66,7 @@ VGDescriptorMap::SearchResult VGDescriptorMap::search_nn(const uchar* desc)
                 }
         }
 
-        SearchResult r;
-        r.ids.push_back(id);
-        r.distances.push_back(dist);
-        return r;
+        return SearchResult { .id = id, .match_cost = static_cast<float>(dist) };
 }
 
 const uchar* VGDescriptorMap::search_by_id(int id)
