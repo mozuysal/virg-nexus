@@ -39,7 +39,7 @@ void VGDescriptorMap::reserve(int n_descriptors)
         m_descriptor_data.reserve(n_descriptors*m_n_octets);
 }
 
-int VGDescriptorMap::add(int id, const uchar* desc)
+int VGDescriptorMap::add(uint64_t id, const uchar* desc)
 {
         int i = static_cast<int>(m_ids.size());
         m_ids.push_back(id);
@@ -55,21 +55,22 @@ VGDescriptorMap::SearchResult VGDescriptorMap::search_nn(const uchar* desc)
 {
         int n_desc = static_cast<int>(m_ids.size());
         uchar* desc_ptr = &m_descriptor_data[0];
-        int id = 0;
+        int idx = 0;
         int dist = VGBriefExtractor::distance_of(m_n_octets, desc, desc_ptr);
         for (int i = 1; i < n_desc; ++i) {
                 int d = VGBriefExtractor::distance_of(m_n_octets, desc,
                                                       desc_ptr+i*m_n_octets);
                 if (d < dist) {
                         dist = d;
-                        id = i;
+                        idx = i;
                 }
         }
 
-        return SearchResult { .id = id, .match_cost = static_cast<float>(dist) };
+        return SearchResult { .id = m_ids[idx],
+                        .match_cost = static_cast<float>(dist) };
 }
 
-const uchar* VGDescriptorMap::search_by_id(int id)
+const uchar* VGDescriptorMap::search_by_id(uint64_t id)
 {
         int n_desc = static_cast<int>(m_ids.size());
         for (int i = 0; i < n_desc; ++i) {

@@ -27,11 +27,11 @@ public:
         void clear() { m_matches.clear(); m_stats[0].reset(); m_stats[1].reset(); }
         void reserve(int n_matches) { m_matches.reserve(n_matches); }
 
-        int add_match(int id,  float x, float y, float sigma,
-                      int idp, float xp, float yp, float sigma_p,
+        int add_match(uint64_t id,  float x, float y, float sigma,
+                      uint64_t idp, float xp, float yp, float sigma_p,
                       float match_cost, bool is_inlier = false);
-        int add_keypoint_match(int id,  const struct NXKeypoint *k,
-                               int idp, const struct NXKeypoint *kp,
+        int add_keypoint_match(const struct NXKeypoint *k,
+                               const struct NXKeypoint *kp,
                                float sigma0, float match_cost,
                                bool is_inlier = false);
         int size() const { return static_cast<int>(m_matches.size()); }
@@ -63,9 +63,9 @@ private:
         std::vector<Match> m_matches;
 };
 
-inline int VGPointCorrespondence2D::add_match(int id,  float x, float y,
+inline int VGPointCorrespondence2D::add_match(uint64_t id,  float x, float y,
                                               float sigma,
-                                              int idp, float xp, float yp,
+                                              uint64_t idp, float xp, float yp,
                                               float sigma_p,
                                               float match_cost,
                                               bool is_inlier)
@@ -81,14 +81,13 @@ inline int VGPointCorrespondence2D::add_match(int id,  float x, float y,
         return static_cast<int>(m_matches.size());
 }
 
-inline int VGPointCorrespondence2D::add_keypoint_match(int id,  const struct NXKeypoint *k,
-                                                       int idp, const struct NXKeypoint *kp,
+inline int VGPointCorrespondence2D::add_keypoint_match(const struct NXKeypoint *k,
+                                                       const struct NXKeypoint *kp,
                                                        float sigma0,
                                                        float match_cost,
                                                        bool is_inlier)
 {
-        m_matches.push_back(Match {nx_point_match_2d_from_keypoints(id, k,
-                                                                    idp, kp,
+        m_matches.push_back(Match {nx_point_match_2d_from_keypoints(k, kp,
                                                                     sigma0,
                                                                     match_cost),
                                 is_inlier });

@@ -24,13 +24,13 @@ struct NXPointMatch2D {
         float match_cost;
         float sigma_x;
         float sigma_xp;
-        int id;
-        int idp;
+        uint64_t id;
+        uint64_t idp;
 };
 
 inline struct NXPointMatch2D
-nx_point_match_2d_from_keypoints(int id,  const struct NXKeypoint *k,
-                                 int idp, const struct NXKeypoint *kp,
+nx_point_match_2d_from_keypoints(const struct NXKeypoint *k,
+                                 const struct NXKeypoint *kp,
                                  float sigma0,
                                  float match_cost) {
         struct NXPointMatch2D pm2d;
@@ -41,8 +41,8 @@ nx_point_match_2d_from_keypoints(int id,  const struct NXKeypoint *k,
         pm2d.match_cost = match_cost;
         pm2d.sigma_x = sigma0*k->scale;
         pm2d.sigma_xp = sigma0*kp->scale;
-        pm2d.id = id;
-        pm2d.idp = idp;
+        pm2d.id = k->id;
+        pm2d.idp = kp->id;
 
         return pm2d;
 }

@@ -24,7 +24,7 @@ namespace nexus {
 class VGDescriptorMap {
 public:
         struct SearchResult {
-                int id;
+                uint64_t id;
                 float match_cost;
         };
 
@@ -36,17 +36,17 @@ public:
         int size    () const { return static_cast<int>(m_ids.size()); }
         int n_octets() const { return m_n_octets; }
 
-        int add(int id, const uchar* desc);
+        int add(uint64_t id, const uchar* desc);
 
         /**
          *  Brute force search for nearest neighbor in hamming distance.
          */
         SearchResult search_nn(const uchar* desc);
-        const uchar* search_by_id(int id);
+        const uchar* search_by_id(uint64_t id);
 private:
         int m_n_octets;
-        std::vector<int>   m_ids;
-        std::vector<uchar> m_descriptor_data;
+        std::vector<uint64_t> m_ids;
+        std::vector<uchar>    m_descriptor_data;
 };
 
 }

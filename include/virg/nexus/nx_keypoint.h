@@ -16,6 +16,7 @@
 #include <stdio.h>
 
 #include "virg/nexus/nx_config.h"
+#include "virg/nexus/nx_types.h"
 
 __NX_BEGIN_DECL
 
@@ -33,7 +34,7 @@ struct NXKeypoint {
         float score;
         float ori; // in radians
 
-        int id;
+        uint64_t id;
 };
 
 static inline int nx_keypoint_x0(const struct NXKeypoint *key)
