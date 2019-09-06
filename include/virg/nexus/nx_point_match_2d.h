@@ -26,13 +26,15 @@ struct NXPointMatch2D {
         float sigma_xp;
         uint64_t id;
         uint64_t idp;
+        NXBool is_inlier;
 };
 
-inline struct NXPointMatch2D
+static inline struct NXPointMatch2D
 nx_point_match_2d_from_keypoints(const struct NXKeypoint *k,
                                  const struct NXKeypoint *kp,
                                  float sigma0,
-                                 float match_cost) {
+                                 float match_cost,
+                                 NXBool is_inlier) {
         struct NXPointMatch2D pm2d;
         pm2d.x[0] = nx_keypoint_xs0(k);
         pm2d.x[1] = nx_keypoint_ys0(k);
@@ -43,9 +45,25 @@ nx_point_match_2d_from_keypoints(const struct NXKeypoint *k,
         pm2d.sigma_xp = sigma0*kp->scale;
         pm2d.id = k->id;
         pm2d.idp = kp->id;
+        pm2d.is_inlier = is_inlier;
 
         return pm2d;
 }
+
+struct NXPointMatch2DStats {
+        double m[2]; // mean point
+        double mp[2]; // mean point
+
+        double d; // distance to mean
+        double dp; // distance to mean
+};
+
+struct NXPointMatch2DStats nx_point_match_2d_normalize(int n_corr,
+                                                       struct NXPointMatch2D *corr_list);
+
+void nx_point_match_2d_denormalize(int n_corr,
+                                   struct NXPointMatch2D *corr_list,
+                                   struct NXPointMatch2DStats stats);
 
 __NX_END_DECL
 

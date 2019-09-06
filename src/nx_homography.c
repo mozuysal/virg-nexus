@@ -22,18 +22,6 @@
 #include "virg/nexus/nx_mat234.h"
 #include "virg/nexus/nx_svd.h"
 
-
-double nx_homography_map(double *xp, const double *x, const double *h)
-{
-        double s = h[2]*x[0]+h[5]*x[1]+h[8];
-        double s_inv = 1.0 / s;
-
-        xp[0] = (h[0]*x[0]+h[3]*x[1]+h[6]) * s_inv;
-        xp[1] = (h[1]*x[0]+h[4]*x[1]+h[7]) * s_inv;
-
-        return s;
-}
-
 static inline void line_eqn_2d(const double* p1, const double* p2, double* l)
 {
         l[0] = p2[1] - p1[1];
@@ -95,7 +83,7 @@ NXBool nx_homography_check(const double *h, double max_abs_cos)
         return cross_check && angle_check;
 }
 
-int nx_homography_count_inliers(int n_corr, const struct NXHCorr *corr_list)
+int nx_homography_count_inliers(int n_corr, const struct NXPointMatch2D *corr_list)
 {
         int n_inliers = 0;
         for (int i = 0; i < n_corr; ++i)
@@ -104,13 +92,14 @@ int nx_homography_count_inliers(int n_corr, const struct NXHCorr *corr_list)
         return n_inliers;
 }
 
-int nx_homography_mark_inliers(int n_corr, struct NXHCorr *corr_list, const double *h, double inlier_tolerance)
+int nx_homography_mark_inliers(int n_corr, struct NXPointMatch2D *corr_list,
+                               const double *h, double inlier_tolerance)
 {
         double tol_sqr = inlier_tolerance*inlier_tolerance;
         int n_inliers = 0;
 
         for (int i = 0; i < n_corr; ++i) {
-                double mp[2];
+                float mp[2];
                 nx_homography_map(&mp[0], &(corr_list[i].x[0]), h);
 
                 double d[2] = { mp[0] - corr_list[i].xp[0],
@@ -126,11 +115,11 @@ int nx_homography_mark_inliers(int n_corr, struct NXHCorr *corr_list, const doub
         return n_inliers;
 }
 
-void nx_homography_estimate_4pt(double *h, int corr_ids[4], const struct NXHCorr *corr_list)
+void nx_homography_estimate_4pt(double *h, int corr_ids[4], const struct NXPointMatch2D *corr_list)
 {
         double x[8];
         for( int i = 0; i < 4; ++i ) {
-                const struct NXHCorr* corr = corr_list + corr_ids[i];
+                const struct NXPointMatch2D* corr = corr_list + corr_ids[i];
                 x[2*i]   = corr->x[0];
                 x[2*i+1] = corr->x[1];
         }
@@ -140,7 +129,7 @@ void nx_homography_estimate_4pt(double *h, int corr_ids[4], const struct NXHCorr
 
         double xp[8];
         for( int i = 0; i < 4; ++i ) {
-                const struct NXHCorr* corr = corr_list + corr_ids[i];
+                const struct NXPointMatch2D* corr = corr_list + corr_ids[i];
                 xp[2*i]   = corr->xp[0];
                 xp[2*i+1] = corr->xp[1];
         }
@@ -153,10 +142,10 @@ void nx_homography_estimate_4pt(double *h, int corr_ids[4], const struct NXHCorr
         nx_dmat3_mul(h, hup_inv, hu);
 }
 
-static inline void nx_homography_constraints_from_corr(double *rcons, const struct NXHCorr *corr)
+static inline void nx_homography_constraints_from_corr(double *rcons, const struct NXPointMatch2D *corr)
 {
-        const double* m  = &(corr->x[0]);
-        const double* mp = &(corr->xp[0]);
+        const float* m  = &(corr->x[0]);
+        const float* mp = &(corr->xp[0]);
 
         rcons[0]  = 0.0;         rcons[1]  = 0.0;         rcons[2]  = 0.0;
         rcons[3]  = -m[0];       rcons[4]  = -m[1];       rcons[5]  = -1.0;
@@ -185,7 +174,7 @@ static inline double nx_homography_svd_solve(double *h, int n_corr, double *A)
         return S[8];
 }
 
-double nx_homography_estimate_dlt(double *h, int n_corr, const struct NXHCorr *corr_list)
+double nx_homography_estimate_dlt(double *h, int n_corr, const struct NXPointMatch2D *corr_list)
 {
         if (n_corr < 4) {
                 NX_WARNING(NX_LOG_TAG, "Insufficient number of correspondences for homography estimation by DLT!");
@@ -204,7 +193,7 @@ double nx_homography_estimate_dlt(double *h, int n_corr, const struct NXHCorr *c
         return sval;
 }
 
-double nx_homography_estimate_dlt_inliers(double *h, int n_corr, const struct NXHCorr *corr_list)
+double nx_homography_estimate_dlt_inliers(double *h, int n_corr, const struct NXPointMatch2D *corr_list)
 {
         int n_inliers = nx_homography_count_inliers(n_corr, corr_list);
         if (n_inliers < 4) {
@@ -229,8 +218,8 @@ double nx_homography_estimate_dlt_inliers(double *h, int n_corr, const struct NX
 
 static int nx_hcorr_cmp_match_cost(const void *c0, const void *c1)
 {
-        const struct NXHCorr *corr0 = (const struct NXHCorr *)c0;
-        const struct NXHCorr *corr1 = (const struct NXHCorr *)c1;
+        const struct NXPointMatch2D *corr0 = (const struct NXPointMatch2D *)c0;
+        const struct NXPointMatch2D *corr1 = (const struct NXPointMatch2D *)c1;
 
         if (corr0->match_cost > corr1->match_cost)
                 return +1;
@@ -257,7 +246,7 @@ static inline void nx_select_prosac_candidates(int n_top, int corr_ids[4])
         } while(corr_ids[3]==corr_ids[1] || corr_ids[3]==corr_ids[1] || corr_ids[3]==corr_ids[0]);
 }
 
-int nx_homography_estimate_ransac(double *h, int n_corr, struct NXHCorr *corr_list, double inlier_tolerance, int max_n_iter)
+int nx_homography_estimate_ransac(double *h, int n_corr, struct NXPointMatch2D *corr_list, double inlier_tolerance, int max_n_iter)
 {
         double min_angle = 15.0 * NX_PI / 180.0;
         double max_abs_cos = fabs(cos(min_angle));
@@ -277,7 +266,7 @@ int nx_homography_estimate_ransac(double *h, int n_corr, struct NXHCorr *corr_li
         int n_top_hypo = PROSAC_START;
         if (n_top_hypo > n_corr)
             n_top_hypo = n_corr;
-        qsort((void *)corr_list, n_corr, sizeof(struct NXHCorr), nx_hcorr_cmp_match_cost);
+        qsort((void *)corr_list, n_corr, sizeof(struct NXPointMatch2D), nx_hcorr_cmp_match_cost);
 
         // Main loop. Quits after max. num. of iterations of we already have a
         // large group of inliers.
@@ -324,69 +313,11 @@ int nx_homography_estimate_ransac(double *h, int n_corr, struct NXHCorr *corr_li
         return n_inliers_best;
 }
 
-struct NXNormStats {
-        double m[2]; // mean point
-        double mp[2]; // mean point
-
-        double d; // distance to mean
-        double dp; // distance to mean
-};
-
-static struct NXNormStats nx_hcorr_normalize(int n_corr, struct NXHCorr *corr_list)
+static inline void nx_homography_denormalize(double *h,
+                                             struct NXPointMatch2DStats stats)
 {
-        struct NXNormStats stats;
-        memset(&stats, 0, sizeof(stats));
-
-        for (int i = 0; i < n_corr; ++i) {
-                struct NXHCorr *corr = corr_list + i;
-                stats.m[0] += corr->x[0];
-                stats.m[1] += corr->x[1];
-                stats.mp[0] += corr->xp[0];
-                stats.mp[1] += corr->xp[1];
-        }
-
-        stats.m[0] /= n_corr;
-        stats.m[1] /= n_corr;
-        stats.mp[0] /= n_corr;
-        stats.mp[1] /= n_corr;
-
-        for (int i = 0; i < n_corr; ++i) {
-                struct NXHCorr *corr = corr_list + i;
-                corr->x[0] -= stats.m[0];
-                corr->x[1] -= stats.m[1];
-                corr->xp[0] -= stats.mp[0];
-                corr->xp[1] -= stats.mp[1];
-
-                stats.d += sqrt(corr->x[0]*corr->x[0] + corr->x[1]*corr->x[1]);
-                stats.dp += sqrt(corr->xp[0]*corr->xp[0] + corr->xp[1]*corr->xp[1]);
-        }
-
-        stats.d /= n_corr;
-        stats.dp /= n_corr;
-
-        double s[2];
-        s[0] = sqrt(2.0) / stats.d;
-        s[1] = sqrt(2.0) / stats.dp;
-
-        for (int i = 0; i < n_corr; ++i) {
-                struct NXHCorr *corr = corr_list + i;
-                corr->x[0] *= s[0];
-                corr->x[1] *= s[0];
-                corr->xp[0] *= s[1];
-                corr->xp[1] *= s[1];
-        }
-
-        return stats;
-}
-
-static inline void nx_homography_denormalize(double *h, struct NXNormStats stats)
-{
-        double s[2];
-        s[0] = stats.d   / sqrt(2.0);
-        s[1] = stats.dp / sqrt(2.0);
-
-        double sx  = 1.0 / s[0];
-        double sxp = 1.0 / s[1];
+        double sx  = 1.0 / stats.d;
+        double sxp = 1.0 / stats.dp;
 
         double tx  = -stats.m[0]*sx;
         double ty  = -stats.m[1]*sx;
@@ -396,10 +327,10 @@ static inline void nx_homography_denormalize(double *h, struct NXNormStats stats
         double htemp[9];
 
         double t[4];
-        t[0] = (h[0] - h[2]*txp) * s[1];
-        t[1] = (h[1] - h[2]*typ) * s[1];
-        t[2] = (h[3] - h[5]*txp) * s[1];
-        t[3] = (h[4] - h[5]*typ) * s[1];
+        t[0] = (h[0] - h[2]*txp) * stats.dp;
+        t[1] = (h[1] - h[2]*typ) * stats.dp;
+        t[2] = (h[3] - h[5]*txp) * stats.dp;
+        t[3] = (h[4] - h[5]*typ) * stats.dp;
 
         htemp[0] = sx*t[0];
         htemp[1] = sx*t[1];
@@ -409,37 +340,26 @@ static inline void nx_homography_denormalize(double *h, struct NXNormStats stats
         htemp[4] = sx*t[3];
         htemp[5] = sx*h[5];
 
-        htemp[6] = tx*t[0] + ty*t[2] + h[6]*s[1] - h[8]*txp*s[1];
-        htemp[7] = tx*t[1] + ty*t[3] + h[7]*s[1] - h[8]*typ*s[1];
+        htemp[6] = tx*t[0] + ty*t[2] + h[6]*stats.dp - h[8]*txp*stats.dp;
+        htemp[7] = tx*t[1] + ty*t[3] + h[7]*stats.dp - h[8]*typ*stats.dp;
         htemp[8] = h[8] + tx*h[2] + ty*h[5];
 
         memcpy(h, htemp, 9*sizeof(*h));
 }
 
-static inline void nx_hcorr_denormalize(int n_corr, struct NXHCorr *corr_list, struct NXNormStats stats)
+int nx_homography_estimate_norm_ransac(double *h, int n_corr,
+                                       struct NXPointMatch2D *corr_list,
+                                       double inlier_tolerance, int max_n_iter)
 {
-        double s[2];
-        s[0] = stats.d / sqrt(2.0);
-        s[1] = stats.dp / sqrt(2.0);
+        struct NXPointMatch2DStats stats;
+        stats = nx_point_match_2d_normalize(n_corr, corr_list);
 
-        for (int i = 0; i < n_corr; ++i) {
-                struct NXHCorr *corr = corr_list + i;
-                corr->x[0] = s[0]*corr->x[0] + stats.m[0];
-                corr->x[1] = s[0]*corr->x[1] + stats.m[1];
-                corr->xp[0] = s[1]*corr->xp[0] + stats.mp[0];
-                corr->xp[1] = s[1]*corr->xp[1] + stats.mp[1];
-        }
-}
-
-int nx_homography_estimate_norm_ransac(double *h, int n_corr, struct NXHCorr *corr_list, double inlier_tolerance, int max_n_iter)
-{
-        struct NXNormStats stats = nx_hcorr_normalize(n_corr, corr_list);
         double norm_tol = inlier_tolerance * sqrt(2.0) / stats.dp;
 
         int n_inliers = nx_homography_estimate_ransac(h, n_corr, corr_list, norm_tol, max_n_iter);
 
         nx_homography_denormalize(h, stats);
-        nx_hcorr_denormalize(n_corr, corr_list, stats);
+        nx_point_match_2d_denormalize(n_corr, corr_list, stats);
 
         return n_inliers;
 }

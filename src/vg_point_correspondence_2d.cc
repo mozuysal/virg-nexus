@@ -23,74 +23,33 @@ using std::end;
 namespace virg {
 namespace nexus {
 
+void VGPointCorrespondence2D::reset_stats()
+{
+        m_stats.m[0] = 0.0f;
+        m_stats.m[1] = 0.0f;
+        m_stats.mp[0] = 0.0f;
+        m_stats.mp[1] = 0.0f;
+        m_stats.d = 1.0f;
+        m_stats.dp = 1.0f;
+}
+
 void VGPointCorrespondence2D::normalize()
 {
-        m_stats[0].x_mean[0] = 0.0f;
-        m_stats[0].x_mean[1] = 0.0f;
-        m_stats[1].x_mean[0] = 0.0f;
-        m_stats[1].x_mean[1] = 0.0f;
-
-        for (const auto& m: m_matches) {
-                const auto& pm = m.pm;
-                m_stats[0].x_mean[0] += pm.x[0];
-                m_stats[0].x_mean[1] += pm.x[1];
-                m_stats[1].x_mean[0] += pm.xp[0];
-                m_stats[1].x_mean[1] += pm.xp[1];
-        }
-        m_stats[0].x_mean[0] /= m_matches.size();
-        m_stats[0].x_mean[1] /= m_matches.size();
-        m_stats[1].x_mean[0] /= m_matches.size();
-        m_stats[1].x_mean[1] /= m_matches.size();
-
-        m_stats[0].mean_distance = 0.0f;
-        m_stats[1].mean_distance = 0.0f;
-        for (auto& m: m_matches) {
-                auto& pm = m.pm;
-                pm.x[0] -= m_stats[0].x_mean[0];
-                pm.x[1] -= m_stats[0].x_mean[1];
-                m_stats[0].mean_distance += sqrt(pm.x[0]*pm.x[0]
-                                                 + pm.x[1]*pm.x[1]);
-
-                pm.xp[0] -= m_stats[1].x_mean[0];
-                pm.xp[1] -= m_stats[1].x_mean[1];
-                m_stats[1].mean_distance += sqrt(pm.xp[0]*pm.xp[0]
-                                                 + pm.xp[1]*pm.xp[1]);
-        }
-        m_stats[0].mean_distance /= m_matches.size();
-        m_stats[1].mean_distance /= m_matches.size();
-
-        for (auto& m: m_matches) {
-                auto& pm = m.pm;
-                pm.x[0]     /= m_stats[0].mean_distance;
-                pm.x[1]     /= m_stats[0].mean_distance;
-                pm.sigma_x  /= m_stats[0].mean_distance;
-                pm.xp[0]    /= m_stats[1].mean_distance;
-                pm.xp[1]    /= m_stats[1].mean_distance;
-                pm.sigma_xp /= m_stats[1].mean_distance;
-        }
+        m_stats = nx_point_match_2d_normalize(this->size(),
+                                              this->matches());
 }
 
 void VGPointCorrespondence2D::denormalize()
 {
-        for (auto& m: m_matches) {
-                auto& pm = m.pm;
-                pm.x[0]     = pm.x[0]*m_stats[0].mean_distance + m_stats[0].x_mean[0];
-                pm.x[1]     = pm.x[1]*m_stats[0].mean_distance + m_stats[0].x_mean[1];
-                pm.sigma_x  *= m_stats[0].mean_distance;
-                pm.xp[0]    = pm.xp[0]*m_stats[1].mean_distance + m_stats[1].x_mean[0];
-                pm.xp[1]    = pm.xp[1]*m_stats[1].mean_distance + m_stats[1].x_mean[1];
-                pm.sigma_xp *= m_stats[1].mean_distance;
-        }
-
-        m_stats[0].reset();
-        m_stats[1].reset();
+        nx_point_match_2d_denormalize(this->size(), this->matches(), m_stats);
+        reset_stats();
 }
 
 void VGPointCorrespondence2D::sort_by_match_cost()
 {
         sort(begin(m_matches), end(m_matches),
-             [](const Match& m0, const Match& m1) {
-                     return m0.pm.match_cost < m1.pm.match_cost;
+             [](const struct NXPointMatch2D& pm0, const struct NXPointMatch2D& pm1) {
+                     return pm0.match_cost < pm1.match_cost;
              });
 }
 

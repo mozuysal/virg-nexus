@@ -48,6 +48,7 @@ set(virg_nexus_C_SOURCES
   src/nx_checkerboard_detector.c
   src/nx_keypoint_vector.c
   src/nx_brief_extractor.c
+  src/nx_point_match_2d.c
   src/nx_data_frame.c
   src/nx_csv_lexer.c
   src/nx_csv_parser.c

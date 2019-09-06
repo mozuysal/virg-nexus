@@ -22,9 +22,9 @@ namespace nexus {
 
 class VGPointCorrespondence2D {
 public:
-        VGPointCorrespondence2D() { m_stats[0].reset(); m_stats[1].reset(); }
+        VGPointCorrespondence2D() { reset_stats(); }
 
-        void clear() { m_matches.clear(); m_stats[0].reset(); m_stats[1].reset(); }
+        void clear() { m_matches.clear(); reset_stats(); }
         void reserve(int n_matches) { m_matches.reserve(n_matches); }
 
         int add_match(uint64_t id,  float x, float y, float sigma,
@@ -35,32 +35,21 @@ public:
                                float sigma0, float match_cost,
                                bool is_inlier = false);
         int size() const { return static_cast<int>(m_matches.size()); }
-        struct NXPointMatch2D&       operator[](int idx)       { return m_matches[idx].pm; }
-        const struct NXPointMatch2D& operator[](int idx) const { return m_matches[idx].pm; }
-        bool is_inlier (int idx) const                  { return m_matches[idx].is_inlier; }
-        void set_inlier(int idx, bool is_inlier = true) { m_matches[idx].is_inlier = is_inlier; }
+        struct NXPointMatch2D&       operator[](int idx)       { return m_matches[idx]; }
+        const struct NXPointMatch2D& operator[](int idx) const { return m_matches[idx]; }
+        struct NXPointMatch2D*       matches()       { return m_matches.data(); }
+        const struct NXPointMatch2D* matches() const { return m_matches.data(); }
+        bool is_inlier (int idx) const                  { return static_cast<bool>(m_matches[idx].is_inlier); }
+        void set_inlier(int idx, bool is_inlier = true) { m_matches[idx].is_inlier = static_cast<NXBool>(is_inlier); }
 
         void normalize();
         void denormalize();
         void sort_by_match_cost();
 private:
-        struct Match {
-                struct NXPointMatch2D pm;
-                bool is_inlier;
-        };
+        void reset_stats();
 
-        struct Stats {
-                float x_mean[2];
-                float mean_distance;
-
-                void reset() {
-                        x_mean[0] = 0.0f;
-                        x_mean[1] = 0.0f;
-                        mean_distance = 1.0f;
-                }
-        } m_stats[2];
-
-        std::vector<Match> m_matches;
+        struct NXPointMatch2DStats m_stats;
+        std::vector<struct NXPointMatch2D> m_matches;
 };
 
 inline int VGPointCorrespondence2D::add_match(uint64_t id,  float x, float y,
@@ -76,8 +65,9 @@ inline int VGPointCorrespondence2D::add_match(uint64_t id,  float x, float y,
                         .sigma_x = sigma,
                         .sigma_xp = sigma_p,
                         .id = id,
-                        .idp = idp };
-        m_matches.push_back(Match { pm, is_inlier });
+                        .idp = idp,
+                        .is_inlier = static_cast<NXBool>(is_inlier) };
+        m_matches.push_back(pm);
         return static_cast<int>(m_matches.size());
 }
 
@@ -87,10 +77,10 @@ inline int VGPointCorrespondence2D::add_keypoint_match(const struct NXKeypoint *
                                                        float match_cost,
                                                        bool is_inlier)
 {
-        m_matches.push_back(Match {nx_point_match_2d_from_keypoints(k, kp,
-                                                                    sigma0,
-                                                                    match_cost),
-                                is_inlier });
+        m_matches.push_back(nx_point_match_2d_from_keypoints(k, kp,
+                                                             sigma0,
+                                                             match_cost,
+                                                             static_cast<NXBool>(is_inlier)));
         return static_cast<int>(m_matches.size());
 }
 

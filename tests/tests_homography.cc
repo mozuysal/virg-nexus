@@ -50,28 +50,28 @@ protected:
                 nx_uniform_sampler_instance_free();
         }
 
-        double *make_test_data_unit();
-        struct NXHCorr *make_test_data4();
-        struct NXHCorr *make_test_data_ransac(double *h, int n, double inlier_ratio, double noise_level);
+        float *make_test_data_unit();
+        struct NXPointMatch2D *make_test_data4();
+        struct NXPointMatch2D *make_test_data_ransac(double *h, int n, double inlier_ratio, double noise_level);
 
-        double measure_test_error_unit(const double *h, const double *x);
-        double measure_test_error4(const double *h, const struct NXHCorr *x);
-        double measure_test_error(const double *h, int n, const struct NXHCorr *x);
+        double measure_test_error_unit(const double *h, const float *x);
+        double measure_test_error4(const double *h, const struct NXPointMatch2D *x);
+        double measure_test_error(const double *h, int n, const struct NXPointMatch2D *x);
 
         double h[9];
         double err;
 };
 
 
-static inline void sample_corner(double *p, double sign_x, double sign_y)
+static inline void sample_corner(float *p, double sign_x, double sign_y)
 {
         p[0] = sign_x * (NX_UNIFORM_SAMPLE_D * 0.5 + 0.5);
         p[1] = sign_y * (NX_UNIFORM_SAMPLE_D * 0.5 + 0.5);
 }
 
-double *NXHomographyTest::make_test_data_unit()
+float *NXHomographyTest::make_test_data_unit()
 {
-        double *x = NX_NEW_D(8);
+        float *x = NX_NEW_S(8);
         sample_corner(&x[0], -1.0, -1.0);
         sample_corner(&x[2], +1.0, -1.0);
         sample_corner(&x[4], +1.0, +1.0);
@@ -79,17 +79,17 @@ double *NXHomographyTest::make_test_data_unit()
         return x;
 }
 
-static inline double point_dist(const double *p, double qx, double qy)
+static inline double point_dist(const float *p, double qx, double qy)
 {
         double dx = p[0] - qx;
         double dy = p[1] - qy;
         return sqrt(dx*dx+dy*dy);
 }
 
-double NXHomographyTest::measure_test_error_unit(const double *h, const double *x)
+double NXHomographyTest::measure_test_error_unit(const double *h, const float *x)
 {
         double err = 0.0;
-        double xp[2];
+        float xp[2];
         nx_homography_map(&xp[0], &x[0], h);
         err += point_dist(&xp[0], 0.0, 0.0);
         nx_homography_map(&xp[0], &x[2], h);
@@ -101,9 +101,9 @@ double NXHomographyTest::measure_test_error_unit(const double *h, const double *
         return err;
 }
 
-struct NXHCorr *NXHomographyTest::make_test_data4()
+struct NXPointMatch2D *NXHomographyTest::make_test_data4()
 {
-        struct NXHCorr *corr = NX_NEW(4, struct NXHCorr);
+        struct NXPointMatch2D *corr = NX_NEW(4, struct NXPointMatch2D);
         sample_corner(&corr[0].x[0], -1.0, -1.0);
         sample_corner(&corr[1].x[0], +1.0, -1.0);
         sample_corner(&corr[2].x[0], +1.0, +1.0);
@@ -116,10 +116,10 @@ struct NXHCorr *NXHomographyTest::make_test_data4()
         return corr;
 }
 
-double NXHomographyTest::measure_test_error4(const double *h, const struct NXHCorr *corr)
+double NXHomographyTest::measure_test_error4(const double *h, const struct NXPointMatch2D *corr)
 {
         double err = 0.0;
-        double xp[2];
+        float xp[2];
         for (int i = 0; i < 4; ++i) {
                 nx_homography_map(&xp[0], &corr[i].x[0], h);
                 err = MAX(err, point_dist(&xp[0], corr[i].xp[0], corr[i].xp[1]));
@@ -127,13 +127,16 @@ double NXHomographyTest::measure_test_error4(const double *h, const struct NXHCo
         return err;
 }
 
-struct NXHCorr *NXHomographyTest::make_test_data_ransac(double *h, int n, double inlier_ratio, double noise_level)
+struct NXPointMatch2D *NXHomographyTest::make_test_data_ransac(double *h, int n, double inlier_ratio, double noise_level)
 {
-        double *h_data = make_test_data_unit();
-        nx_homography_estimate_unit(h, h_data);
+        float *h_data = make_test_data_unit();
+        double hd[8];
+        for (int i = 0; i < 8; ++i)
+                hd[i] = h_data[i];
+        nx_homography_estimate_unit(h, &hd[0]);
         nx_free(h_data);
 
-        struct NXHCorr *corr = NX_NEW(n, struct NXHCorr);
+        struct NXPointMatch2D *corr = NX_NEW(n, struct NXPointMatch2D);
         for (int i = 0; i < n; ++i) {
                 double sign_x = NX_UNIFORM_SAMPLE_D > 0.5 ? +1.0 : -1.0;
                 double sign_y = NX_UNIFORM_SAMPLE_D > 0.5 ? +1.0 : -1.0;
@@ -159,8 +162,11 @@ struct NXHCorr *NXHomographyTest::make_test_data_ransac(double *h, int n, double
 
 TEST_F(NXHomographyTest, unit) {
         for (int i = 0; i < N_TESTS; ++i) {
-                double *test_data = make_test_data_unit();
-                nx_homography_estimate_unit(h, test_data);
+                float *test_data = make_test_data_unit();
+                double td[8];
+                for (int i = 0; i < 8; ++i)
+                        td[i] = test_data[i];
+                nx_homography_estimate_unit(h, &td[0]);
                 err = MAX(err, measure_test_error_unit(h, test_data));
                 nx_free(test_data);
         }
@@ -171,7 +177,7 @@ TEST_F(NXHomographyTest, unit) {
 TEST_F(NXHomographyTest, dlt4) {
         int indices[4] = { 0, 1, 2, 3 };
         for (int i = 0; i < N_TESTS; ++i) {
-                struct NXHCorr *test_data = make_test_data4();
+                struct NXPointMatch2D *test_data = make_test_data4();
                 nx_homography_estimate_4pt(h, indices, test_data);
                 err = MAX(err, measure_test_error4(h, test_data));
                 nx_free(test_data);
@@ -182,7 +188,7 @@ TEST_F(NXHomographyTest, dlt4) {
 
 TEST_F(NXHomographyTest, dlt) {
         for (int i = 0; i < N_TESTS; ++i) {
-                struct NXHCorr *test_data = make_test_data4();
+                struct NXPointMatch2D *test_data = make_test_data4();
                 nx_homography_estimate_dlt(h, 4, test_data);
                 err = MAX(err, measure_test_error4(h, test_data));
                 nx_free(test_data);
@@ -194,11 +200,11 @@ TEST_F(NXHomographyTest, dlt) {
 TEST_F(NXHomographyTest, ransac) {
         for (int i = 0; i < N_TESTS; ++i) {
                 double h_gt[9];
-                struct NXHCorr *test_data = make_test_data_ransac(h_gt, N_RANSAC_CORR, RANSAC_INLIER_RATIO, RANSAC_NOISE_LEVEL);
+                struct NXPointMatch2D *test_data = make_test_data_ransac(h_gt, N_RANSAC_CORR, RANSAC_INLIER_RATIO, RANSAC_NOISE_LEVEL);
 
                 nx_homography_estimate_norm_ransac(h, N_RANSAC_CORR, test_data, RANSAC_NOISE_LEVEL * 2.0, RANSAC_MAX_N_ITER);
 
-                struct NXHCorr gt_data[4];
+                struct NXPointMatch2D gt_data[4];
                 gt_data[0].x[0] = 0.0; gt_data[0].x[1] = 0.0;
                 gt_data[1].x[0] = 1.0; gt_data[1].x[1] = 0.0;
                 gt_data[2].x[0] = 1.0; gt_data[2].x[1] = 1.0;
