@@ -12,6 +12,12 @@
  */
 #include "virg/nexus/vg_image_annotator.hpp"
 
+#include <cstring>
+#include <cmath>
+
+using std::memcpy;
+using std::max;
+
 namespace virg {
 namespace nexus {
 
@@ -50,22 +56,22 @@ void VGImageAnnotator::draw_mark(MarkType type, double x, double y,
                 break;
         case MARK_DIAMOND:
                 m_gc.move_to(x, y-r);
-                m_gc.line_to(r, r);
-                m_gc.line_to(-r, r);
-                m_gc.line_to(-r, -r);
-                m_gc.line_to(r, -r);
+                m_gc.rel_line_to(r, r);
+                m_gc.rel_line_to(-r, r);
+                m_gc.rel_line_to(-r, -r);
+                m_gc.rel_line_to(r, -r);
                 break;
         case MARK_PLUS:
                 m_gc.move_to(x, y-r);
-                m_gc.line_to(0.0, size);
+                m_gc.rel_line_to(0.0, size);
                 m_gc.move_to(x-r, y);
-                m_gc.line_to(size, 0.0);
+                m_gc.rel_line_to(size, 0.0);
                 break;
         case MARK_CROSS:
                 m_gc.move_to(x-r, y-r);
-                m_gc.line_to(size, size);
+                m_gc.rel_line_to(size, size);
                 m_gc.move_to(x+r, y-r);
-                m_gc.line_to(-size, size);
+                m_gc.rel_line_to(-size, size);
                 break;
         default:
                 break;
@@ -82,7 +88,10 @@ void VGImageAnnotator::draw_edge(double xs, double ys, double xe, double ye,
         m_gc.set_line_width(width);
         m_gc.new_path();
 
+        m_gc.new_path();
         m_gc.line(xs, ys, xe, ye);
+        m_gc.stroke();
+
         draw_mark(end_marks, xs, ys, mark_size, color);
         draw_mark(end_marks, xe, ye, mark_size, color);
 
@@ -136,6 +145,50 @@ void VGImageAnnotator::draw_keypoints(int n_keys, struct NXKeypoint *key,
                         : color_from_keypoint_level(k->level);
                 draw_keypoint(k, color);
         }
+}
+
+VGImageAnnotator VGImageAnnotator::create_match_image(const VGImage& image_left,
+                                                      const VGImage& image_right,
+                                                      const VGPointCorrespondence2D& corr)
+{
+        int lw = image_left.width();
+        int rw = image_right.width();
+        int w =  lw + rw;
+
+        int lh = image_left.height();
+        int rh = image_right.height();
+        int h = max(lh, rh);
+
+        VGImage lrgba = image_left.clone().convert_type_to(VGImage::RGBA);
+        VGImage rrgba = image_right.clone().convert_type_to(VGImage::RGBA);
+
+        VGImage combined;
+        combined.create_rgba(w, h, VGImage::UCHAR);
+        combined.set_zero();
+
+        for (int y = 0; y < h; ++y) {
+                uchar* crow = combined.data<uchar>(y);
+
+                if (y < lh) {
+                        const uchar* lrow = lrgba.data<uchar>(y);
+                        memcpy(crow, lrow, lw*4*sizeof(uchar));
+                }
+
+                if (y < rh) {
+                        const uchar* rrow = rrgba.data<uchar>(y);
+                        memcpy(crow+lw*4, rrow, rw*4*sizeof(uchar));
+                }
+        }
+
+        VGImageAnnotator ia(combined);
+        for (int i = 0; i < corr.size(); ++i) {
+                const struct NXPointMatch2D& pm = corr[i];
+                ia.draw_edge(pm.x[0], pm.x[1], pm.xp[0]+lw, pm.xp[1], 3,
+                             VGColor::red(),
+                             VGImageAnnotator::MARK_DIAMOND, 10);
+        }
+
+        return ia;
 }
 
 }

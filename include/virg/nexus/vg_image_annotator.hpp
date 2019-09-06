@@ -17,6 +17,7 @@
 
 #include "virg/nexus/vg_color.hpp"
 #include "virg/nexus/vg_image.hpp"
+#include "virg/nexus/vg_point_correspondence_2d.hpp"
 #include "virg/nexus/vg_graphics_context.hpp"
 
 namespace virg {
@@ -29,6 +30,10 @@ public:
 
         explicit VGImageAnnotator(const VGImage& image);
         ~VGImageAnnotator() {}
+
+        static VGImageAnnotator create_match_image(const VGImage& image_left,
+                                                   const VGImage& image_right,
+                                                   const VGPointCorrespondence2D& corr);
 
         int width () const { return m_canvas.width(); }
         int height() const { return m_canvas.height(); }
