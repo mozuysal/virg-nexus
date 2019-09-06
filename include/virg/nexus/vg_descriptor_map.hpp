@@ -33,8 +33,13 @@ public:
         void clear();
         void reserve(int n_descriptors);
 
-        int size    () const { return static_cast<int>(m_ids.size()); }
-        int n_octets() const { return m_n_octets; }
+        int      size  ()        const { return static_cast<int>(m_ids.size()); }
+        uint64_t get_id(int idx) const { return m_ids[idx]; }
+
+        uchar*       get_descriptor(int idx)       { return m_descriptor_data.data() + idx*m_n_octets; }
+        const uchar* get_descriptor(int idx) const { return m_descriptor_data.data() + idx*m_n_octets; }
+
+        int  n_octets    () const { return m_n_octets; }
         void set_n_octets(int n_octets) { this->clear(); m_n_octets = n_octets; }
 
         int add(uint64_t id, const uchar* desc);
