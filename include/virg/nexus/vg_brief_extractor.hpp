@@ -24,7 +24,7 @@ namespace nexus {
 
 class VGBriefExtractor {
 public:
-        VGBriefExtractor(int n_octets = 32, int radius = 32);
+        VGBriefExtractor(int n_octets = 32, int radius = 24);
         ~VGBriefExtractor() {}
 
         VGBriefExtractor& resize(int n_octets, int radius);
@@ -45,6 +45,8 @@ public:
                 return nx_brief_extractor_descriptor_distance(n_octets, desc0, desc1);
         }
 private:
+        void pick_good_seed();
+
         std::shared_ptr<NXBriefExtractor> m_be;
 };
 

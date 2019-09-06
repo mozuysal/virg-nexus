@@ -18,16 +18,30 @@ using std::unique_ptr;
 namespace virg {
 namespace nexus {
 
+void VGBriefExtractor::pick_good_seed()
+{
+        if (m_be->radius == 16) {
+                nx_brief_extractor_randomize_with_seed(m_be.get(),
+                                                       NX_BRIEF_EXTRACTOR_GOOD_SEED_N32_R16);
+        } else {
+                nx_brief_extractor_randomize_with_seed(m_be.get(),
+                                                       NX_BRIEF_EXTRACTOR_GOOD_SEED_N32_R24);
+        }
+}
+
 VGBriefExtractor::VGBriefExtractor(int n_octets, int radius)
         : m_be(nx_brief_extractor_new(n_octets, radius),
                nx_brief_extractor_free)
-{}
+{
+        pick_good_seed();
+}
 
 VGBriefExtractor& VGBriefExtractor::resize(int n_octets, int radius)
 {
         shared_ptr<NXBriefExtractor> ptr(nx_brief_extractor_new(n_octets, radius),
                                          nx_brief_extractor_free);
         m_be = ptr;
+        pick_good_seed();
         return *this;
 }
 
