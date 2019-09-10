@@ -47,7 +47,7 @@ static const int N_PYR_LEVELS = 5;
 static const float SIGMA0 = 1.2f;
 static const int   N_OCTETS = 32;
 static const float KEY_SIGMA0 = 0.5f;
-static const float MATCH_COST_UPPER_BOUND = 50.0f;
+static const float MATCH_COST_UPPER_BOUND = 70.0f;
 static const float INLIER_TOL_H = 3.0f;
 static const int MAX_RANSAC_ITER = 3000;
 
@@ -120,7 +120,7 @@ static void match_frames(StereoFrame& stereo, bool is_verbose)
                 NX_LOG(LOG_TAG, "Saving match image to %s", filename.c_str());
                 VGImageAnnotator ia = VGImageAnnotator::create_match_image(stereo.left.pyr[0],
                                                                            stereo.right.pyr[0],
-                                                                           stereo.corr);
+                                                                           stereo.corr, false);
                 ia.get_canvas().xsave(filename);
         }
 
@@ -159,9 +159,20 @@ int main(int argc, char** argv)
                                           INLIER_TOL_H/sf.corr.stats()->dp,
                                           MAX_RANSAC_ITER);
         sf.corr.denormalize_homography(H.data());
+        sf.corr.denormalize();
 
         if (is_verbose) {
                 NX_LOG(LOG_TAG, "RANSAC for homography terminated with %d inliers.", n_inliers);
+                NX_LOG(LOG_TAG, "   transfer error (fwd/sym) = %.2f / %.2f",
+                       H.transfer_error_fwd(sf.corr),
+                       H.transfer_error_sym(sf.corr));
+
+                string filename = "/tmp/matches_inliers.png";
+                NX_LOG(LOG_TAG, "Saving matched inliers as image to %s", filename.c_str());
+                VGImageAnnotator ia = VGImageAnnotator::create_match_image(sf.left.pyr[0],
+                                                                           sf.right.pyr[0],
+                                                                           sf.corr, true);
+                ia.get_canvas().xsave(filename);
         }
 
 
