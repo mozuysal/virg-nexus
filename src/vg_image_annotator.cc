@@ -149,7 +149,8 @@ void VGImageAnnotator::draw_keypoints(int n_keys, struct NXKeypoint *key,
 
 VGImageAnnotator VGImageAnnotator::create_match_image(const VGImage& image_left,
                                                       const VGImage& image_right,
-                                                      const VGPointCorrespondence2D& corr)
+                                                      const VGPointCorrespondence2D& corr,
+                                                      bool only_inliers)
 {
         int lw = image_left.width();
         int rw = image_right.width();
@@ -183,9 +184,11 @@ VGImageAnnotator VGImageAnnotator::create_match_image(const VGImage& image_left,
         VGImageAnnotator ia(combined);
         for (int i = 0; i < corr.size(); ++i) {
                 const struct NXPointMatch2D& pm = corr[i];
-                ia.draw_edge(pm.x[0], pm.x[1], pm.xp[0]+lw, pm.xp[1], 3,
-                             VGColor::red(),
-                             VGImageAnnotator::MARK_DIAMOND, 10);
+                if (!only_inliers || pm.is_inlier)
+                        ia.draw_edge(pm.x[0], pm.x[1],
+                                     pm.xp[0]+lw, pm.xp[1],
+                                     3, VGColor::red(),
+                                     VGImageAnnotator::MARK_DIAMOND, 10);
         }
 
         return ia;

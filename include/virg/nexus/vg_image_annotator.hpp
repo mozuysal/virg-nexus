@@ -33,7 +33,8 @@ public:
 
         static VGImageAnnotator create_match_image(const VGImage& image_left,
                                                    const VGImage& image_right,
-                                                   const VGPointCorrespondence2D& corr);
+                                                   const VGPointCorrespondence2D& corr,
+                                                   bool only_inliers);
 
         int width () const { return m_canvas.width(); }
         int height() const { return m_canvas.height(); }
