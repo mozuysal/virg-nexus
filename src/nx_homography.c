@@ -21,6 +21,7 @@
 #include "virg/nexus/nx_uniform_sampler.h"
 #include "virg/nexus/nx_mat234.h"
 #include "virg/nexus/nx_svd.h"
+#include "virg/nexus/nx_point_match_2d_stats.h"
 
 static inline void line_eqn_2d(const double* p1, const double* p2, double* l)
 {
@@ -313,53 +314,19 @@ int nx_homography_estimate_ransac(double *h, int n_corr, struct NXPointMatch2D *
         return n_inliers_best;
 }
 
-static inline void nx_homography_denormalize(double *h,
-                                             struct NXPointMatch2DStats stats)
-{
-        double sx  = 1.0 / stats.d;
-        double sxp = 1.0 / stats.dp;
-
-        double tx  = -stats.m[0]*sx;
-        double ty  = -stats.m[1]*sx;
-        double txp = -stats.mp[0]*sxp;
-        double typ = -stats.mp[1]*sxp;
-
-        double htemp[9];
-
-        double t[4];
-        t[0] = (h[0] - h[2]*txp) * stats.dp;
-        t[1] = (h[1] - h[2]*typ) * stats.dp;
-        t[2] = (h[3] - h[5]*txp) * stats.dp;
-        t[3] = (h[4] - h[5]*typ) * stats.dp;
-
-        htemp[0] = sx*t[0];
-        htemp[1] = sx*t[1];
-        htemp[2] = sx*h[2];
-
-        htemp[3] = sx*t[2];
-        htemp[4] = sx*t[3];
-        htemp[5] = sx*h[5];
-
-        htemp[6] = tx*t[0] + ty*t[2] + h[6]*stats.dp - h[8]*txp*stats.dp;
-        htemp[7] = tx*t[1] + ty*t[3] + h[7]*stats.dp - h[8]*typ*stats.dp;
-        htemp[8] = h[8] + tx*h[2] + ty*h[5];
-
-        memcpy(h, htemp, 9*sizeof(*h));
-}
-
 int nx_homography_estimate_norm_ransac(double *h, int n_corr,
                                        struct NXPointMatch2D *corr_list,
                                        double inlier_tolerance, int max_n_iter)
 {
-        struct NXPointMatch2DStats stats;
-        stats = nx_point_match_2d_normalize(n_corr, corr_list);
+        struct NXPointMatch2DStats *stats = nx_point_match_2d_stats_new();
+        nx_point_match_2d_stats_normalize_matches(stats, n_corr, corr_list);
 
-        double norm_tol = inlier_tolerance * sqrt(2.0) / stats.dp;
-
+        double norm_tol = inlier_tolerance / stats->dp;
         int n_inliers = nx_homography_estimate_ransac(h, n_corr, corr_list, norm_tol, max_n_iter);
 
-        nx_homography_denormalize(h, stats);
-        nx_point_match_2d_denormalize(n_corr, corr_list, stats);
+        nx_point_match_2d_stats_denormalize_homography(stats, h);
+        nx_point_match_2d_stats_denormalize_matches(stats, n_corr, corr_list);
+        nx_point_match_2d_stats_free(stats);
 
         return n_inliers;
 }

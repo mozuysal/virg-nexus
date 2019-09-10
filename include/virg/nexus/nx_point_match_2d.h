@@ -50,21 +50,6 @@ nx_point_match_2d_from_keypoints(const struct NXKeypoint *k,
         return pm2d;
 }
 
-struct NXPointMatch2DStats {
-        double m[2]; // mean point
-        double mp[2]; // mean point
-
-        double d; // distance to mean
-        double dp; // distance to mean
-};
-
-struct NXPointMatch2DStats nx_point_match_2d_normalize(int n_corr,
-                                                       struct NXPointMatch2D *corr_list);
-
-void nx_point_match_2d_denormalize(int n_corr,
-                                   struct NXPointMatch2D *corr_list,
-                                   struct NXPointMatch2DStats stats);
-
 __NX_END_DECL
 
 #endif

@@ -17,6 +17,7 @@
 #include <ctime>
 
 #include "virg/nexus/nx_log.h"
+#include "virg/nexus/nx_homography.h"
 
 #include "virg/nexus/vg_options.hpp"
 #include "virg/nexus/vg_image.hpp"
@@ -24,6 +25,7 @@
 #include "virg/nexus/vg_harris_detector.hpp"
 #include "virg/nexus/vg_brief_extractor.hpp"
 #include "virg/nexus/vg_point_correspondence_2d.hpp"
+#include "virg/nexus/vg_homography.hpp"
 #include "virg/nexus/vg_image_annotator.hpp"
 
 using namespace std;
@@ -36,6 +38,7 @@ using virg::nexus::VGHarrisDetector;
 using virg::nexus::VGBriefExtractor;
 using virg::nexus::VGDescriptorMap;
 using virg::nexus::VGPointCorrespondence2D;
+using virg::nexus::VGHomography;
 using virg::nexus::VGImageAnnotator;
 
 static const char* LOG_TAG = "STEREO";
@@ -44,6 +47,9 @@ static const int N_PYR_LEVELS = 5;
 static const float SIGMA0 = 1.2f;
 static const int   N_OCTETS = 32;
 static const float KEY_SIGMA0 = 0.5f;
+static const float MATCH_COST_UPPER_BOUND = 50.0f;
+static const float INLIER_TOL_H = 3.0f;
+static const int MAX_RANSAC_ITER = 3000;
 
 struct Frame {
         string label;
@@ -101,7 +107,7 @@ static void match_frames(StereoFrame& stereo, bool is_verbose)
                 uint64_t id_right = r.id;
                 const struct NXKeypoint* key_right = &stereo.right.keys[id_right];
 
-                if (r.match_cost < 50) {
+                if (r.match_cost < MATCH_COST_UPPER_BOUND) {
                         stereo.corr.add_keypoint_match(key_left, key_right,
                                                        KEY_SIGMA0, r.match_cost);
                 }
@@ -146,6 +152,18 @@ int main(int argc, char** argv)
         build_frame(sf.left,  "left",  images[0], is_verbose);
         build_frame(sf.right, "right", images[1], is_verbose);
         match_frames(sf, is_verbose);
+
+        VGHomography H;
+        sf.corr.normalize();
+        int n_inliers = H.estimate_ransac(sf.corr,
+                                          INLIER_TOL_H/sf.corr.stats()->dp,
+                                          MAX_RANSAC_ITER);
+        sf.corr.denormalize_homography(H.data());
+
+        if (is_verbose) {
+                NX_LOG(LOG_TAG, "RANSAC for homography terminated with %d inliers.", n_inliers);
+        }
+
 
         return EXIT_SUCCESS;
 }

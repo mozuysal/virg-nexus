@@ -14,15 +14,19 @@
 #define VIRG_NEXUS_VG_POINT_CORRESPONDENCE_2D_HPP
 
 #include <vector>
+#include <memory>
 
 #include "virg/nexus/nx_point_match_2d.h"
+#include "virg/nexus/nx_point_match_2d_stats.h"
+
 
 namespace virg {
 namespace nexus {
 
 class VGPointCorrespondence2D {
 public:
-        VGPointCorrespondence2D() { reset_stats(); }
+        VGPointCorrespondence2D() : m_stats(nx_point_match_2d_stats_new(),
+                                            nx_point_match_2d_stats_free) { }
 
         void clear() { m_matches.clear(); reset_stats(); }
         void reserve(int n_matches) { m_matches.reserve(n_matches); }
@@ -42,13 +46,19 @@ public:
         bool is_inlier (int idx) const                  { return static_cast<bool>(m_matches[idx].is_inlier); }
         void set_inlier(int idx, bool is_inlier = true) { m_matches[idx].is_inlier = static_cast<NXBool>(is_inlier); }
 
+        void sort_by_match_cost();
+
+        const NXPointMatch2DStats* stats() const { return m_stats.get(); }
         void normalize();
         void denormalize();
-        void sort_by_match_cost();
+        void denormalize_homography(double* h) {
+                nx_point_match_2d_stats_denormalize_homography(m_stats.get(), h);
+        }
+
 private:
         void reset_stats();
 
-        struct NXPointMatch2DStats m_stats;
+        std::shared_ptr<struct NXPointMatch2DStats> m_stats;
         std::vector<struct NXPointMatch2D> m_matches;
 };
 

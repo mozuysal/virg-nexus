@@ -25,23 +25,21 @@ namespace nexus {
 
 void VGPointCorrespondence2D::reset_stats()
 {
-        m_stats.m[0] = 0.0f;
-        m_stats.m[1] = 0.0f;
-        m_stats.mp[0] = 0.0f;
-        m_stats.mp[1] = 0.0f;
-        m_stats.d = 1.0f;
-        m_stats.dp = 1.0f;
+        nx_point_match_2d_stats_reset(m_stats.get());
 }
 
 void VGPointCorrespondence2D::normalize()
 {
-        m_stats = nx_point_match_2d_normalize(this->size(),
-                                              this->matches());
+        nx_point_match_2d_stats_normalize_matches(m_stats.get(),
+                                                  this->size(),
+                                                  this->matches());
 }
 
 void VGPointCorrespondence2D::denormalize()
 {
-        nx_point_match_2d_denormalize(this->size(), this->matches(), m_stats);
+        nx_point_match_2d_stats_denormalize_matches(m_stats.get(),
+                                                    this->size(),
+                                                    this->matches());
         reset_stats();
 }
 
