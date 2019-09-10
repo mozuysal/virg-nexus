@@ -44,6 +44,13 @@ double nx_homography_estimate_dlt_inliers(double *h, int n_corr, const struct NX
 int nx_homography_estimate_ransac(double *h, int n_corr, struct NXPointMatch2D *corr_list, double inlier_tolerance, int max_n_iter);
 int nx_homography_estimate_norm_ransac(double *h, int n_corr, struct NXPointMatch2D *corr_list, double inlier_tolerance, int max_n_iter);
 
+double nx_homography_transfer_error_fwd(const double *h, int n_corr,
+                                        const struct NXPointMatch2D *corr_list);
+double nx_homography_transfer_error_bwd(const double *h, int n_corr,
+                                        const struct NXPointMatch2D *corr_list);
+double nx_homography_transfer_error_sym(const double *h, int n_corr,
+                                        const struct NXPointMatch2D *corr_list);
+
 __NX_END_DECL
 
 #endif

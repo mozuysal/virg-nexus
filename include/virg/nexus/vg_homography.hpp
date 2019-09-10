@@ -23,8 +23,8 @@ class VGHomography {
 public:
         VGHomography();
 
-        double*       data()       { return m_data; }
-        const double* data() const { return m_data; }
+        double*       data()       { return &m_data[0]; }
+        const double* data() const { return &m_data[0]; }
 
         int estimate_ransac(VGPointCorrespondence2D& corr,
                             double inlier_tolerance,
@@ -34,6 +34,10 @@ public:
                                                      inlier_tolerance,
                                                      max_n_iter);
         }
+
+        double transfer_error_fwd(VGPointCorrespondence2D& corr) const { return nx_homography_transfer_error_fwd(this->data(), corr.size(), corr.matches()); }
+        double transfer_error_bwd(VGPointCorrespondence2D& corr) const { return nx_homography_transfer_error_bwd(this->data(), corr.size(), corr.matches()); }
+        double transfer_error_sym(VGPointCorrespondence2D& corr) const { return nx_homography_transfer_error_sym(this->data(), corr.size(), corr.matches()); }
 private:
         double m_data[9];
 };
