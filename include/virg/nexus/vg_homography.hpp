@@ -13,6 +13,8 @@
 #ifndef VIRG_NEXUS_VG_HOMOGRAPHY_HPP
 #define VIRG_NEXUS_VG_HOMOGRAPHY_HPP
 
+#include <cstring>
+
 #include "virg/nexus/nx_homography.h"
 #include "virg/nexus/vg_point_correspondence_2d.hpp"
 
@@ -23,8 +25,12 @@ class VGHomography {
 public:
         VGHomography();
 
+        void set(double* h_new) { std::memcpy(m_data, h_new, 9*sizeof(m_data[0])); }
+
         double*       data()       { return &m_data[0]; }
         const double* data() const { return &m_data[0]; }
+
+        template <typename T> void transfer_fwd(T *xp, const T *x) const;
 
         int estimate_ransac(VGPointCorrespondence2D& corr,
                             double inlier_tolerance,
