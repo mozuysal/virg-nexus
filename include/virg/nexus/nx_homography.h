@@ -20,7 +20,8 @@
 
 __NX_BEGIN_DECL
 
-static inline double nx_homography_map(float *xp, const float *x, const double *h)
+static inline double nx_homography_transfer_fwd(const double *h, float *xp,
+                                                const float *x)
 {
         double s = h[2]*x[0]+h[5]*x[1]+h[8];
         double s_inv = 1.0 / s;
@@ -33,16 +34,24 @@ static inline double nx_homography_map(float *xp, const float *x, const double *
 
 // x[TL, TR, BR, BL] -> unit square[(0,0) - (1,0) - (1,1) - (0,1)]
 double nx_homography_estimate_unit(double *h, const double *x);
-NXBool nx_homography_check(const double *h, double max_abs_cos);
-int nx_homography_count_inliers(int n_corr, const struct NXPointMatch2D *corr_list);
-int nx_homography_mark_inliers(int n_corr, struct NXPointMatch2D *corr_list, const double *h, double inlier_tolerance);
+NXBool nx_homography_check        (const double *h, double max_abs_cos);
+int    nx_homography_mark_inliers (const double *h, int n_corr,
+                                   struct NXPointMatch2D *corr_list,
+                                   double inlier_tolerance);
 
-void nx_homography_estimate_4pt(double *h, int corr_ids[4], const struct NXPointMatch2D *corr_list);
-double nx_homography_estimate_dlt(double *h, int n_corr, const struct NXPointMatch2D *corr_list);
-double nx_homography_estimate_dlt_inliers(double *h, int n_corr, const struct NXPointMatch2D *corr_list);
+double nx_homography_estimate_4pt        (double *h, int corr_ids[4],
+                                          const struct NXPointMatch2D *corr_list);
+double nx_homography_estimate_dlt        (double *h, int n_corr,
+                                          const struct NXPointMatch2D *corr_list);
+double nx_homography_estimate_dlt_inliers(double *h, int n_corr,
+                                          const struct NXPointMatch2D *corr_list);
 
-int nx_homography_estimate_ransac(double *h, int n_corr, struct NXPointMatch2D *corr_list, double inlier_tolerance, int max_n_iter);
-int nx_homography_estimate_norm_ransac(double *h, int n_corr, struct NXPointMatch2D *corr_list, double inlier_tolerance, int max_n_iter);
+int nx_homography_estimate_ransac     (double *h, int n_corr,
+                                       struct NXPointMatch2D *corr_list,
+                                       double inlier_tolerance, int max_n_iter);
+int nx_homography_estimate_norm_ransac(double *h, int n_corr,
+                                       struct NXPointMatch2D *corr_list,
+                                       double inlier_tolerance, int max_n_iter);
 
 double nx_homography_transfer_error_fwd(const double *h, int n_corr,
                                         const struct NXPointMatch2D *corr_list);

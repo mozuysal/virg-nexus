@@ -84,24 +84,16 @@ NXBool nx_homography_check(const double *h, double max_abs_cos)
         return cross_check && angle_check;
 }
 
-int nx_homography_count_inliers(int n_corr, const struct NXPointMatch2D *corr_list)
-{
-        int n_inliers = 0;
-        for (int i = 0; i < n_corr; ++i)
-                if (corr_list[i].is_inlier)
-                        ++n_inliers;
-        return n_inliers;
-}
-
-int nx_homography_mark_inliers(int n_corr, struct NXPointMatch2D *corr_list,
-                               const double *h, double inlier_tolerance)
+int nx_homography_mark_inliers(const double *h, int n_corr,
+                               struct NXPointMatch2D *corr_list,
+                               double inlier_tolerance)
 {
         double tol_sqr = inlier_tolerance*inlier_tolerance;
         int n_inliers = 0;
 
         for (int i = 0; i < n_corr; ++i) {
                 float mp[2];
-                nx_homography_map(&mp[0], &(corr_list[i].x[0]), h);
+                nx_homography_transfer_fwd(h, &mp[0], &(corr_list[i].x[0]));
 
                 double d[2] = { mp[0] - corr_list[i].xp[0],
                                 mp[1] - corr_list[i].xp[1] };
@@ -116,7 +108,7 @@ int nx_homography_mark_inliers(int n_corr, struct NXPointMatch2D *corr_list,
         return n_inliers;
 }
 
-void nx_homography_estimate_4pt(double *h, int corr_ids[4], const struct NXPointMatch2D *corr_list)
+double nx_homography_estimate_4pt(double *h, int corr_ids[4], const struct NXPointMatch2D *corr_list)
 {
         double x[8];
         for( int i = 0; i < 4; ++i ) {
@@ -136,11 +128,13 @@ void nx_homography_estimate_4pt(double *h, int corr_ids[4], const struct NXPoint
         }
 
         double hup[9];
-        nx_homography_estimate_unit(hup, xp);
+        double sval = nx_homography_estimate_unit(hup, xp);
 
         double hup_inv[9] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
         nx_dmat3_inv(hup_inv, hup);
         nx_dmat3_mul(h, hup_inv, hu);
+
+        return sval;
 }
 
 static inline void nx_homography_constraints_from_corr(double *rcons, const struct NXPointMatch2D *corr)
@@ -196,7 +190,7 @@ double nx_homography_estimate_dlt(double *h, int n_corr, const struct NXPointMat
 
 double nx_homography_estimate_dlt_inliers(double *h, int n_corr, const struct NXPointMatch2D *corr_list)
 {
-        int n_inliers = nx_homography_count_inliers(n_corr, corr_list);
+        int n_inliers = nx_point_match_2d_count_inliers(n_corr, corr_list);
         if (n_inliers < 4) {
                 NX_WARNING(NX_LOG_TAG, "Insufficient number of inliers for homography estimation by DLT!");
                 return DBL_MAX;
@@ -281,7 +275,7 @@ int nx_homography_estimate_ransac(double *h, int n_corr, struct NXPointMatch2D *
                 nx_homography_estimate_4pt(h, corr_ids, corr_list);
             } while (--tries && !nx_homography_check(h, max_abs_cos));
 
-            n_inliers = nx_homography_mark_inliers(n_corr, corr_list, h, inlier_tolerance);
+            n_inliers = nx_homography_mark_inliers(h, n_corr, corr_list, inlier_tolerance);
 
             // update if we got sth. better than current best
             if (n_inliers > n_inliers_best) {
@@ -299,12 +293,12 @@ int nx_homography_estimate_ransac(double *h, int n_corr, struct NXPointMatch2D *
 
         // reestimate with all inliers and relabel inlier until it does not improve much (by 5)
         memcpy(h, h_best, 9*sizeof(h[0]));
-        n_inliers_best = nx_homography_mark_inliers(n_corr, corr_list, h_best, inlier_tolerance);
+        n_inliers_best = nx_homography_mark_inliers(h_best, n_corr, corr_list, inlier_tolerance);
         n_inliers = 1;
         while (n_inliers_best > (n_inliers + 5)) {
                 nx_homography_estimate_dlt_inliers(h, n_corr, corr_list);
                 n_inliers = n_inliers_best;
-                n_inliers_best = nx_homography_mark_inliers(n_corr, corr_list, h, inlier_tolerance);
+                n_inliers_best = nx_homography_mark_inliers(h, n_corr, corr_list, inlier_tolerance);
         }
 
         // last check for homography, return zero inliers if fails.
@@ -577,7 +571,7 @@ double nx_homography_transfer_error_fwd(const double *h, int n_corr,
                 const struct NXPointMatch2D *pm = corr_list + i;
                 if (pm->is_inlier) {
                         float xp[2];
-                        nx_homography_map(&xp[0], &pm->x[0], h);
+                        nx_homography_transfer_fwd(h, &xp[0], &pm->x[0]);
                         double dx = xp[0] - pm->xp[0];
                         double dy = xp[1] - pm->xp[1];
                         double e_i = sqrt(dx*dx + dy*dy) / pm->sigma_xp;
@@ -598,7 +592,7 @@ double nx_homography_transfer_error_bwd(const double *h, int n_corr,
                 const struct NXPointMatch2D *pm = corr_list + i;
                 if (pm->is_inlier) {
                         float x[2];
-                        nx_homography_map(&x[0], &pm->xp[0], &h_inv[0]);
+                        nx_homography_transfer_fwd(&h_inv[0], &x[0], &pm->xp[0]);
                         double dx = x[0] - pm->x[0];
                         double dy = x[1] - pm->x[1];
                         e += sqrt(dx*dx + dy*dy) / pm->sigma_x;

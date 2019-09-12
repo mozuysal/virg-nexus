@@ -44,8 +44,8 @@ public:
         int estimate_from_inliers(VGPointCorrespondence2D& corr, double inlier_tolerance) {
                 nx_homography_estimate_dlt_inliers(&m_data[0], corr.size(),
                                                    corr.matches());
-                return nx_homography_mark_inliers(corr.size(),
-                                                  corr.matches(), &m_data[0],
+                return nx_homography_mark_inliers(&m_data[0], corr.size(),
+                                                  corr.matches(),
                                                   inlier_tolerance);
         }
 

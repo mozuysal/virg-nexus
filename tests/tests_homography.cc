@@ -90,13 +90,13 @@ double NXHomographyTest::measure_test_error_unit(const double *h, const float *x
 {
         double err = 0.0;
         float xp[2];
-        nx_homography_map(&xp[0], &x[0], h);
+        nx_homography_transfer_fwd(h, &xp[0], &x[0]);
         err += point_dist(&xp[0], 0.0, 0.0);
-        nx_homography_map(&xp[0], &x[2], h);
+        nx_homography_transfer_fwd(h, &xp[0], &x[2]);
         err += point_dist(&xp[0], 1.0, 0.0);
-        nx_homography_map(&xp[0], &x[4], h);
+        nx_homography_transfer_fwd(h, &xp[0], &x[4]);
         err += point_dist(&xp[0], 1.0, 1.0);
-        nx_homography_map(&xp[0], &x[6], h);
+        nx_homography_transfer_fwd(h, &xp[0], &x[6]);
         err += point_dist(&xp[0], 0.0, 1.0);
         return err;
 }
@@ -121,7 +121,7 @@ double NXHomographyTest::measure_test_error4(const double *h, const struct NXPoi
         double err = 0.0;
         float xp[2];
         for (int i = 0; i < 4; ++i) {
-                nx_homography_map(&xp[0], &corr[i].x[0], h);
+                nx_homography_transfer_fwd(h, &xp[0], &corr[i].x[0]);
                 err = MAX(err, point_dist(&xp[0], corr[i].xp[0], corr[i].xp[1]));
         }
         return err;
@@ -144,7 +144,7 @@ struct NXPointMatch2D *NXHomographyTest::make_test_data_ransac(double *h, int n,
 
                 if (NX_UNIFORM_SAMPLE_D < inlier_ratio) {
                         corr[i].is_inlier = NX_TRUE;
-                        nx_homography_map(&corr[i].xp[0], &corr[i].x[0], h);
+                        nx_homography_transfer_fwd(h, &corr[i].xp[0], &corr[i].x[0]);
                         corr[i].xp[0] += (NX_UNIFORM_SAMPLE_D - 0.5) * noise_level;
                         corr[i].xp[1] += (NX_UNIFORM_SAMPLE_D - 0.5) * noise_level;
                         corr[i].match_cost = NX_UNIFORM_SAMPLE_S * 20.0;
@@ -210,7 +210,8 @@ TEST_F(NXHomographyTest, ransac) {
                 gt_data[2].x[0] = 1.0; gt_data[2].x[1] = 1.0;
                 gt_data[3].x[0] = 0.0; gt_data[3].x[1] = 1.0;
                 for (int j = 0; j < 4; ++j)
-                        nx_homography_map(&gt_data[j].xp[0], &gt_data[j].x[0], h_gt);
+                        nx_homography_transfer_fwd(h_gt, &gt_data[j].xp[0],
+                                                   &gt_data[j].x[0]);
                 err = MAX(err, measure_test_error4(h, gt_data));
                 nx_free(test_data);
         }

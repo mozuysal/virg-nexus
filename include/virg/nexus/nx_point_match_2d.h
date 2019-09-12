@@ -50,6 +50,17 @@ nx_point_match_2d_from_keypoints(const struct NXKeypoint *k,
         return pm2d;
 }
 
+static inline int
+nx_point_match_2d_count_inliers(int n_corr,
+                                const struct NXPointMatch2D *corr_list)
+{
+        int n_inliers = 0;
+        for (int i = 0; i < n_corr; ++i)
+                if (corr_list[i].is_inlier)
+                        ++n_inliers;
+        return n_inliers;
+}
+
 __NX_END_DECL
 
 #endif
