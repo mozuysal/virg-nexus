@@ -42,6 +42,8 @@ void nx_point_match_2d_stats_denormalize_matches(const struct NXPointMatch2DStat
 
 void nx_point_match_2d_stats_denormalize_homography(const struct NXPointMatch2DStats *stats,
                                                     double *h);
+void nx_point_match_2d_stats_denormalize_fundamental(const struct NXPointMatch2DStats *stats,
+                                                     double *f);
 
 
 __NX_END_DECL

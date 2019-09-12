@@ -19,6 +19,8 @@
 #include "virg/nexus/nx_assert.h"
 #include "virg/nexus/nx_svd.h"
 #include "virg/nexus/nx_mat234.h"
+#include "virg/nexus/nx_uniform_sampler.h"
+#include "virg/nexus/nx_point_match_2d_stats.h"
 
 int nx_fundamental_mark_inliers (const double *f, int n_corr,
                                  struct NXPointMatch2D *corr_list,
@@ -27,11 +29,20 @@ int nx_fundamental_mark_inliers (const double *f, int n_corr,
         NX_ASSERT_PTR(f);
         NX_ASSERT_PTR(corr_list);
 
+        int n_inliers = 0;
         for (int i = 0; i < n_corr; ++i) {
-                corr_list[i].is_inlier = NX_FALSE;
+                struct NXPointMatch2D *pm_i = corr_list + i;
+                double d = nx_fundamental_epipolar_distance_fwd(f, pm_i);
+                /* double d_effective = d / pm_i->sigma_xp; */
+                if (d < inlier_tolerance) {
+                        pm_i->is_inlier = NX_TRUE;
+                        n_inliers++;
+                } else {
+                        pm_i->is_inlier = NX_FALSE;
+                }
         }
 
-        return 0;
+        return n_inliers;
 }
 
 static inline void nx_fundamental_constraints_from_corr(double *rcons, const struct NXPointMatch2D *corr)
@@ -164,6 +175,19 @@ double nx_fundamental_estimate_inliers(double *f, int n_corr,
         return sval;
 }
 
+static inline void nx_select_prosac_candidates(int n_top, int corr_ids[8])
+{
+        corr_ids[0] = (int)(NX_UNIFORM_SAMPLE_S*n_top);
+        for (int i = 1; i < 8; ++i) {
+                corr_ids[i] = (int)(NX_UNIFORM_SAMPLE_S*n_top);
+                for (int j = i-1; j > 0; --j)
+                        if (corr_ids[i] == corr_ids[j]) {
+                                --i;
+                                break;
+                        }
+        }
+}
+
 int nx_fundamental_estimate_ransac(double *f, int n_corr,
                                    struct NXPointMatch2D *corr_list,
                                    double inlier_tolerance, int max_n_iter)
@@ -171,7 +195,67 @@ int nx_fundamental_estimate_ransac(double *f, int n_corr,
         NX_ASSERT_PTR(f);
         NX_ASSERT_PTR(corr_list);
 
-        return 0;
+        double f_best[9];
+        int n_inliers_best = 0;
+        int n_inliers = 0;
+        int corr_ids[8];
+
+        if (n_corr < 8) {
+                NX_WARNING(NX_LOG_TAG, "Insufficient number (< 8) of correspondences for fundamental matrix estimation with RANSAC!");
+                return 0;
+        }
+        NX_ASSERT(n_corr >= 8);
+
+        // This routine mimics PROSAC by reordering and sampling from the top
+        // group. In every iteration the top group grows by PROSAC_INC
+        const int PROSAC_START = 10;
+        const int PROSAC_INC   = 1;
+
+        int n_top_hypo = PROSAC_START;
+        if (n_top_hypo > n_corr)
+                n_top_hypo = n_corr;
+        qsort((void *)corr_list, n_corr, sizeof(struct NXPointMatch2D),
+              nx_point_match_2d_cmp_match_cost);
+
+        // Main loop. Quits after max. num. of iterations or when we already
+        // have a large group of inliers.
+        int iter = 0;
+        while (iter < max_n_iter && n_inliers < 100) {
+                nx_select_prosac_candidates(n_top_hypo, corr_ids);
+                nx_fundamental_estimate_8pt(f, corr_ids, corr_list);
+
+                n_inliers = nx_fundamental_mark_inliers(f, n_corr, corr_list,
+                                                        inlier_tolerance);
+
+                // update if we got sth. better than current best
+                if (n_inliers > n_inliers_best) {
+                        memcpy(f_best, f, 9*sizeof(f[0]));
+                        n_inliers_best = n_inliers;
+                }
+
+                /* printf("%d ", iter); */
+                ++iter;
+                n_top_hypo += PROSAC_INC;
+                if (n_top_hypo >= n_corr) {
+                        n_top_hypo = n_corr;
+                }
+        }
+
+        // reestimate with all inliers and relabel inlier until it does not
+        // improve much (by 5)
+        memcpy(f, f_best, 9*sizeof(f[0]));
+        n_inliers_best = nx_fundamental_mark_inliers(f_best, n_corr,
+                                                     corr_list, inlier_tolerance);
+        n_inliers = 1;
+        while (n_inliers_best > (n_inliers + 5)) {
+                nx_fundamental_estimate_inliers(f, n_corr, corr_list);
+                n_inliers = n_inliers_best;
+                n_inliers_best = nx_fundamental_mark_inliers(f, n_corr,
+                                                             corr_list,
+                                                             inlier_tolerance);
+        }
+
+        return n_inliers_best;
 }
 
 int nx_fundamental_estimate_norm_ransac(double *f, int n_corr,
@@ -181,5 +265,16 @@ int nx_fundamental_estimate_norm_ransac(double *f, int n_corr,
         NX_ASSERT_PTR(f);
         NX_ASSERT_PTR(corr_list);
 
-        return 0;
+        struct NXPointMatch2DStats *stats = nx_point_match_2d_stats_new();
+        nx_point_match_2d_stats_normalize_matches(stats, n_corr, corr_list);
+
+        double norm_tol = inlier_tolerance / stats->dp;
+        int n_inliers = nx_fundamental_estimate_ransac(f, n_corr, corr_list,
+                                                       norm_tol, max_n_iter);
+
+        nx_point_match_2d_stats_denormalize_fundamental(stats, f);
+        nx_point_match_2d_stats_denormalize_matches(stats, n_corr, corr_list);
+        nx_point_match_2d_stats_free(stats);
+
+        return n_inliers;
 }

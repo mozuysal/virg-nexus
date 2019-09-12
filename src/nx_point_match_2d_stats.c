@@ -131,3 +131,16 @@ void nx_point_match_2d_stats_denormalize_homography(const struct NXPointMatch2DS
 
         memcpy(h, htemp, 9*sizeof(*h));
 }
+
+void nx_point_match_2d_stats_denormalize_fundamental(const struct NXPointMatch2DStats *stats,
+                                                     double *f)
+{
+        double sx  = 1.0 / stats->d;
+        double sxp = 1.0 / stats->dp;
+
+        double tx  = -stats->m[0]*sx;
+        double ty  = -stats->m[1]*sx;
+        double txp = -stats->mp[0]*sxp;
+        double typ = -stats->mp[1]*sxp;
+        
+}

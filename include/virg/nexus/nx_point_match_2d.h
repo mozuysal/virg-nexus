@@ -61,6 +61,21 @@ nx_point_match_2d_count_inliers(int n_corr,
         return n_inliers;
 }
 
+static inline int
+nx_point_match_2d_cmp_match_cost(const void *m0, const void *m1)
+{
+        const struct NXPointMatch2D *match0 = (const struct NXPointMatch2D *)m0;
+        const struct NXPointMatch2D *match1 = (const struct NXPointMatch2D *)m1;
+
+        if (match0->match_cost > match1->match_cost)
+                return +1;
+        else if (match0->match_cost < match1->match_cost)
+                return -1;
+        else
+                return 0;
+}
+
+
 __NX_END_DECL
 
 #endif

@@ -95,9 +95,10 @@ int nx_homography_mark_inliers(const double *h, int n_corr,
                 float mp[2];
                 nx_homography_transfer_fwd(h, &mp[0], &(corr_list[i].x[0]));
 
-                double d[2] = { mp[0] - corr_list[i].xp[0],
-                                mp[1] - corr_list[i].xp[1] };
-                if (d[0]*d[0] + d[1]*d[1] < tol_sqr) {
+                double dx = mp[0] - corr_list[i].xp[0];
+                double dy = mp[1] - corr_list[i].xp[1];
+                double d_sqr = dx*dx + dy*dy;
+                if (d_sqr < tol_sqr) {
                         corr_list[i].is_inlier = NX_TRUE;
                         ++n_inliers;
                 } else {
@@ -211,19 +212,6 @@ double nx_homography_estimate_dlt_inliers(double *h, int n_corr, const struct NX
         return sval;
 }
 
-static int nx_hcorr_cmp_match_cost(const void *c0, const void *c1)
-{
-        const struct NXPointMatch2D *corr0 = (const struct NXPointMatch2D *)c0;
-        const struct NXPointMatch2D *corr1 = (const struct NXPointMatch2D *)c1;
-
-        if (corr0->match_cost > corr1->match_cost)
-                return +1;
-        else if (corr0->match_cost < corr1->match_cost)
-                return -1;
-        else
-                return 0;
-}
-
 static inline void nx_select_prosac_candidates(int n_top, int corr_ids[4])
 {
         corr_ids[0] = (int)(NX_UNIFORM_SAMPLE_S*n_top);
@@ -261,7 +249,8 @@ int nx_homography_estimate_ransac(double *h, int n_corr, struct NXPointMatch2D *
         int n_top_hypo = PROSAC_START;
         if (n_top_hypo > n_corr)
             n_top_hypo = n_corr;
-        qsort((void *)corr_list, n_corr, sizeof(struct NXPointMatch2D), nx_hcorr_cmp_match_cost);
+        qsort((void *)corr_list, n_corr, sizeof(struct NXPointMatch2D),
+              nx_point_match_2d_cmp_match_cost);
 
         // Main loop. Quits after max. num. of iterations of we already have a
         // large group of inliers.

@@ -13,11 +13,29 @@
 #ifndef VIRG_NEXUS_NX_EPIPOLAR_H
 #define VIRG_NEXUS_NX_EPIPOLAR_H
 
+#include <math.h>
+
 #include "virg/nexus/nx_config.h"
 #include "virg/nexus/nx_point_match_2d.h"
 
 __NX_BEGIN_DECL
 
+static inline double
+nx_fundamental_epipolar_distance_fwd(const double *f,
+                                     struct NXPointMatch2D *pm)
+{
+        double x[2] =  { pm->x[0],  pm->x[1] };
+        double xp[2] = { pm->xp[0], pm->xp[1] };
+
+        double l[3];
+        l[0] = f[0]*x[0] + f[3]*x[1] + f[6];
+        l[1] = f[1]*x[0] + f[4]*x[1] + f[7];
+        l[2] = f[2]*x[0] + f[5]*x[1] + f[8];
+
+        // point - line distance in 2D
+        return fabs((l[0]*xp[0] + l[1]*xp[1] + l[2])
+                    / sqrt(l[0]*l[0] + l[1]*l[1]));
+}
 
 int nx_fundamental_mark_inliers(const double *f, int n_corr,
                                 struct NXPointMatch2D *corr_list,
