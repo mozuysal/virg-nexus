@@ -273,6 +273,7 @@ set(test_SOURCES
   tests/tests_filter.cc
   tests/tests_svd.cc
   tests/tests_homography.cc
+  tests/tests_epipolar.cc
   tests/tests_image.cc
   tests/tests_image_pyr.cc
   tests/tests_fast_detector.cc

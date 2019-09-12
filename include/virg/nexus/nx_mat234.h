@@ -13,6 +13,7 @@
 #ifndef VIRG_NEXUS_NX_MAT234_H
 #define VIRG_NEXUS_NX_MAT234_H
 
+#include <stdio.h>
 #include <string.h>
 #include <math.h>
 
@@ -29,6 +30,9 @@ static inline double nx_dmat3_inv(double *M3i, const double *M3);
 static inline void   nx_dmat3_mul(double *C, const double *A, const double *B);
 static inline void   nx_dmat3_mul_ua(double *C, const double *U, const double *A);
 static inline void   nx_dmat3_eye(double *A);
+static inline double nx_dmat3_xptFx(const double *F, const double *x, const double* xp);
+static inline void   nx_dmat3_print(const double *A, const char *label);
+
 /*
  * -----------------------------------------------------------------------------
  *                                   Definitions
@@ -161,6 +165,28 @@ static inline void nx_dmat3_eye(double *A)
         A[0] = 1.0;
         A[4] = 1.0;
         A[8] = 1.0;
+}
+
+static inline double nx_dmat3_xptFx(const double *F, const double *x,
+                                    const double* xp)
+{
+        double r = 0.0;
+
+        r += xp[0] * (x[0]*F[0] + x[1]*F[3] + F[6]);
+        r += xp[1] * (x[0]*F[1] + x[1]*F[4] + F[7]);
+        r +=   1.0 * (x[0]*F[2] + x[1]*F[5] + F[8]);
+
+        return r;
+}
+
+static inline void nx_dmat3_print(const double *A, const char *label)
+{
+        if (label)
+                printf("%s\n---------\n", label);
+
+        printf("[ %10.4f%10.4f%10.4f ]\n", A[0], A[3], A[6]);
+        printf("[ %10.4f%10.4f%10.4f ]\n", A[1], A[4], A[7]);
+        printf("[ %10.4f%10.4f%10.4f ]\n", A[2], A[5], A[8]);
 }
 
 __NX_END_DECL

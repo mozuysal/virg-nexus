@@ -24,12 +24,19 @@ int nx_fundamental_mark_inliers(const double *f, int n_corr,
                                 double inlier_tolerance);
 
 
-double nx_fundamental_estimate_8_point(double *f, int corr_ids[8],
+double nx_fundamental_estimate_8pt    (double *f, int corr_ids[8],
                                        const struct NXPointMatch2D *corr_list);
 double nx_fundamental_estimate        (double *f, int n_corr,
                                        const struct NXPointMatch2D *corr_list);
 double nx_fundamental_estimate_inliers(double *f, int n_corr,
                                        const struct NXPointMatch2D *corr_list);
+
+int nx_fundamental_estimate_ransac     (double *f, int n_corr,
+                                        struct NXPointMatch2D *corr_list,
+                                        double inlier_tolerance, int max_n_iter);
+int nx_fundamental_estimate_norm_ransac(double *f, int n_corr,
+                                        struct NXPointMatch2D *corr_list,
+                                        double inlier_tolerance, int max_n_iter);
 
 __NX_END_DECL
 
