@@ -37,6 +37,7 @@ set(virg_nexus_C_SOURCES
   src/nx_image_warp.c
   src/nx_affine_warp_processor.c
   src/nx_homography.c
+  src/nx_epipolar.c
   src/nx_image_pyr.c
   src/nx_image_pyr_builder.c
   src/nx_colorspace.c
@@ -93,6 +94,7 @@ set(virg_nexus_C_HEADERS
   include/virg/nexus/nx_image_warp.h
   include/virg/nexus/nx_affine_warp_processor.h
   include/virg/nexus/nx_homography.h
+  include/virg/nexus/nx_epipolar.h
   include/virg/nexus/nx_image_pyr.h
   include/virg/nexus/nx_image_pyr_builder.h
   include/virg/nexus/nx_colorspace.h
