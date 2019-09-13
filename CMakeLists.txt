@@ -121,6 +121,7 @@ set(virg_nexus_CXX_SOURCES
   src/vg_descriptor_map.cc
   src/vg_point_correspondence_2d.cc
   src/vg_homography.cc
+  src/vg_fundamental_matrix.cc
   src/vg_graphics_context.cc
   src/vg_image_annotator.cc
 )
@@ -134,6 +135,7 @@ set(virg_nexus_CXX_HEADERS
   include/virg/nexus/vg_descriptor_map.hpp
   include/virg/nexus/vg_point_correspondence_2d.hpp
   include/virg/nexus/vg_homography.hpp
+  include/virg/nexus/vg_fundamental_matrix.hpp
   include/virg/nexus/vg_color.hpp
   include/virg/nexus/vg_color_map.hpp
   include/virg/nexus/vg_graphics_context.hpp

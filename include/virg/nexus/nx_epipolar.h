@@ -22,7 +22,7 @@ __NX_BEGIN_DECL
 
 static inline double
 nx_fundamental_epipolar_distance_fwd(const double *f,
-                                     struct NXPointMatch2D *pm)
+                                     const struct NXPointMatch2D *pm)
 {
         double x[2] =  { pm->x[0],  pm->x[1] };
         double xp[2] = { pm->xp[0], pm->xp[1] };

@@ -25,7 +25,7 @@ class VGHomography {
 public:
         VGHomography();
 
-        void set(double* h_new) { std::memcpy(m_data, h_new, 9*sizeof(m_data[0])); }
+        void set(const double* h_new) { std::memcpy(m_data, h_new, 9*sizeof(m_data[0])); }
 
         double*       data()       { return &m_data[0]; }
         const double* data() const { return &m_data[0]; }

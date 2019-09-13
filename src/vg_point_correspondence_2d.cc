@@ -14,11 +14,13 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstring>
 
 using std::sqrt;
 using std::sort;
 using std::begin;
 using std::end;
+using std::memcpy;
 
 namespace virg {
 namespace nexus {
@@ -26,6 +28,16 @@ namespace nexus {
 void VGPointCorrespondence2D::reset_stats()
 {
         nx_point_match_2d_stats_reset(m_stats.get());
+}
+
+VGPointCorrespondence2D VGPointCorrespondence2D::clone() const
+{
+        VGPointCorrespondence2D corr;
+        for (const struct NXPointMatch2D& pm: this->m_matches)
+                corr.m_matches.push_back(pm);
+        memcpy(corr.m_stats.get(), this->m_stats.get(), sizeof(*corr.m_stats));
+
+        return corr;
 }
 
 void VGPointCorrespondence2D::normalize()

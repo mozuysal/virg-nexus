@@ -28,6 +28,7 @@ public:
         VGPointCorrespondence2D() : m_stats(nx_point_match_2d_stats_new(),
                                             nx_point_match_2d_stats_free) { }
 
+        VGPointCorrespondence2D clone() const;
         void clear() { m_matches.clear(); reset_stats(); }
         void reserve(int n_matches) { m_matches.reserve(n_matches); }
 
