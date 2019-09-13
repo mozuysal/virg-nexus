@@ -51,6 +51,7 @@ static const int   N_OCTETS = 32;
 static const float KEY_SIGMA0 = 0.5f;
 static const float MATCH_COST_UPPER_BOUND = 70.0f;
 static const float INLIER_TOL_H = 3.0f;
+static const float INLIER_TOL_F = 2.0f;
 static const int MAX_RANSAC_ITER = 3000;
 
 struct Frame {
@@ -122,7 +123,7 @@ static void match_frames(StereoFrame& stereo, bool is_verbose)
         if (is_verbose) {
                 NX_LOG(LOG_TAG, "Established %d putative correspondences", stereo.hcorr.size());
 
-                string filename = "/tmp/matches.png";
+                string filename = "/tmp/h_matches.png";
                 NX_LOG(LOG_TAG, "Saving match image to %s", filename.c_str());
                 VGImageAnnotator ia = VGImageAnnotator::create_match_image(stereo.left.pyr[0],
                                                                            stereo.right.pyr[0],
@@ -149,7 +150,7 @@ static int estimate_initial_homography(StereoFrame& sf, bool is_verbose)
                 NX_LOG(LOG_TAG, "   transfer error (fwd/sym) = %.2f / %.2f",
                        te_fwd, te_sym);
 
-                string filename = "/tmp/matches_inliers.png";
+                string filename = "/tmp/h_matches_inliers.png";
                 NX_LOG(LOG_TAG, "Saving matched inliers as image to %s", filename.c_str());
                 VGImageAnnotator ia = VGImageAnnotator::create_match_image(sf.left.pyr[0],
                                                                            sf.right.pyr[0],
@@ -159,6 +160,7 @@ static int estimate_initial_homography(StereoFrame& sf, bool is_verbose)
 
         return n_inliers;
 }
+
 
 static int search_keypoint_around(const double* x, const vector<NXKeypoint>& keys)
 {
@@ -202,7 +204,7 @@ static void match_frames_guided_by_homography(StereoFrame& stereo,
                 NX_LOG(LOG_TAG, "Established %d H guided correspondences",
                        stereo.hcorr.size());
 
-                string filename = "/tmp/matches_guided.png";
+                string filename = "/tmp/h_matches_guided.png";
                 NX_LOG(LOG_TAG, "Saving guided match image to %s", filename.c_str());
                 VGImageAnnotator ia = VGImageAnnotator::create_match_image(stereo.left.pyr[0],
                                                                            stereo.right.pyr[0],
@@ -228,11 +230,39 @@ static int estimate_guided_homography(StereoFrame& sf, bool is_verbose)
                 NX_LOG(LOG_TAG, "   transfer error (fwd/sym) = %.2f / %.2f",
                        te_fwd, te_sym);
 
-                string filename = "/tmp/matches_guided_inliers.png";
+                string filename = "/tmp/h_matches_guided_inliers.png";
                 NX_LOG(LOG_TAG, "Saving matched inliers after guided matching as image to %s", filename.c_str());
                 VGImageAnnotator ia = VGImageAnnotator::create_match_image(sf.left.pyr[0],
                                                                            sf.right.pyr[0],
                                                                            sf.hcorr, true);
+                ia.get_canvas().xsave(filename);
+        }
+
+        return n_inliers;
+}
+
+static int estimate_initial_fundamental_matrix(StereoFrame& sf, bool is_verbose)
+{
+        sf.fcorr.normalize();
+        int n_inliers = sf.F.estimate_ransac(sf.fcorr,
+                                             INLIER_TOL_F/sf.fcorr.stats()->dp,
+                                             MAX_RANSAC_ITER);
+        sf.fcorr.denormalize_fundamental(sf.F.data());
+        sf.fcorr.denormalize();
+
+        // double te_fwd = sf.H.transfer_error_fwd(sf.hcorr);
+        // double te_sym = sf.H.transfer_error_sym(sf.hcorr);
+
+        if (is_verbose) {
+                NX_LOG(LOG_TAG, "RANSAC for fundamental matrix terminated with %d inliers.", n_inliers);
+                // NX_LOG(LOG_TAG, "   transfer error (fwd/sym) = %.2f / %.2f",
+                       // te_fwd, te_sym);
+
+                string filename = "/tmp/f_matches_inliers.png";
+                NX_LOG(LOG_TAG, "Saving matched inliers as image to %s", filename.c_str());
+                VGImageAnnotator ia = VGImageAnnotator::create_match_image(sf.left.pyr[0],
+                                                                           sf.right.pyr[0],
+                                                                           sf.fcorr, true);
                 ia.get_canvas().xsave(filename);
         }
 
@@ -265,11 +295,14 @@ int main(int argc, char** argv)
         build_frame(sf.left,  "left",  images[0], is_verbose);
         build_frame(sf.right, "right", images[1], is_verbose);
         match_frames(sf, is_verbose);
-        int n_inliers = estimate_initial_homography(sf, is_verbose);
-        if (n_inliers >= 15) {
+
+        int n_inliers_h = estimate_initial_homography(sf, is_verbose);
+        if (n_inliers_h >= 15) {
                 match_frames_guided_by_homography(sf, is_verbose);
-                int n_inliers_guided = estimate_guided_homography(sf, is_verbose);
+                estimate_guided_homography(sf, is_verbose);
         }
+
+        int n_inliers_f = estimate_initial_fundamental_matrix(sf, is_verbose);
 
         return EXIT_SUCCESS;
 }

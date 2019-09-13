@@ -55,6 +55,9 @@ public:
         void denormalize_homography(double* h) {
                 nx_point_match_2d_stats_denormalize_homography(m_stats.get(), h);
         }
+        void denormalize_fundamental(double* f) {
+                nx_point_match_2d_stats_denormalize_fundamental(m_stats.get(), f);
+        }
 
 private:
         void reset_stats();

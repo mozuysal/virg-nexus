@@ -184,11 +184,18 @@ VGImageAnnotator VGImageAnnotator::create_match_image(const VGImage& image_left,
         VGImageAnnotator ia(combined);
         for (int i = 0; i < corr.size(); ++i) {
                 const struct NXPointMatch2D& pm = corr[i];
-                if (!only_inliers || pm.is_inlier)
+                if (!only_inliers || pm.is_inlier) {
                         ia.draw_edge(pm.x[0], pm.x[1],
+                                     pm.xp[0], pm.xp[1],
+                                     3, VGColor::red());
+                        ia.draw_edge(pm.x[0]+lw, pm.x[1],
                                      pm.xp[0]+lw, pm.xp[1],
-                                     3, VGColor::red(),
-                                     VGImageAnnotator::MARK_DIAMOND, 10);
+                                     3, VGColor::green());
+                        ia.draw_mark(MARK_DIAMOND, pm.x[0], pm.x[1],
+                                     10, VGColor::red());
+                        ia.draw_mark(MARK_DIAMOND, pm.xp[0]+lw, pm.xp[1],
+                                     10, VGColor::green());
+                }
         }
 
         return ia;
