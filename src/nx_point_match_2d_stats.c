@@ -142,5 +142,25 @@ void nx_point_match_2d_stats_denormalize_fundamental(const struct NXPointMatch2D
         double ty  = -stats->m[1]*sx;
         double txp = -stats->mp[0]*sxp;
         double typ = -stats->mp[1]*sxp;
-        
+
+        double FT[9];
+        FT[0] = f[0]*sx;
+        FT[1] = f[1]*sx;
+        FT[2] = f[2]*sx;
+        FT[3] = f[3]*sx;
+        FT[4] = f[4]*sx;
+        FT[5] = f[5]*sx;
+        FT[6] = f[0]*tx+f[3]*ty+f[6];
+        FT[7] = f[1]*tx+f[4]*ty+f[7];
+        FT[8] = f[2]*tx+f[5]*ty+f[8];
+
+        f[0] = sxp*FT[0];
+        f[1] = sxp*FT[1];
+        f[2] = txp*FT[0] + typ*FT[1] + FT[2];
+        f[3] = sxp*FT[3];
+        f[4] = sxp*FT[4];
+        f[5] = txp*FT[3] + typ*FT[4] + FT[5];
+        f[6] = sxp*FT[6];
+        f[7] = sxp*FT[7];
+        f[8] = txp*FT[6] + typ*FT[7] + FT[8];
 }

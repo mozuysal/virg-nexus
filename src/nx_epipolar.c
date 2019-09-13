@@ -168,7 +168,7 @@ double nx_fundamental_estimate_inliers(double *f, int n_corr,
                         Ac += 9;
                 }
 
-        double sval = nx_fundamental_svd_solve(f, n_corr, A);
+        double sval = nx_fundamental_svd_solve(f, n_inliers, A);
         nx_fundamental_fix_rank(f);
         nx_free(A);
 
@@ -232,8 +232,9 @@ int nx_fundamental_estimate_ransac(double *f, int n_corr,
                         memcpy(f_best, f, 9*sizeof(f[0]));
                         n_inliers_best = n_inliers;
                 }
+                /* NX_LOG("FRANSAC", "Iter %4d, inliers %4d, best inliers %4d", */
+                       /* iter, n_inliers, n_inliers_best); */
 
-                /* printf("%d ", iter); */
                 ++iter;
                 n_top_hypo += PROSAC_INC;
                 if (n_top_hypo >= n_corr) {
@@ -246,6 +247,8 @@ int nx_fundamental_estimate_ransac(double *f, int n_corr,
         memcpy(f, f_best, 9*sizeof(f[0]));
         n_inliers_best = nx_fundamental_mark_inliers(f_best, n_corr,
                                                      corr_list, inlier_tolerance);
+        /* NX_LOG("FRANSAC", "Iter END, best inliers %4d", n_inliers_best); */
+
         n_inliers = 1;
         while (n_inliers_best > (n_inliers + 5)) {
                 nx_fundamental_estimate_inliers(f, n_corr, corr_list);
@@ -255,6 +258,7 @@ int nx_fundamental_estimate_ransac(double *f, int n_corr,
                                                              inlier_tolerance);
         }
 
+        /* NX_LOG("FRANSAC", "Estimate ALL, best inliers %4d", n_inliers_best); */
         return n_inliers_best;
 }
 

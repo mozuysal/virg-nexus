@@ -26,13 +26,13 @@
 
 #define ABS_MAX(x,y) ((fabs(x) > fabs(y)) ? fabs(x) : fabs(y))
 
-#define N_TESTS 20
+#define N_TESTS 100
 #define ERROR_THRESHOLD 1e-9
 
 #define N_RANSAC_CORR 100
-#define RANSAC_INLIER_RATIO 0.8
+#define RANSAC_INLIER_RATIO 0.7
 #define RANSAC_NOISE_LEVEL 1e-3
-#define RANSAC_MAX_N_ITER 1000
+#define RANSAC_MAX_N_ITER 200
 
 using namespace std;
 
@@ -53,11 +53,11 @@ protected:
 
         struct NXPointMatch2D *make_test_data8();
         struct NXPointMatch2D *make_test_data16();
-        // struct NXPointMatch2D *make_test_data_ransac(double *h, int n, double inlier_ratio, double noise_level);
+        struct NXPointMatch2D *make_test_data_ransac(int n, double inlier_ratio, double noise_level);
 
         double measure_test_error(const double *f, int n,
-                                  const struct NXPointMatch2D *x);
-        // double measure_test_error(const double *h, int n, const struct NXPointMatch2D *x);
+                                  const struct NXPointMatch2D *x,
+                                  bool only_inliers = false);
 
         double f[9];
         double err;
@@ -149,29 +149,27 @@ struct NXPointMatch2D *NXEpipolarTest::make_test_data16()
 }
 
 double NXEpipolarTest::measure_test_error(const double *f, int n,
-                                          const struct NXPointMatch2D *corr)
+                                          const struct NXPointMatch2D *corr,
+                                          bool only_inliers)
 {
         double err = 0.0;
         for (int i = 0; i < n; ++i) {
-                double x[2]  = { corr[i].x[0], corr[i].x[1] };
-                double xp[2] = { corr[i].xp[0], corr[i].xp[1] };
-                double e_i = nx_dmat3_xptFx(f, &x[0], &xp[0]);
-                err += ABS_MAX(err, e_i);
+                if (!only_inliers || corr[i].is_inlier) {
+                        double x[2]  = { corr[i].x[0], corr[i].x[1] };
+                        double xp[2] = { corr[i].xp[0], corr[i].xp[1] };
+                        double e_i = nx_dmat3_xptFx(f, &x[0], &xp[0]);
+                        err = ABS_MAX(err, e_i);
+                }
         }
 
         return err;
 }
 
-/*
-struct NXPointMatch2D *NXEpipolarTest::make_test_data_ransac(double *h, int n, double inlier_ratio, double noise_level)
-{
-        float *h_data = make_test_data_unit();
-        double hd[8];
-        for (int i = 0; i < 8; ++i)
-                hd[i] = h_data[i];
-        nx_homography_estimate_unit(h, &hd[0]);
-        nx_free(h_data);
 
+struct NXPointMatch2D *NXEpipolarTest::make_test_data_ransac(int n,
+                                                             double inlier_ratio,
+                                                             double noise_level)
+{
         struct NXPointMatch2D *corr = NX_NEW(n, struct NXPointMatch2D);
         for (int i = 0; i < n; ++i) {
                 double sign_x = NX_UNIFORM_SAMPLE_D > 0.5 ? +1.0 : -1.0;
@@ -179,10 +177,9 @@ struct NXPointMatch2D *NXEpipolarTest::make_test_data_ransac(double *h, int n, d
                 sample_corner(&corr[i].x[0], sign_x, sign_y);
 
                 if (NX_UNIFORM_SAMPLE_D < inlier_ratio) {
+                        sample_corner(&corr[i].xp[0], sign_x, sign_y);
                         corr[i].is_inlier = NX_TRUE;
-                        nx_homography_transfer_fwd(h, &corr[i].xp[0], &corr[i].x[0]);
-                        corr[i].xp[0] += (NX_UNIFORM_SAMPLE_D - 0.5) * noise_level;
-                        corr[i].xp[1] += (NX_UNIFORM_SAMPLE_D - 0.5) * noise_level;
+                        corr[i].xp[1] = corr[i].x[1] + (NX_UNIFORM_SAMPLE_D - 0.5) * noise_level;
                         corr[i].match_cost = NX_UNIFORM_SAMPLE_S * 20.0;
                 } else {
                         corr[i].is_inlier = NX_FALSE;
@@ -190,12 +187,11 @@ struct NXPointMatch2D *NXEpipolarTest::make_test_data_ransac(double *h, int n, d
                         corr[i].xp[1] = NX_UNIFORM_SAMPLE_D * 2.0 - 1.0;
                         corr[i].match_cost = NX_UNIFORM_SAMPLE_S * 30.0 + 5.0;
                 }
-
         }
 
         return corr;
 }
-*/
+
 
 TEST_F(NXEpipolarTest, eight_points) {
         int indices[8] = { 0, 1, 2, 3, 4, 5, 6, 7 };
@@ -222,27 +218,17 @@ TEST_F(NXEpipolarTest, n_points) {
         // NX_LOG(NX_LOG_TAG, "Max error is = %.4g", err);
         EXPECT_GT(ERROR_THRESHOLD, err);
 }
-/*
+
 TEST_F(NXEpipolarTest, ransac) {
         for (int i = 0; i < N_TESTS; ++i) {
-                double h_gt[9];
-                struct NXPointMatch2D *test_data = make_test_data_ransac(h_gt, N_RANSAC_CORR, RANSAC_INLIER_RATIO, RANSAC_NOISE_LEVEL);
-
-                nx_homography_estimate_norm_ransac(h, N_RANSAC_CORR, test_data, RANSAC_NOISE_LEVEL * 2.0, RANSAC_MAX_N_ITER);
-
-                struct NXPointMatch2D gt_data[4];
-                gt_data[0].x[0] = 0.0; gt_data[0].x[1] = 0.0;
-                gt_data[1].x[0] = 1.0; gt_data[1].x[1] = 0.0;
-                gt_data[2].x[0] = 1.0; gt_data[2].x[1] = 1.0;
-                gt_data[3].x[0] = 0.0; gt_data[3].x[1] = 1.0;
-                for (int j = 0; j < 4; ++j)
-                        nx_homography_transfer_fwd(h_gt, &gt_data[j].xp[0],
-                                                   &gt_data[j].x[0]);
-                err = MAX(err, measure_test_error4(h, gt_data));
+                struct NXPointMatch2D *test_data = make_test_data_ransac(N_RANSAC_CORR, RANSAC_INLIER_RATIO, RANSAC_NOISE_LEVEL);
+                nx_fundamental_estimate_norm_ransac(f, N_RANSAC_CORR, test_data, RANSAC_NOISE_LEVEL * 2.0, RANSAC_MAX_N_ITER);
+                err = ABS_MAX(err, measure_test_error(f, N_RANSAC_CORR, test_data, true));
                 nx_free(test_data);
         }
 
-        EXPECT_GT(RANSAC_NOISE_LEVEL * 2.0, fabs(err));
+        // NX_LOG(NX_LOG_TAG, "Max error is = %.4g", err);
+        EXPECT_GT(RANSAC_NOISE_LEVEL * 2.0, err);
 }
-*/
+
 } // namespace
