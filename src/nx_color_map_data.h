@@ -1,16 +1,28 @@
 /**
  * @file nx_color_map_data.h
  *
- * This file is part of the IYTE Visual Intelligence Research Group Software Library
- *
  * Copyright (C) 2019 Mustafa Ozuysal. All rights reserved.
+ *
+ * This file is part of the VIRG-Nexus Library
+ *
+ * VIRG-Nexus Library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * VIRG-Nexus Library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
  *
  * @author Mustafa Ozuysal
  *
  * Contact mustafaozuysal@iyte.edu.tr for comments and bug reports.
  *
  */
-
 static float nx_color_map_data_viridis[][3] = {{0.267004f, 0.004874f, 0.329415f},
                                                {0.268510f, 0.009605f, 0.335427f},
                                                {0.269944f, 0.014625f, 0.341379f},

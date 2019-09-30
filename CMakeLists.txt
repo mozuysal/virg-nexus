@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 
 project(virg-nexus C CXX)
 
-set(VERSION 1.0)
+set(VERSION 0.1)
 
 option(VIRG_NEXUS_PC_LINUX "Enable Linux Compilation"  ON)
 

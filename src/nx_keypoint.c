@@ -1,9 +1,22 @@
 /**
  * @file nx_keypoint.c
  *
- * This file is part of the IYTE Visual Intelligence Research Group Software Library
+ * Copyright (C) 2019 Mustafa Ozuysal. All rights reserved.
  *
- * Copyright (C) 2015 Mustafa Ozuysal. All rights reserved.
+ * This file is part of the VIRG-Nexus Library
+ *
+ * VIRG-Nexus Library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * VIRG-Nexus Library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
  *
  * @author Mustafa Ozuysal
  *
@@ -73,5 +86,3 @@ void nx_keypoint_xread(struct NXKeypoint *key, int n, FILE *stream)
         if (n_rd != n)
                 NX_IO_FATAL(NX_LOG_TAG, "Error reading keypoints, read %d of %d", n_rd, n);
 }
-
-

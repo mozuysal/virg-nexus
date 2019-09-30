@@ -7,16 +7,29 @@
             (concat "/**\n"
                     " * @file " (file-name-nondirectory (buffer-file-name)) "\n"
                     " *\n"
-                    " * This file is part of the IYTE Visual Intelligence Research Group Software Library\n"
-                    " *\n"
                     " * Copyright (C) " (format-time-string "%Y") " Mustafa Ozuysal. All rights reserved.\n"
+                    " *\n"
+                    " * This file is part of the VIRG-Nexus Library\n"
+                    " *\n"
+                    " * VIRG-Nexus Library is free software: you can redistribute it and/or modify\n"
+                    " * it under the terms of the GNU General Public License as published by\n"
+                    " * the Free Software Foundation, either version 3 of the License, or\n"
+                    " * (at your option) any later version.\n"
+                    " *\n"
+                    " * VIRG-Nexus Library is distributed in the hope that it will be useful,\n"
+                    " * but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
+                    " * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n"
+                    " * GNU General Public License for more details.\n"
+                    " *\n"
+                    " * You should have received a copy of the GNU General Public License\n"
+                    " * along with Foobar.  If not, see <https://www.gnu.org/licenses/>.\n"
                     " *\n"
                     " * @author " user-full-name "\n"))
           (when (boundp 'user-mail-address)
             (concat " *\n * Contact " user-mail-address " for comments and bug reports.\n"))
           " *\n"
           " */\n"))
-        (temp-position))
+        (temp-position 0))
 
     (goto-char (point-min))
 
@@ -31,8 +44,8 @@
 
     (if arg
         (let ((upcase-filename (upcase (file-name-nondirectory (buffer-file-name))))
-              (dot-position)
-              (date-string))
+              (dot-position 0)
+              (date-string ""))
           (setq dot-position (string-match "\\." upcase-filename))
           (aset upcase-filename dot-position ?_)
           (insert "#ifndef VIRG_NEXUS_" upcase-filename "\n")
