@@ -13,6 +13,7 @@ set(virg_nexus_C_SOURCES
   src/nx_uniform_sampler.c
   src/nx_bit_ops.c
   src/nx_math.c
+  src/nx_rotation_3d.c
   src/nx_svd.c
   src/nx_string.c
   src/nx_transform_2d.c
@@ -67,6 +68,7 @@ set(virg_nexus_C_HEADERS
   include/virg/nexus/nx_uniform_sampler.h
   include/virg/nexus/nx_bit_ops.h
   include/virg/nexus/nx_math.h
+  include/virg/nexus/nx_rotation_3d.h
   include/virg/nexus/nx_svd.h
   include/virg/nexus/nx_mat234.h
   include/virg/nexus/nx_string.h
