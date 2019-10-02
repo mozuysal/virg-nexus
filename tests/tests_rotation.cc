@@ -130,8 +130,8 @@ TEST_F(NXRotation3DTest, RzRyRx_test) {
         assert_identity(&R[0]);
 
         for (int alpha = -1; alpha < 2; alpha++) {
-                for (int beta = -1; alpha < 2; alpha++) {
-                        for (int gamma = -1; alpha < 2; alpha++) {
+                for (int beta = -1; beta < 2; beta++) {
+                        for (int gamma = -1; gamma < 2; gamma++) {
                                 so3_zyx_test(alpha*NX_PI/6,
                                              beta*NX_PI/3,
                                              gamma*NX_PI/4);

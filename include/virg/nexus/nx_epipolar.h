@@ -72,7 +72,9 @@ int nx_fundamental_estimate_norm_ransac(double *F, int n_corr,
 void nx_essential_from_fundamental(double *E, const double *F,
                                    const double *K, const double *Kp);
 
-double nx_essential_decompose_to_rt(const double *E, double **R, double **t);
+void nx_essential_from_Rt(double *E, const double *R, const double *t);
+
+double nx_essential_decompose_to_Rt(const double *E, double **R, double **t);
 
 __NX_END_DECL
 

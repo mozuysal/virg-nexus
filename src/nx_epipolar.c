@@ -322,7 +322,22 @@ void nx_essential_from_fundamental(double *E, const double *F,
         E[8] = Kp[2]*Fk[6] + Kp[5]*Fk[7] + Fk[8];
 }
 
-double nx_essential_decompose_to_rt(const double *E, double **R, double **t)
+
+// Computes E = [t]x * R
+void nx_essential_from_Rt(double *E, const double *R, const double *t)
+{
+        E[0] = -t[2]*R[1] + t[1]*R[2];
+        E[1] =  t[2]*R[0] - t[0]*R[2];
+        E[2] = -t[1]*R[0] + t[0]*R[1];
+        E[3] = -t[2]*R[4] + t[1]*R[5];
+        E[4] =  t[2]*R[3] - t[0]*R[5];
+        E[5] = -t[1]*R[3] + t[0]*R[4];
+        E[6] = -t[2]*R[7] + t[1]*R[8];
+        E[7] =  t[2]*R[6] - t[0]*R[8];
+        E[8] = -t[1]*R[6] + t[0]*R[7];
+}
+
+double nx_essential_decompose_to_Rt(const double *E, double **R, double **t)
 {
         double U[9];
         double S[3];
@@ -341,6 +356,11 @@ double nx_essential_decompose_to_rt(const double *E, double **R, double **t)
 
         t[0][0] = U[6]; t[0][1] = U[7]; t[0][2] = U[8];
 
+        double det = nx_dmat3_det(&R[0][0]);
+        if (det < 0.0)
+                for (int i = 0; i < 9; ++i)
+                        R[0][i] = -R[0][i];
+
         memcpy(&R[1][0], &R[0][0], 9*sizeof(R[0][0]));
         t[1][0] = -U[6]; t[1][1] = -U[7]; t[1][2] = -U[8];
 
@@ -355,6 +375,11 @@ double nx_essential_decompose_to_rt(const double *E, double **R, double **t)
         R[2][8] = -U[5]*Vt[6] + U[2]*Vt[7] + U[8]*Vt[8];
 
         t[2][0] = U[6]; t[2][1] = U[7]; t[2][2] = U[8];
+
+        det = nx_dmat3_det(&R[2][0]);
+        if (det < 0.0)
+                for (int i = 0; i < 9; ++i)
+                        R[2][i] = -R[2][i];
 
         memcpy(&R[3][0], &R[2][0], 9*sizeof(R[0][0]));
         t[3][0] = -U[6]; t[3][1] = -U[7]; t[3][2] = -U[8];

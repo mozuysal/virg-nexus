@@ -34,7 +34,9 @@
 #include "virg/nexus/nx_alloc.h"
 #include "virg/nexus/nx_log.h"
 #include "virg/nexus/nx_mat234.h"
+#include "virg/nexus/nx_math.h"
 #include "virg/nexus/nx_uniform_sampler.h"
+#include "virg/nexus/nx_rotation_3d.h"
 #include "virg/nexus/nx_epipolar.h"
 
 #define ABS_MAX(x,y) ((fabs(x) > fabs(y)) ? fabs(x) : fabs(y))
@@ -71,6 +73,10 @@ protected:
         double measure_test_error(const double *f, int n,
                                   const struct NXPointMatch2D *x,
                                   bool only_inliers = false);
+
+        void check_decomposition_error(const double *E,
+                                       const double *R,
+                                       const double *t);
 
         double f[9];
         double err;
@@ -205,6 +211,51 @@ struct NXPointMatch2D *NXEpipolarTest::make_test_data_ransac(int n,
         return corr;
 }
 
+void NXEpipolarTest::check_decomposition_error(const double *E,
+                                               const double *R,
+                                               const double *t)
+{
+        double *Re[4];
+        double *te[4];
+        for (int i = 0; i < 4; ++i) {
+                Re[i] = NX_NEW_D(9);
+                te[i] = NX_NEW_D(3);
+        }
+
+        // nx_dmat3_print(&R[0], "R");
+        nx_essential_decompose_to_Rt(&E[0], &Re[0], &te[0]);
+        double re_min = DBL_MAX;
+        double te_min = DBL_MAX;
+        for (int i = 0; i < 4; ++i) {
+                // nx_dmat3_print(&Re[i][0], "Re_i");
+                nx_dmat3_sub(&Re[i][0], &R[0]);
+
+                double e = nx_dmat3_frob_norm(&Re[i][0]);
+                if (e < re_min)
+                        re_min = e;
+
+                e = 0.0;
+                for (int j = 0; j < 3; ++j) {
+                        double d = t[j] - te[i][j];
+                        e += d*d;
+                }
+                e = sqrt(e);
+                if (e < te_min)
+                        te_min = e;
+        }
+
+
+        // NX_LOG(NX_LOG_TAG, "min rotation    error norm = %.2e", re_min);
+        // NX_LOG(NX_LOG_TAG, "min translation error norm = %.2e", te_min);
+
+        EXPECT_GT(1e-15, re_min);
+        EXPECT_GT(1e-15, te_min);
+
+        for (int i = 0; i < 4; ++i) {
+                nx_free(Re[i]);
+                nx_free(te[i]);
+        }
+}
 
 TEST_F(NXEpipolarTest, eight_points) {
         int indices[8] = { 0, 1, 2, 3, 4, 5, 6, 7 };
@@ -242,6 +293,32 @@ TEST_F(NXEpipolarTest, ransac) {
 
         // NX_LOG(NX_LOG_TAG, "Max error is = %.4g", err);
         EXPECT_GT(RANSAC_NOISE_LEVEL * 2.0, err);
+}
+
+TEST_F(NXEpipolarTest, essential_decompose) {
+        double E[9];
+        double R[9];
+        double t[3];
+
+        t[0] = -1.0/sqrt(3.0);
+        t[1] = -1.0/sqrt(3.0);
+        t[2] =  1.0/sqrt(3.0);
+
+        for (int alpha = -1; alpha < 2; alpha++) {
+                for (int beta = -1; beta < 2; beta++) {
+                        for (int gamma = -1; gamma < 2; gamma++) {
+                                nx_rotation_3d_RxRyRz(&R[0],
+                                                      alpha*NX_PI/4,
+                                                      beta*NX_PI/6,
+                                                      gamma*NX_PI/3);
+                                nx_essential_from_Rt(&E[0], &R[0], &t[0]);
+                                check_decomposition_error(&E[0], &R[0], &t[0]);
+                        }
+                }
+        }
+
+
+
 }
 
 } // namespace

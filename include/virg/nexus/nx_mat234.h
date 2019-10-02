@@ -48,6 +48,8 @@ static inline double nx_dmat3_det(const double *A);
 static inline double nx_dmat3_xptFx(const double *F, const double *x, const double* xp);
 static inline void   nx_dmat3_print(const double *A, const char *label);
 static inline void   nx_dmat3_svd(const double *A, double *U, double *S, double *Vt);
+static inline double nx_dmat3_frob_norm(const double *A);
+static inline void   nx_dmat3_sub      (double *A, const double *B);
 
 
 /*
@@ -217,6 +219,20 @@ static inline void nx_dmat3_svd(const double *A, double *U, double *S, double *V
 {
         double AA[9] = { A[0], A[1], A[2], A[3], A[4], A[5], A[6], A[7], A[8] };
         nx_dsvd_usvt(U, 3, S, Vt, 3, 3, 3, AA, 3);
+}
+
+static inline double nx_dmat3_frob_norm(const double *A)
+{
+        double sq_sum = 0.0;
+        for (int i = 0; i < 9; ++i)
+                sq_sum += A[i]*A[i];
+        return sqrt(sq_sum);
+}
+
+static inline void nx_dmat3_sub(double *A, const double *B)
+{
+        for (int i = 0; i < 9; ++i)
+                A[i] -= B[i];
 }
 
 __NX_END_DECL
