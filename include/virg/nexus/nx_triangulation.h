@@ -33,13 +33,13 @@
 __NX_BEGIN_DECL
 
 struct NXRPoint3D {
-        float X[4];
+        float Xh[4];
         uint64_t id;
         uint64_t corr_id;
 };
 
 
-int nx_triangulate(int n_pt, struct NXRPoint3D *X_list,
+int nx_triangulate(int n_pt, struct NXRPoint3D *pt_list,
                    int n_corr, const struct NXPointMatch2D *corr_list,
                    const double *P0, const double *P1);
 

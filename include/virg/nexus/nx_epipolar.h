@@ -34,45 +34,45 @@
 __NX_BEGIN_DECL
 
 static inline double
-nx_fundamental_epipolar_distance_fwd(const double *f,
+nx_fundamental_epipolar_distance_fwd(const double *F,
                                      const struct NXPointMatch2D *pm)
 {
         double x[2] =  { pm->x[0],  pm->x[1] };
         double xp[2] = { pm->xp[0], pm->xp[1] };
 
         double l[3];
-        l[0] = f[0]*x[0] + f[3]*x[1] + f[6];
-        l[1] = f[1]*x[0] + f[4]*x[1] + f[7];
-        l[2] = f[2]*x[0] + f[5]*x[1] + f[8];
+        l[0] = F[0]*x[0] + F[3]*x[1] + F[6];
+        l[1] = F[1]*x[0] + F[4]*x[1] + F[7];
+        l[2] = F[2]*x[0] + F[5]*x[1] + F[8];
 
         // point - line distance in 2D
         return fabs((l[0]*xp[0] + l[1]*xp[1] + l[2])
                     / sqrt(l[0]*l[0] + l[1]*l[1]));
 }
 
-int nx_fundamental_mark_inliers(const double *f, int n_corr,
+int nx_fundamental_mark_inliers(const double *F, int n_corr,
                                 struct NXPointMatch2D *corr_list,
                                 double inlier_tolerance);
 
 
-double nx_fundamental_estimate_8pt    (double *f, int corr_ids[8],
+double nx_fundamental_estimate_8pt    (double *F, int corr_ids[8],
                                        const struct NXPointMatch2D *corr_list);
-double nx_fundamental_estimate        (double *f, int n_corr,
+double nx_fundamental_estimate        (double *F, int n_corr,
                                        const struct NXPointMatch2D *corr_list);
-double nx_fundamental_estimate_inliers(double *f, int n_corr,
+double nx_fundamental_estimate_inliers(double *F, int n_corr,
                                        const struct NXPointMatch2D *corr_list);
 
-int nx_fundamental_estimate_ransac     (double *f, int n_corr,
+int nx_fundamental_estimate_ransac     (double *F, int n_corr,
                                         struct NXPointMatch2D *corr_list,
                                         double inlier_tolerance, int max_n_iter);
-int nx_fundamental_estimate_norm_ransac(double *f, int n_corr,
+int nx_fundamental_estimate_norm_ransac(double *F, int n_corr,
                                         struct NXPointMatch2D *corr_list,
                                         double inlier_tolerance, int max_n_iter);
 
-void nx_essential_from_fundamental(double *e, const double *f,
-                                   const double *k, const double *kp);
+void nx_essential_from_fundamental(double *E, const double *F,
+                                   const double *K, const double *Kp);
 
-double nx_essential_decompose_to_rt(const double *e, double **r, double **t);
+double nx_essential_decompose_to_rt(const double *E, double **R, double **t);
 
 __NX_END_DECL
 

@@ -61,11 +61,11 @@ nx_triangulation_constraints_from_corr(double *rcons,
 
 }
 
-int nx_triangulate(int n_pt, struct NXRPoint3D *X_list,
+int nx_triangulate(int n_pt, struct NXRPoint3D *pt_list,
                    int n_corr, const struct NXPointMatch2D *corr_list,
                    const double *P0, const double *P1)
 {
-        NX_ASSERT_PTR(X_list);
+        NX_ASSERT_PTR(pt_list);
         NX_ASSERT_PTR(corr_list);
         NX_ASSERT_PTR(P0);
         NX_ASSERT_PTR(P1);
@@ -87,11 +87,11 @@ int nx_triangulate(int n_pt, struct NXRPoint3D *X_list,
                                                                P0, P1);
                         nx_dsvd_us(&U[0], 4, &S[0], 4, 4, A, 4);
 
-                        struct NXRPoint3D *rpt = X_list + pt_i;
-                        rpt->X[0] = U[4*3+0];
-                        rpt->X[1] = U[4*3+1];
-                        rpt->X[2] = U[4*3+2];
-                        rpt->X[3] = U[4*3+3];
+                        struct NXRPoint3D *rpt = pt_list + pt_i;
+                        rpt->Xh[0] = U[4*3+0];
+                        rpt->Xh[1] = U[4*3+1];
+                        rpt->Xh[2] = U[4*3+2];
+                        rpt->Xh[3] = U[4*3+3];
                         rpt->id = pt_i;
                         rpt->corr_id = i;
 
