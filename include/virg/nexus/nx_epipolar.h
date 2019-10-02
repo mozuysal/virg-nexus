@@ -69,6 +69,11 @@ int nx_fundamental_estimate_norm_ransac(double *f, int n_corr,
                                         struct NXPointMatch2D *corr_list,
                                         double inlier_tolerance, int max_n_iter);
 
+void nx_essential_from_fundamental(double *e, const double *f,
+                                   const double *k, const double *kp);
+
+double nx_essential_decompose_to_rt(const double *e, double **r, double **t);
+
 __NX_END_DECL
 
 #endif

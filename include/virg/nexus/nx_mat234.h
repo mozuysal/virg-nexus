@@ -32,6 +32,7 @@
 
 #include "virg/nexus/nx_config.h"
 #include "virg/nexus/nx_log.h"
+#include "virg/nexus/nx_svd.h"
 
 __NX_BEGIN_DECL
 
@@ -45,6 +46,8 @@ static inline void   nx_dmat3_mul_ua(double *C, const double *U, const double *A
 static inline void   nx_dmat3_eye(double *A);
 static inline double nx_dmat3_xptFx(const double *F, const double *x, const double* xp);
 static inline void   nx_dmat3_print(const double *A, const char *label);
+static inline void   nx_dmat3_svd(const double *A, double *U, double *S, double *Vt);
+
 
 /*
  * -----------------------------------------------------------------------------
@@ -200,6 +203,12 @@ static inline void nx_dmat3_print(const double *A, const char *label)
         printf("[ %10.4f%10.4f%10.4f ]\n", A[0], A[3], A[6]);
         printf("[ %10.4f%10.4f%10.4f ]\n", A[1], A[4], A[7]);
         printf("[ %10.4f%10.4f%10.4f ]\n", A[2], A[5], A[8]);
+}
+
+static inline void nx_dmat3_svd(const double *A, double *U, double *S, double *Vt)
+{
+        double AA[9] = { A[0], A[1], A[2], A[3], A[4], A[5], A[6], A[7], A[8] };
+        nx_dsvd_usvt(U, 3, S, Vt, 3, 3, 3, AA, 3);
 }
 
 __NX_END_DECL

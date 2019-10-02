@@ -295,3 +295,69 @@ int nx_fundamental_estimate_norm_ransac(double *f, int n_corr,
 
         return n_inliers;
 }
+
+// Compute E = K'.T*F*K
+void nx_essential_from_fundamental(double *e, const double *f,
+                                   const double *k, const double *kp)
+{
+        double fk[9];
+        fk[0] = k[0]*f[0];
+        fk[1] = k[0]*f[1];
+        fk[2] = k[0]*f[2];
+        fk[3] = k[3]*f[0] + k[4]*f[3];
+        fk[4] = k[3]*f[1] + k[4]*f[4];
+        fk[5] = k[3]*f[2] + k[4]*f[5];
+        fk[6] = k[6]*f[0] + k[7]*f[3] + f[6];
+        fk[7] = k[6]*f[1] + k[7]*f[4] + f[7];
+        fk[8] = k[6]*f[2] + k[7]*f[5] + f[8];
+
+        e[0] = kp[0]*fk[0];
+        e[3] = kp[0]*fk[3];
+        e[6] = kp[0]*fk[6];
+        e[1] = kp[1]*fk[0] + kp[4]*fk[1];
+        e[4] = kp[1]*fk[3] + kp[4]*fk[4];
+        e[7] = kp[1]*fk[6] + kp[4]*fk[7];
+        e[2] = kp[2]*fk[0] + kp[5]*fk[1] + fk[2];
+        e[5] = kp[2]*fk[3] + kp[5]*fk[4] + fk[5];
+        e[8] = kp[2]*fk[6] + kp[5]*fk[7] + fk[8];
+}
+
+double nx_essential_decompose_to_rt(const double *e, double **r, double **t)
+{
+        double U[9];
+        double S[3];
+        double Vt[9];
+        nx_dmat3_svd(e, U, S, Vt);
+
+        r[0][0] = U[3]*Vt[0] - U[0]*Vt[1] + U[6]*Vt[2];
+        r[0][1] = U[4]*Vt[0] - U[1]*Vt[1] + U[7]*Vt[2];
+        r[0][2] = U[5]*Vt[0] - U[2]*Vt[1] + U[8]*Vt[2];
+        r[0][3] = U[3]*Vt[3] - U[0]*Vt[4] + U[6]*Vt[5];
+        r[0][4] = U[4]*Vt[3] - U[1]*Vt[4] + U[7]*Vt[5];
+        r[0][5] = U[5]*Vt[3] - U[2]*Vt[4] + U[8]*Vt[5];
+        r[0][6] = U[3]*Vt[6] - U[0]*Vt[7] + U[6]*Vt[8];
+        r[0][7] = U[4]*Vt[6] - U[1]*Vt[7] + U[7]*Vt[8];
+        r[0][8] = U[5]*Vt[6] - U[2]*Vt[7] + U[8]*Vt[8];
+
+        t[0][0] = U[6]; t[0][1] = U[7]; t[0][2] = U[8];
+
+        memcpy(&r[1][0], &r[0][0], 9*sizeof(r[0][0]));
+        t[1][0] = -U[6]; t[1][1] = -U[7]; t[1][2] = -U[8];
+
+        r[2][0] = -U[3]*Vt[0] + U[0]*Vt[1] + U[6]*Vt[2];
+        r[2][1] = -U[4]*Vt[0] + U[1]*Vt[1] + U[7]*Vt[2];
+        r[2][2] = -U[5]*Vt[0] + U[2]*Vt[1] + U[8]*Vt[2];
+        r[2][3] = -U[3]*Vt[3] + U[0]*Vt[4] + U[6]*Vt[5];
+        r[2][4] = -U[4]*Vt[3] + U[1]*Vt[4] + U[7]*Vt[5];
+        r[2][5] = -U[5]*Vt[3] + U[2]*Vt[4] + U[8]*Vt[5];
+        r[2][6] = -U[3]*Vt[6] + U[0]*Vt[7] + U[6]*Vt[8];
+        r[2][7] = -U[4]*Vt[6] + U[1]*Vt[7] + U[7]*Vt[8];
+        r[2][8] = -U[5]*Vt[6] + U[2]*Vt[7] + U[8]*Vt[8];
+
+        t[2][0] = U[6]; t[2][1] = U[7]; t[2][2] = U[8];
+
+        memcpy(&r[3][0], &r[2][0], 9*sizeof(r[0][0]));
+        t[3][0] = -U[6]; t[3][1] = -U[7]; t[3][2] = -U[8];
+
+        return S[2];
+}
