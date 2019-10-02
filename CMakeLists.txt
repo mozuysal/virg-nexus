@@ -278,6 +278,7 @@ set(test_SOURCES
   tests/tests_options.cc
   tests/tests_filter.cc
   tests/tests_svd.cc
+  tests/tests_rotation.cc
   tests/tests_homography.cc
   tests/tests_epipolar.cc
   tests/tests_image.cc

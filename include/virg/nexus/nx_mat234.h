@@ -44,6 +44,7 @@ static inline double nx_dmat3_inv(double *M3i, const double *M3);
 static inline void   nx_dmat3_mul(double *C, const double *A, const double *B);
 static inline void   nx_dmat3_mul_ua(double *C, const double *U, const double *A);
 static inline void   nx_dmat3_eye(double *A);
+static inline double nx_dmat3_det(const double *A);
 static inline double nx_dmat3_xptFx(const double *F, const double *x, const double* xp);
 static inline void   nx_dmat3_print(const double *A, const char *label);
 static inline void   nx_dmat3_svd(const double *A, double *U, double *S, double *Vt);
@@ -181,6 +182,13 @@ static inline void nx_dmat3_eye(double *A)
         A[0] = 1.0;
         A[4] = 1.0;
         A[8] = 1.0;
+}
+
+static inline double nx_dmat3_det(const double *A)
+{
+        return A[0]*(A[4]*A[8]-A[5]*A[7])
+                - A[3]*(A[1]*A[8]-A[2]*A[7])
+                + A[6]*(A[1]*A[5]-A[2]*A[4]);
 }
 
 static inline double nx_dmat3_xptFx(const double *F, const double *x,
