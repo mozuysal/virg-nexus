@@ -56,7 +56,7 @@ set(virg_nexus_C_SOURCES
   src/nx_csv_lexer.c
   src/nx_csv_parser.c
   src/nx_log_c_impl.c
-  src/nx_camera.c
+  src/nx_pinhole.c
 )
 
 set(virg_nexus_C_HEADERS
@@ -113,7 +113,7 @@ set(virg_nexus_C_HEADERS
   include/virg/nexus/nx_data_frame.h
   include/virg/nexus/nx_csv_lexer.h
   include/virg/nexus/nx_csv_parser.h
-  include/virg/nexus/nx_camera.h
+  include/virg/nexus/nx_pinhole.h
 )
 
 set(virg_nexus_CXX_SOURCES
@@ -291,7 +291,6 @@ set(test_SOURCES
   tests/tests_csv_lexer.cc
   tests/tests_csv_parser.cc
   tests/tests_gc.cc
-  tests/tests_camera.cc
 )
 
 set(VIRG_NEXUS_TEST_DATA_PATH "${CMAKE_SOURCE_DIR}/tests/data")

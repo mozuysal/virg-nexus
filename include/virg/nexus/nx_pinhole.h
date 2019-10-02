@@ -1,5 +1,5 @@
 /**
- * @file nx_camera.h
+ * @file nx_pinhole.h
  *
  * Copyright (C) 2019 Mustafa Ozuysal. All rights reserved.
  *
@@ -23,38 +23,18 @@
  * Contact mustafaozuysal@iyte.edu.tr for comments and bug reports.
  *
  */
-#ifndef VIRG_NEXUS_NX_CAMERA_H
-#define VIRG_NEXUS_NX_CAMERA_H
+#ifndef VIRG_NEXUS_NX_PINHOLE_H
+#define VIRG_NEXUS_NX_PINHOLE_H
 
 #include "virg/nexus/nx_config.h"
 
 __NX_BEGIN_DECL
 
-struct NXCamera;
+void nx_pinhole_projection_from_krt(double *P, const double *K,
+                                    const double *R, const double *t);
 
-struct NXCamera *nx_camera_alloc();
-
-struct NXCamera *nx_camera_new(double fx, double fy, double px, double pv);
-
-void nx_camera_free(struct NXCamera *c);
-
-void nx_camera_set_interior(struct NXCamera *c, double fx, double fy, double px, double pv);
-
-const double *nx_camera_get_K(struct NXCamera *c);
-
-void nx_camera_set_exterior(struct NXCamera *c, const double *R, const double *t);
-
-void nx_camera_set_rotation(struct NXCamera *c, const double *R);
-
-void nx_camera_set_translation(struct NXCamera *c, const double *t);
-
-const double *nx_camera_get_rotation(struct NXCamera *c);
-
-const double *nx_camera_get_translation(struct NXCamera *c);
-
-double nx_camera_project(const struct NXCamera *c, int n, const double *X, double *x);
-
-void nx_camera_project_h(const struct NXCamera *c, int n, const double *X, double *x);
+double nx_pinhole_project  (const double *P, int n, const float *X,  float *x);
+void   nx_pinhole_project_h(const double *P, int n, const float *Xh, float *xh);
 
 __NX_END_DECL
 
