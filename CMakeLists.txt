@@ -308,8 +308,8 @@ add_custom_target(unit-tests bin/virg-nexus-tests --gtest_death_test_style=threa
   DEPENDS virg-nexus virg-nexus-tests
   COMMENT "Unit Testing")
 
-set(valgrind-flags --leak-check=full --track-origins=yes --show-reachable=yes)
-add_custom_target(unit-tests-valgrind valgrind ${valgrind-flags} bin/virg-nexus-tests --gtest_death_test_style=threadsafe --gtest_filter=-*DEATH `printenv NX_TEST_FLAGS`
+set(valgrind-flags --leak-check=full --track-origins=yes --show-reachable=yes --suppressions=${CMAKE_SOURCE_DIR}/valgrind_nexus.supp)
+add_custom_target(unit-tests-valgrind valgrind ${valgrind-flags} bin/virg-nexus-tests --valgrind --gtest_death_test_style=threadsafe --gtest_filter=-*DEATH `printenv NX_TEST_FLAGS`
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   DEPENDS virg-nexus virg-nexus-tests
   COMMENT "Unit Testing with Valgrind")

@@ -38,7 +38,8 @@
 
 #define MAX(x,y) (((x) > (y)) ? (x) : (y))
 
-#define N_TESTS 20
+extern bool IS_VALGRIND_RUN;
+static int N_TESTS = 50;
 #define ERROR_THRESHOLD 1e-12
 
 #define N_RANSAC_CORR 100
@@ -53,6 +54,8 @@ namespace {
 class NXHomographyTest : public ::testing::Test {
 protected:
         NXHomographyTest() {
+                if (IS_VALGRIND_RUN)
+                        N_TESTS = 2;
         }
 
         virtual void SetUp() {

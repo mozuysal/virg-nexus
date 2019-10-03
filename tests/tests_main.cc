@@ -25,8 +25,26 @@
  */
 #include "gtest/gtest.h"
 
+#include "virg/nexus/nx_options.h"
+#include "virg/nexus/nx_log.h"
+
+bool IS_VALGRIND_RUN = false;
+
 int main(int argc, char** argv)
 {
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+        ::testing::InitGoogleTest(&argc, argv);
+
+        struct NXOptions *opt = nx_options_new("b", "--valgrind", "Expect to be run with valgrind", NX_FALSE);
+        nx_options_set_from_args(opt, argc, argv);
+
+        NXBool is_valgrind_run = nx_options_get_bool(opt, "--valgrind");
+
+        if (is_valgrind_run) {
+                NX_LOG(NX_LOG_TAG, "VALGRIND RUN DETECTED");
+                IS_VALGRIND_RUN = true;
+        }
+
+        nx_options_free(opt);
+
+        return RUN_ALL_TESTS();
 }

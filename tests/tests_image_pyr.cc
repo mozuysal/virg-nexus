@@ -40,18 +40,20 @@
 
 using std::pow;
 
+extern bool IS_VALGRIND_RUN;
+
 namespace {
 
 // const int TEST_WIDTH0 = 97;
 // const int TEST_HEIGHT0 = 97;
 // const int TEST_N_LEVELS = 3;
 
-const int TEST_WIDTH0 = 921;
-const int TEST_HEIGHT0 = 614;
-const int TEST_N_LEVELS = 5;
-const int TEST_OCTAVES = 3;
-const int TEST_STEPS = 3;
-const float TEST_SCALE_F = 1.2f;
+int TEST_WIDTH0 = 921;
+int TEST_HEIGHT0 = 614;
+int TEST_N_LEVELS = 5;
+int TEST_OCTAVES = 3;
+int TEST_STEPS = 3;
+float TEST_SCALE_F = 1.2f;
 const float TEST_SIGMA0 = 1.5f;
 
 class NXImagePyrTest : public ::testing::Test {
@@ -60,6 +62,15 @@ protected:
                 img_ = NULL;
                 lena_ = NULL;
                 pyr0_ = NULL;
+
+                if (IS_VALGRIND_RUN) {
+                        TEST_N_LEVELS = 2;
+                        TEST_WIDTH0 = 321;
+                        TEST_HEIGHT0 = 214;
+                        TEST_OCTAVES = 2;
+                        TEST_STEPS = 2;
+                        TEST_SCALE_F = 1.8f;
+                }
         }
 
         virtual void SetUp() {

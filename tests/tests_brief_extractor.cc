@@ -43,15 +43,18 @@
 
 using std::pow;
 
+extern bool IS_VALGRIND_RUN;
+
 namespace {
 
-const int TEST_N_LEVELS = 5;
-const int TEST_OCTAVES = 4;
-const int TEST_STEPS = 3;
+int N_COMPUTE_TESTS = 1000;
+int TEST_N_LEVELS = 5;
+int TEST_OCTAVES = 4;
+int TEST_STEPS = 3;
+
 const float TEST_SIGMA0 = 0.9f;
 const int TEST_N_OCTETS = 2;
 const int TEST_RADIUS = 16;
-const int N_COMPUTE_TESTS = 1000;
 
 const int TEST_IMAGE_W = 4;
 const int TEST_IMAGE_H = 4;
@@ -92,6 +95,14 @@ protected:
                 pyr1_ = NULL;
                 be_ = NULL;
                 desc_ = NULL;
+
+                if (IS_VALGRIND_RUN) {
+                        N_COMPUTE_TESTS = 150;
+                        TEST_N_LEVELS = 3;
+                        TEST_OCTAVES = 2;
+                        TEST_STEPS = 2;
+                }
+
         }
 
         virtual void SetUp() {
@@ -185,7 +196,7 @@ TEST_F(NXBriefExtractorTest, BriefExtractorComputePyrFast) {
                         nx_brief_extractor_compute_pyr(be_, pyr0_, x, y, level, desc_);
                 }
         }
-        EXPECT_LE(N_COMPUTE_TESTS / 3, n);
+        EXPECT_LE(N_COMPUTE_TESTS / 4, n);
 
         nx_brief_extractor_free(be_);
         TearDownPyramids();
@@ -206,7 +217,7 @@ TEST_F(NXBriefExtractorTest, BriefExtractorComputePyrFine) {
                         nx_brief_extractor_compute_pyr(be_, pyr1_, x, y, level, desc_);
                 }
         }
-        EXPECT_LE(N_COMPUTE_TESTS / 2, n);
+        EXPECT_LE(N_COMPUTE_TESTS / 3, n);
 
         nx_brief_extractor_free(be_);
         TearDownPyramids();

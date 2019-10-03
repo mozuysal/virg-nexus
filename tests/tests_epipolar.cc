@@ -41,7 +41,8 @@
 
 #define ABS_MAX(x,y) ((fabs(x) > fabs(y)) ? fabs(x) : fabs(y))
 
-#define N_TESTS 10
+extern bool IS_VALGRIND_RUN;
+static int N_TESTS = 20;
 #define ERROR_THRESHOLD 1e-9
 
 #define N_RANSAC_CORR 100
@@ -56,6 +57,8 @@ namespace {
 class NXEpipolarTest : public ::testing::Test {
 protected:
         NXEpipolarTest() {
+                if (IS_VALGRIND_RUN)
+                        N_TESTS = 2;
         }
 
         virtual void SetUp() {

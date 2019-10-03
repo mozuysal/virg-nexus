@@ -44,13 +44,18 @@
 
 using namespace std;
 
+extern bool IS_VALGRIND_RUN;
+
 static const int N_POINTS = 100;
+static int N_TESTS = 100;
 
 namespace {
 
 class NXTriangulationTest : public ::testing::Test {
 protected:
         NXTriangulationTest() {
+                if (IS_VALGRIND_RUN)
+                        N_TESTS = 2;
         }
 
         virtual void SetUp() {
@@ -103,7 +108,7 @@ protected:
                         double e = sqrt(nx_svec3_dist_sq(&pt->Xh[0], X + 3*i));
                         // NX_LOG(NX_LOG_TAG, "%03d: e = %.2e", e);
 
-                        EXPECT_GT(1e-5, e);
+                        EXPECT_GT(1e-4, e);
                 }
         }
 
@@ -134,7 +139,7 @@ TEST_F(NXTriangulationTest, rectified_test) {
 }
 
 TEST_F(NXTriangulationTest, generic_test) {
-        for (int i = 0; i < 10; ++i) {
+        for (int i = 0; i < N_TESTS; ++i) {
                 float *X = gen_points_3d();
 
                 double t[3] = { 1.0, 4.0, -2.0 };
