@@ -71,6 +71,7 @@ set(virg_nexus_C_HEADERS
   include/virg/nexus/nx_math.h
   include/virg/nexus/nx_rotation_3d.h
   include/virg/nexus/nx_svd.h
+  include/virg/nexus/nx_vec234.h
   include/virg/nexus/nx_mat234.h
   include/virg/nexus/nx_string.h
   include/virg/nexus/nx_vector_gen.h
@@ -281,6 +282,7 @@ set(test_SOURCES
   tests/tests_rotation.cc
   tests/tests_homography.cc
   tests/tests_epipolar.cc
+  tests/tests_triangulation.cc
   tests/tests_image.cc
   tests/tests_image_pyr.cc
   tests/tests_fast_detector.cc

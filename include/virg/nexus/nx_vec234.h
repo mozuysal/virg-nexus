@@ -1,0 +1,71 @@
+/**
+ * @file nx_vec234.h
+ *
+ * Copyright (C) 2019 Mustafa Ozuysal. All rights reserved.
+ *
+ * This file is part of the VIRG-Nexus Library
+ *
+ * VIRG-Nexus Library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * VIRG-Nexus Library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ * @author Mustafa Ozuysal
+ *
+ * Contact mustafaozuysal@iyte.edu.tr for comments and bug reports.
+ *
+ */
+#ifndef VIRG_NEXUS_NX_VEC234_H
+#define VIRG_NEXUS_NX_VEC234_H
+
+#include "virg/nexus/nx_config.h"
+
+__NX_BEGIN_DECL
+
+static inline float nx_svec3_norm_sq(const float *v);
+static inline float nx_svec3_dist_sq(const float *v0, const float *v1);
+
+static inline float nx_svec4h_to_euclidean(float *v);
+
+/*
+ * -----------------------------------------------------------------------------
+ *                                   Definitions
+ * -----------------------------------------------------------------------------
+ */
+
+static inline float nx_svec3_norm_sq(const float *v)
+{
+        return v[0]*v[0] + v[1]*v[1] + v[2]*v[2];
+}
+
+static inline float nx_svec3_dist_sq(const float *v0, const float *v1)
+{
+        float d0 = v0[0] - v1[0];
+        float d1 = v0[1] - v1[1];
+        float d2 = v0[2] - v1[2];
+
+        return d0*d0 + d1*d1 + d2*d2;
+}
+
+static inline float nx_svec4h_to_euclidean(float *v)
+{
+        float w = v[3];
+        v[0] /= w;
+        v[1] /= w;
+        v[2] /= w;
+        v[3] = 1.0f;
+
+        return w;
+}
+
+__NX_END_DECL
+
+#endif

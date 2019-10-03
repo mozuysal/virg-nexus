@@ -51,6 +51,7 @@ static inline void   nx_dmat3_svd(const double *A, double *U, double *S, double 
 static inline double nx_dmat3_frob_norm(const double *A);
 static inline void   nx_dmat3_sub      (double *A, const double *B);
 
+static inline void nx_dmat34_print(const double *A, const char *label);
 
 /*
  * -----------------------------------------------------------------------------
@@ -234,6 +235,18 @@ static inline void nx_dmat3_sub(double *A, const double *B)
         for (int i = 0; i < 9; ++i)
                 A[i] -= B[i];
 }
+
+
+static inline void nx_dmat34_print(const double *A, const char *label)
+{
+        if (label)
+                printf("%s\n---------\n", label);
+
+        printf("[ %10.4f%10.4f%10.4f|%10.4f ]\n", A[0], A[3], A[6], A[9]);
+        printf("[ %10.4f%10.4f%10.4f|%10.4f ]\n", A[1], A[4], A[7], A[10]);
+        printf("[ %10.4f%10.4f%10.4f|%10.4f ]\n", A[2], A[5], A[8], A[11]);
+}
+
 
 __NX_END_DECL
 

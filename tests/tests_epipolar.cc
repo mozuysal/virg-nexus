@@ -41,7 +41,7 @@
 
 #define ABS_MAX(x,y) ((fabs(x) > fabs(y)) ? fabs(x) : fabs(y))
 
-#define N_TESTS 100
+#define N_TESTS 10
 #define ERROR_THRESHOLD 1e-9
 
 #define N_RANSAC_CORR 100

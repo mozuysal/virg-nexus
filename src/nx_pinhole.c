@@ -35,11 +35,20 @@
 void nx_pinhole_projection_from_krt(double *P, const double *K,
                                     const double *R, const double *t)
 {
-        nx_dmat3_mul_ua(P, K, R);
+        NX_ASSERT_PTR(P);
 
-        P[9]  = K[0]*t[0]+K[6]*t[2];
-        P[10] = K[4]*t[1]+K[7]*t[2];
-        P[11] = t[2];
+        const double I[12] = { 1.0, 0.0, 0.0,
+                               0.0, 1.0, 0.0,
+                               0.0, 0.0, 1.0,
+                               0.0, 0.0, 0.0 };
+        const double *Kv = K ? K : &I[0];
+        const double *Rv = R ? R : &I[0];
+        const double *tv = t ? t : &I[9];
+
+        nx_dmat3_mul_ua(P, Kv, Rv);
+        P[9]  = Kv[0]*tv[0] + Kv[3]*tv[1] + Kv[6]*tv[2];
+        P[10] = Kv[4]*tv[1] + Kv[7]*tv[2];
+        P[11] = tv[2];
 }
 
 double nx_pinhole_project(const double *P, int n, const float *X, float *x)
@@ -51,8 +60,13 @@ double nx_pinhole_project(const double *P, int n, const float *X, float *x)
 
         double min_abs_s = DBL_MAX;
         for (int i = 0; i < n; ++i, x += 2, X += 3) {
+                /* NX_LOG(NX_LOG_TAG, "%02d: %.2f %.2f %.2f", i, X[0], X[1], X[2]); */
+
                 double s = (P[2]*X[0] + P[5]*X[1] + P[8]*X[2] + P[11]);
                 min_abs_s = nx_min_d(min_abs_s, fabs(s));
+
+                /* NX_LOG(NX_LOG_TAG, "  %.2f -> min = %.2f", s, min_abs_s); */
+
                 double inv_s = 1.0 / s;
                 x[0] = (P[0]*X[0] + P[3]*X[1] + P[6]*X[2] + P[9])*inv_s;
                 x[1] = (P[1]*X[0] + P[4]*X[1] + P[7]*X[2] + P[10])*inv_s;
