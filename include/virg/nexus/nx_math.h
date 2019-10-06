@@ -32,6 +32,8 @@ __NX_BEGIN_DECL
 
 #define NX_PI 3.14159265358979323846
 
+static inline int nx_signum(double d);
+
 static inline int nx_min_i(int x, int y);
 static inline float nx_min_s(float x, float y);
 static inline double nx_min_d(double x, double y);
@@ -43,6 +45,11 @@ static inline double nx_max_d(double x, double y);
 double nx_erf(double x);
 
 /* ----------------------------- inline definitions ------------------------------- */
+static inline int nx_signum(double d)
+{
+        return (d > 0.0) - (d < 0.0);
+}
+
 int nx_min_i(int x, int y)
 {
         return (x < y) ? x : y;

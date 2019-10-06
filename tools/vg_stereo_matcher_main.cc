@@ -31,6 +31,8 @@
 
 #include "virg/nexus/nx_log.h"
 #include "virg/nexus/nx_homography.h"
+#include "virg/nexus/nx_epipolar.h"
+#include "virg/nexus/nx_triangulation.h"
 
 #include "virg/nexus/vg_options.hpp"
 #include "virg/nexus/vg_image.hpp"
@@ -316,6 +318,12 @@ int main(int argc, char** argv)
         }
 
         int n_inliers_f = estimate_initial_fundamental_matrix(sf, is_verbose);
+        if (n_inliers_f >= 30) {
+                double E[9];
+                // nx_essential_from_fundamental(&E[0], sf.F.data(),
+                                              // &sf.Kl[0], &sf.Kr[0]);
+                
+        }
 
         return EXIT_SUCCESS;
 }

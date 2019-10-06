@@ -33,22 +33,26 @@
 
 #include "virg/nexus/nx_alloc.h"
 #include "virg/nexus/nx_log.h"
+#include "virg/nexus/nx_vec234.h"
 #include "virg/nexus/nx_mat234.h"
 #include "virg/nexus/nx_math.h"
 #include "virg/nexus/nx_uniform_sampler.h"
 #include "virg/nexus/nx_rotation_3d.h"
+#include "virg/nexus/nx_pinhole.h"
 #include "virg/nexus/nx_epipolar.h"
 
 #define ABS_MAX(x,y) ((fabs(x) > fabs(y)) ? fabs(x) : fabs(y))
 
 extern bool IS_VALGRIND_RUN;
 static int N_TESTS = 20;
-#define ERROR_THRESHOLD 1e-9
+#define ERROR_THRESHOLD 1e-4
 
 #define N_RANSAC_CORR 100
 #define RANSAC_INLIER_RATIO 0.7
 #define RANSAC_NOISE_LEVEL 1e-3
 #define RANSAC_MAX_N_ITER 200
+
+static const int N_POINTS_3D = 1000;
 
 using namespace std;
 
@@ -62,16 +66,56 @@ protected:
         }
 
         virtual void SetUp() {
+                sampler = nx_uniform_sampler_alloc();
+                nx_uniform_sampler_init_time(sampler);
+
                 err = 0.0;
+                X = gen_points_3d(N_POINTS_3D);
         }
 
         virtual void TearDown() {
-                nx_uniform_sampler_instance_free();
+                nx_uniform_sampler_free(sampler);
+                nx_free(X);
         }
 
-        struct NXPointMatch2D *make_test_data8();
-        struct NXPointMatch2D *make_test_data16();
-        struct NXPointMatch2D *make_test_data_ransac(int n, double inlier_ratio, double noise_level);
+         float *gen_points_3d(int n) {
+                float *X = NX_NEW_S(3*n);
+                for (int i = 0; i < n; ++i) {
+                        X[i*3+0] = nx_uniform_sampler_sample_s(sampler)*2.0f - 1.0f;
+                        X[i*3+1] = nx_uniform_sampler_sample_s(sampler)*2.0f - 1.0f;
+                        X[i*3+2] = 5.0;
+                }
+                return X;
+        }
+
+        struct NXPointMatch2D *gen_matches(int n,
+                                           const double *R, const double *t) {
+                double P0[12];
+                double P1[12];
+                nx_pinhole_projection_from_krt(P0, NULL, NULL, NULL);
+                nx_pinhole_projection_from_krt(P1, NULL, &R[0], &t[0]);
+
+                struct NXPointMatch2D *corr_list = NX_NEW(n,
+                                                          struct NXPointMatch2D);
+                for (int i = 0; i < n; ++i) {
+                        struct NXPointMatch2D *pm = corr_list + i;
+                        nx_pinhole_project(P0, 1, &X[i*3], &pm->x[0]);
+                        nx_pinhole_project(P1, 1, &X[i*3], &pm->xp[0]);
+                        pm->match_cost = 0.0f;
+                        pm->sigma_x = 0.0f;
+                        pm->sigma_xp = 0.0f;
+                        pm->id = 0;
+                        pm->idp = 0;
+                        pm->is_inlier = NX_TRUE;
+                }
+
+                return corr_list;
+        }
+
+        struct NXPointMatch2D *make_test_data_ransac(int n, double inlier_ratio,
+                                                     double noise_level,
+                                                     const double *R,
+                                                     const double *t);
 
         double measure_test_error(const double *f, int n,
                                   const struct NXPointMatch2D *x,
@@ -80,17 +124,14 @@ protected:
         void check_decomposition_error(const double *E,
                                        const double *R,
                                        const double *t);
+        void check_z_test(const double *E, const double *R, const double *t);
 
+        struct NXUniformSampler *sampler;
+
+        float* X;
         double f[9];
         double err;
 };
-
-
-static inline void sample_corner(float *p, double sign_x, double sign_y)
-{
-        p[0] = sign_x * (NX_UNIFORM_SAMPLE_D * 0.5 + 0.5);
-        p[1] = sign_y * (NX_UNIFORM_SAMPLE_D * 0.5 + 0.5);
-}
 
 
 static inline double point_dist(const float *p, double qx, double qy)
@@ -98,76 +139,6 @@ static inline double point_dist(const float *p, double qx, double qy)
         double dx = p[0] - qx;
         double dy = p[1] - qy;
         return sqrt(dx*dx+dy*dy);
-}
-
-struct NXPointMatch2D *NXEpipolarTest::make_test_data8()
-{
-        struct NXPointMatch2D *corr = NX_NEW(8, struct NXPointMatch2D);
-        sample_corner(&corr[0].x[0], -1.0, -1.0);
-        sample_corner(&corr[1].x[0], +1.0, -1.0);
-        sample_corner(&corr[2].x[0], +1.0, +1.0);
-        sample_corner(&corr[3].x[0], -1.0, +1.0);
-        sample_corner(&corr[4].x[0],  0.0, -1.0);
-        sample_corner(&corr[5].x[0], +1.0,  0.0);
-        sample_corner(&corr[6].x[0],  0.0, +1.0);
-        sample_corner(&corr[7].x[0], -1.0,  0.0);
-
-        sample_corner(&corr[0].xp[0], -1.0, -1.0);
-        sample_corner(&corr[1].xp[0], +1.0, -1.0);
-        sample_corner(&corr[2].xp[0], +1.0, +1.0);
-        sample_corner(&corr[3].xp[0], -1.0, +1.0);
-        sample_corner(&corr[4].xp[0],  0.0, -1.0);
-        sample_corner(&corr[5].xp[0], +1.0,  0.0);
-        sample_corner(&corr[6].xp[0],  0.0, +1.0);
-        sample_corner(&corr[7].xp[0], -1.0,  0.0);
-
-        for (int i = 0; i < 8; ++i)
-                corr[i].xp[1] = corr[i].x[1];
-
-        return corr;
-}
-
-struct NXPointMatch2D *NXEpipolarTest::make_test_data16()
-{
-        struct NXPointMatch2D *corr = NX_NEW(16, struct NXPointMatch2D);
-        sample_corner(&corr[0].x[0], -1.0, -1.0);
-        sample_corner(&corr[1].x[0], +1.0, -1.0);
-        sample_corner(&corr[2].x[0], +1.0, +1.0);
-        sample_corner(&corr[3].x[0], -1.0, +1.0);
-        sample_corner(&corr[4].x[0],  0.0, -1.0);
-        sample_corner(&corr[5].x[0], +1.0,  0.0);
-        sample_corner(&corr[6].x[0],  0.0, +1.0);
-        sample_corner(&corr[7].x[0], -1.0,  0.0);
-        sample_corner(&corr[8].x[0], -1.0, -1.0);
-        sample_corner(&corr[9].x[0], +1.0, -1.0);
-        sample_corner(&corr[10].x[0], +1.0, +1.0);
-        sample_corner(&corr[11].x[0], -1.0, +1.0);
-        sample_corner(&corr[12].x[0],  0.0, -1.0);
-        sample_corner(&corr[13].x[0], +1.0,  0.0);
-        sample_corner(&corr[14].x[0],  0.0, +1.0);
-        sample_corner(&corr[15].x[0], -1.0,  0.0);
-
-        sample_corner(&corr[0].xp[0], -1.0, -1.0);
-        sample_corner(&corr[1].xp[0], +1.0, -1.0);
-        sample_corner(&corr[2].xp[0], +1.0, +1.0);
-        sample_corner(&corr[3].xp[0], -1.0, +1.0);
-        sample_corner(&corr[4].xp[0],  0.0, -1.0);
-        sample_corner(&corr[5].xp[0], +1.0,  0.0);
-        sample_corner(&corr[6].xp[0],  0.0, +1.0);
-        sample_corner(&corr[7].xp[0], -1.0,  0.0);
-        sample_corner(&corr[8].xp[0], -1.0, -1.0);
-        sample_corner(&corr[9].xp[0], +1.0, -1.0);
-        sample_corner(&corr[10].xp[0], +1.0, +1.0);
-        sample_corner(&corr[11].xp[0], -1.0, +1.0);
-        sample_corner(&corr[12].xp[0],  0.0, -1.0);
-        sample_corner(&corr[13].xp[0], +1.0,  0.0);
-        sample_corner(&corr[14].xp[0],  0.0, +1.0);
-        sample_corner(&corr[15].xp[0], -1.0,  0.0);
-
-        for (int i = 0; i < 16; ++i)
-                corr[i].xp[1] = corr[i].x[1];
-
-        return corr;
 }
 
 double NXEpipolarTest::measure_test_error(const double *f, int n,
@@ -190,24 +161,23 @@ double NXEpipolarTest::measure_test_error(const double *f, int n,
 
 struct NXPointMatch2D *NXEpipolarTest::make_test_data_ransac(int n,
                                                              double inlier_ratio,
-                                                             double noise_level)
+                                                             double noise_level,
+                                                             const double *R,
+                                                             const double *t)
 {
-        struct NXPointMatch2D *corr = NX_NEW(n, struct NXPointMatch2D);
-        for (int i = 0; i < n; ++i) {
-                double sign_x = NX_UNIFORM_SAMPLE_D > 0.5 ? +1.0 : -1.0;
-                double sign_y = NX_UNIFORM_SAMPLE_D > 0.5 ? +1.0 : -1.0;
-                sample_corner(&corr[i].x[0], sign_x, sign_y);
+        EXPECT_LT(n, N_POINTS_3D);
 
-                if (NX_UNIFORM_SAMPLE_D < inlier_ratio) {
-                        sample_corner(&corr[i].xp[0], sign_x, sign_y);
-                        corr[i].is_inlier = NX_TRUE;
-                        corr[i].xp[1] = corr[i].x[1] + (NX_UNIFORM_SAMPLE_D - 0.5) * noise_level;
-                        corr[i].match_cost = NX_UNIFORM_SAMPLE_S * 20.0;
-                } else {
+        struct NXPointMatch2D *corr = gen_matches(n, R, t);
+        for (int i = 0; i < n; ++i) {
+                if (NX_UNIFORM_SAMPLE_D >= inlier_ratio) {
                         corr[i].is_inlier = NX_FALSE;
-                        corr[i].xp[0] = NX_UNIFORM_SAMPLE_D * 2.0 - 1.0;
-                        corr[i].xp[1] = NX_UNIFORM_SAMPLE_D * 2.0 - 1.0;
+                        corr[i].xp[0] += nx_uniform_sampler_sample64(sampler) * 2.0 - 1.0;
+                        corr[i].xp[1] += nx_uniform_sampler_sample64(sampler) * 2.0 - 1.0;;
                         corr[i].match_cost = NX_UNIFORM_SAMPLE_S * 30.0 + 5.0;
+                } else {
+                        corr[i].xp[0] += (nx_uniform_sampler_sample64(sampler) - 0.5) * noise_level;
+                        corr[i].xp[1] += (nx_uniform_sampler_sample64(sampler) - 0.5) * noise_level;
+                        corr[i].match_cost = NX_UNIFORM_SAMPLE_S * 20.0;
                 }
         }
 
@@ -260,10 +230,66 @@ void NXEpipolarTest::check_decomposition_error(const double *E,
         }
 }
 
+void NXEpipolarTest::check_z_test(const double *E,
+                                  const double *R,
+                                  const double *t)
+{
+        const int N = 50;
+        struct NXPointMatch2D *corr_list = gen_matches(N, &R[0], &t[0]);
+
+        double *Re[4];
+        double *te[4];
+        for (int i = 0; i < 4; ++i) {
+                Re[i] = NX_NEW_D(9);
+                te[i] = NX_NEW_D(3);
+        }
+
+        // NX_LOG(NX_LOG_TAG, "------------------------------------------------");
+        nx_essential_decompose_to_Rt(&E[0], &Re[0], &te[0]);
+        int sum_best = -2*N;
+        int i_best = nx_epipolar_pick_best_Rt(&Re[0], &te[0],
+                                              N, corr_list, &sum_best);
+        // NX_LOG(NX_LOG_TAG, "------------------------------------------------");
+        // nx_dmat3_print(&R[0], "R");
+        // nx_dvec3_print(&t[0], "t");
+        // NX_LOG(NX_LOG_TAG, "------------------------------------------------");
+        // nx_dmat3_print(&Re[i_best][0], "Rbest");
+        // nx_dvec3_print(&te[i_best][0], "tbest");
+
+        nx_dmat3_sub(&Re[i_best][0], &R[0]);
+        double er = nx_dmat3_frob_norm(&Re[i_best][0]);
+        double et = 0.0;
+        for (int j = 0; j < 3; ++j) {
+                double d = t[j] - te[i_best][j];
+                et += d*d;
+        }
+        et = sqrt(et);
+
+        // NX_LOG(NX_LOG_TAG, "min rotation    error norm = %.2e", er);
+        // NX_LOG(NX_LOG_TAG, "min translation error norm = %.2e", et);
+
+        EXPECT_GT(1e-14, er);
+        EXPECT_GT(1e-14, et);
+
+        for (int i = 0; i < 4; ++i) {
+                nx_free(Re[i]);
+                nx_free(te[i]);
+        }
+        nx_free(corr_list);
+}
+
 TEST_F(NXEpipolarTest, eight_points) {
+        double t[3] = { 1.0, 4.0, -2.0 };
+        double R[9];
+
         int indices[8] = { 0, 1, 2, 3, 4, 5, 6, 7 };
         for (int i = 0; i < N_TESTS; ++i) {
-                struct NXPointMatch2D *test_data = make_test_data8();
+                double alpha = nx_uniform_sampler_sample64(sampler)*NX_PI/4-NX_PI/8;
+                double beta  = nx_uniform_sampler_sample64(sampler)*NX_PI/4-NX_PI/8;
+                double gamma = nx_uniform_sampler_sample64(sampler)*NX_PI/4-NX_PI/8;
+                nx_rotation_3d_RxRyRz(&R[0], alpha, beta, gamma);
+
+                struct NXPointMatch2D *test_data = gen_matches(8, &R[0], &t[0]);
                 nx_fundamental_estimate_8pt(f, indices, test_data);
                 err = ABS_MAX(err, measure_test_error(f, 8, test_data));
                 nx_free(test_data);
@@ -275,8 +301,16 @@ TEST_F(NXEpipolarTest, eight_points) {
 
 
 TEST_F(NXEpipolarTest, n_points) {
+        double t[3] = { 1.0, 4.0, -2.0 };
+        double R[9];
+
         for (int i = 0; i < N_TESTS; ++i) {
-                struct NXPointMatch2D *test_data = make_test_data16();
+                double alpha = nx_uniform_sampler_sample64(sampler)*NX_PI/4-NX_PI/8;
+                double beta  = nx_uniform_sampler_sample64(sampler)*NX_PI/4-NX_PI/8;
+                double gamma = nx_uniform_sampler_sample64(sampler)*NX_PI/4-NX_PI/8;
+                nx_rotation_3d_RxRyRz(&R[0], alpha, beta, gamma);
+
+                struct NXPointMatch2D *test_data = gen_matches(16, &R[0], &t[0]);
                 nx_fundamental_estimate(f, 16, test_data);
                 err = ABS_MAX(err, measure_test_error(f, 16, test_data));
                 nx_free(test_data);
@@ -287,8 +321,17 @@ TEST_F(NXEpipolarTest, n_points) {
 }
 
 TEST_F(NXEpipolarTest, ransac) {
+        double t[3] = { 1.0, 4.0, -2.0 };
+        double R[9];
+
         for (int i = 0; i < N_TESTS; ++i) {
-                struct NXPointMatch2D *test_data = make_test_data_ransac(N_RANSAC_CORR, RANSAC_INLIER_RATIO, RANSAC_NOISE_LEVEL);
+                double alpha = nx_uniform_sampler_sample64(sampler)*NX_PI/4-NX_PI/8;
+                double beta  = nx_uniform_sampler_sample64(sampler)*NX_PI/4-NX_PI/8;
+                double gamma = nx_uniform_sampler_sample64(sampler)*NX_PI/4-NX_PI/8;
+                nx_rotation_3d_RxRyRz(&R[0], alpha, beta, gamma);
+
+                struct NXPointMatch2D *test_data = make_test_data_ransac(N_RANSAC_CORR, RANSAC_INLIER_RATIO,
+                                                                         RANSAC_NOISE_LEVEL, &R[0], &t[0]);
                 nx_fundamental_estimate_norm_ransac(f, N_RANSAC_CORR, test_data, RANSAC_NOISE_LEVEL * 2.0, RANSAC_MAX_N_ITER);
                 err = ABS_MAX(err, measure_test_error(f, N_RANSAC_CORR, test_data, true));
                 nx_free(test_data);
@@ -319,9 +362,32 @@ TEST_F(NXEpipolarTest, essential_decompose) {
                         }
                 }
         }
-
-
-
 }
+
+TEST_F(NXEpipolarTest, essential_z_test) {
+        double E[9];
+        double R[9];
+        double t[3];
+
+        t[0] = -1.0/sqrt(3.0);
+        t[1] = -1.0/sqrt(3.0);
+        t[2] =  1.0/sqrt(3.0);
+
+        double INCREMENT = IS_VALGRIND_RUN ? 1.0 : 0.1;
+
+        for (double alpha = -1.0; alpha < 1.001; alpha += INCREMENT) {
+                for (double beta = -1.0; beta < 1.001; beta += INCREMENT) {
+                        for (double gamma = -1.0; gamma < 1.001; gamma += INCREMENT) {
+                                nx_rotation_3d_RxRyRz(&R[0],
+                                                      alpha*NX_PI/6,
+                                                      beta*NX_PI/6,
+                                                      gamma*NX_PI/6);
+                                nx_essential_from_Rt(&E[0], &R[0], &t[0]);
+                                check_z_test(&E[0], &R[0], &t[0]);
+                        }
+                }
+        }
+}
+
 
 } // namespace

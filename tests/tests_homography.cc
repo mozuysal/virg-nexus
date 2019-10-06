@@ -40,7 +40,7 @@
 
 extern bool IS_VALGRIND_RUN;
 static int N_TESTS = 50;
-#define ERROR_THRESHOLD 1e-12
+#define ERROR_THRESHOLD 1e-7
 
 #define N_RANSAC_CORR 100
 #define RANSAC_INLIER_RATIO 0.8

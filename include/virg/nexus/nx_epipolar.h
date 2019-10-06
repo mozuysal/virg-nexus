@@ -76,6 +76,10 @@ void nx_essential_from_Rt(double *E, const double *R, const double *t);
 
 double nx_essential_decompose_to_Rt(const double *E, double **R, double **t);
 
+int nx_epipolar_pick_best_Rt(const double * const *R, const double * const *t,
+                             int n, const struct NXPointMatch2D *corr_list,
+                             int *z_sign_sum);
+
 __NX_END_DECL
 
 #endif

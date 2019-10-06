@@ -31,7 +31,9 @@
 #include "virg/nexus/nx_log.h"
 #include "virg/nexus/nx_assert.h"
 #include "virg/nexus/nx_svd.h"
+#include "virg/nexus/nx_vec234.h"
 #include "virg/nexus/nx_mat234.h"
+#include "virg/nexus/nx_math.h"
 #include "virg/nexus/nx_uniform_sampler.h"
 #include "virg/nexus/nx_point_match_2d_stats.h"
 
@@ -344,6 +346,16 @@ double nx_essential_decompose_to_Rt(const double *E, double **R, double **t)
         double Vt[9];
         nx_dmat3_svd(E, U, S, Vt);
 
+        double det = nx_dmat3_det(&U[0]);
+        if (det < 0.0)
+                for (int i = 0; i < 9; ++i)
+                        U[i] = -U[i];
+
+        det = nx_dmat3_det(&Vt[0]);
+        if (det < 0.0)
+                for (int i = 0; i < 9; ++i)
+                        Vt[i] = -Vt[i];
+
         R[0][0] = U[3]*Vt[0] - U[0]*Vt[1] + U[6]*Vt[2];
         R[0][1] = U[4]*Vt[0] - U[1]*Vt[1] + U[7]*Vt[2];
         R[0][2] = U[5]*Vt[0] - U[2]*Vt[1] + U[8]*Vt[2];
@@ -355,11 +367,6 @@ double nx_essential_decompose_to_Rt(const double *E, double **R, double **t)
         R[0][8] = U[5]*Vt[6] - U[2]*Vt[7] + U[8]*Vt[8];
 
         t[0][0] = U[6]; t[0][1] = U[7]; t[0][2] = U[8];
-
-        double det = nx_dmat3_det(&R[0][0]);
-        if (det < 0.0)
-                for (int i = 0; i < 9; ++i)
-                        R[0][i] = -R[0][i];
 
         memcpy(&R[1][0], &R[0][0], 9*sizeof(R[0][0]));
         t[1][0] = -U[6]; t[1][1] = -U[7]; t[1][2] = -U[8];
@@ -376,13 +383,79 @@ double nx_essential_decompose_to_Rt(const double *E, double **R, double **t)
 
         t[2][0] = U[6]; t[2][1] = U[7]; t[2][2] = U[8];
 
-        det = nx_dmat3_det(&R[2][0]);
-        if (det < 0.0)
-                for (int i = 0; i < 9; ++i)
-                        R[2][i] = -R[2][i];
-
         memcpy(&R[3][0], &R[2][0], 9*sizeof(R[0][0]));
         t[3][0] = -U[6]; t[3][1] = -U[7]; t[3][2] = -U[8];
 
         return S[2];
+}
+
+static int nx_epipolar_get_z_sign_sum(int n, const struct NXPointMatch2D *corr_list,
+                                      const double *R, const double *t)
+{
+        double A[9];
+        double *b = &A[0];
+        b[0] = -R[0]*t[0] - R[1]*t[1] - R[2]*t[2];
+        b[1] = -R[3]*t[0] - R[4]*t[1] - R[5]*t[2];
+        b[2] = -R[6]*t[0] - R[7]*t[1] - R[8]*t[2];
+
+        int s_sum  = 0;
+        int sp_sum = 0;
+        for (int i = 0; i < n; ++i) {
+                const struct NXPointMatch2D *pm = corr_list + i;
+                double u[3] = { pm->x[0], pm->x[1], 1.0 };
+                double *m = &A[3];
+                double temp[3];
+                nx_dvec3_cross(&temp[0], b, &u[0]);
+                nx_dvec3_cross(m, &temp[0], b);
+                nx_dvec3_to_unit(m);
+
+                double Rtv[3];
+                Rtv[0] = R[0]*pm->xp[0] + R[1]*pm->xp[1] + R[2];
+                Rtv[1] = R[3]*pm->xp[0] + R[4]*pm->xp[1] + R[5];
+                Rtv[2] = R[6]*pm->xp[0] + R[7]*pm->xp[1] + R[8];
+                nx_dvec3_cross(&A[6], &u[0], &Rtv[0]);
+
+                int sp = nx_signum(nx_dmat3_det(&A[0]));
+                int s  = sp * nx_signum(nx_dvec3_dot(&m[0], &Rtv[0]));
+
+                s_sum  += s;
+                sp_sum += sp;
+        }
+
+        return s_sum + sp_sum;
+}
+
+int nx_epipolar_pick_best_Rt(const double * const *R, const double * const *t,
+                             int n, const struct NXPointMatch2D *corr_list,
+                             int *z_sign_sum)
+{
+        NX_ASSERT_PTR(R);
+        NX_ASSERT_PTR(R[0]);
+        NX_ASSERT_PTR(R[1]);
+        NX_ASSERT_PTR(R[2]);
+        NX_ASSERT_PTR(R[3]);
+        NX_ASSERT_PTR(t);
+        NX_ASSERT_PTR(t[0]);
+        NX_ASSERT_PTR(t[1]);
+        NX_ASSERT_PTR(t[2]);
+        NX_ASSERT_PTR(t[3]);
+        NX_ASSERT_PTR(corr_list);
+        NX_ASSERT(n > 0);
+
+        int idx = 0;
+        int sum_idx = nx_epipolar_get_z_sign_sum(n, corr_list, &R[0][0], &t[0][0]);
+
+        for (int i = 1; i < 4; ++i) {
+                int sum = nx_epipolar_get_z_sign_sum(n, corr_list,
+                                                     &R[i][0], &t[i][0]);
+                if (sum > sum_idx) {
+                        idx = i;
+                        sum_idx = sum;
+                }
+        }
+
+        if (z_sign_sum)
+                *z_sign_sum = sum_idx;
+
+        return idx;
 }
