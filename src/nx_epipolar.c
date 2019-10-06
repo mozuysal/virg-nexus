@@ -392,6 +392,13 @@ double nx_essential_decompose_to_Rt(const double *E, double **R, double **t)
 static int nx_epipolar_get_z_sign_sum(int n, const struct NXPointMatch2D *corr_list,
                                       const double *R, const double *t)
 {
+        // Algorithm 20, Chapter 13, page 583 in
+        // Photogrammetric Computer Vision by W. Förstner and B. P. Wrobel
+        // for correspondence u <-> v and relative orientation R, t
+        // b = -R.T * t
+        // m = N((b x u) x b)
+        // sign_v = sign(det([b m (u x R.T * v)]))
+        // sign_u = sign_v * sign(m.T * R.T * v)
         double A[9];
         double *b = &A[0];
         b[0] = -R[0]*t[0] - R[1]*t[1] - R[2]*t[2];
