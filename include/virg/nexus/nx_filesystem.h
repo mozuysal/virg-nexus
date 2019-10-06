@@ -27,11 +27,14 @@
 #define VIRG_NEXUS_NX_FILESYSTEM_H
 
 #include "virg/nexus/nx_config.h"
+#include "virg/nexus/nx_types.h"
 #include "virg/nexus/nx_string_array.h"
 
 __NX_BEGIN_DECL
 
 struct NXStringArray *nx_scan_dir(const char *path);
+
+NXBool nx_check_dir(const char *path);
 
 __NX_END_DECL
 

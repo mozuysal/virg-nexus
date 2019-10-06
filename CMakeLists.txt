@@ -58,6 +58,7 @@ set(virg_nexus_C_SOURCES
   src/nx_csv_parser.c
   src/nx_log_c_impl.c
   src/nx_pinhole.c
+  src/nx_kitti_slam.c
 )
 
 set(virg_nexus_C_HEADERS
@@ -117,6 +118,7 @@ set(virg_nexus_C_HEADERS
   include/virg/nexus/nx_csv_lexer.h
   include/virg/nexus/nx_csv_parser.h
   include/virg/nexus/nx_pinhole.h
+  include/virg/nexus/nx_kitti_slam.h
 )
 
 set(virg_nexus_CXX_SOURCES

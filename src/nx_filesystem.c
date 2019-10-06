@@ -26,6 +26,8 @@
 #include "virg/nexus/nx_filesystem.h"
 
 #include <stdlib.h>
+
+#include <sys/types.h>
 #include <dirent.h>
 
 #include "virg/nexus/nx_io.h"
@@ -52,3 +54,16 @@ struct NXStringArray *nx_scan_dir(const char *path)
 
         return dir_contents;
 }
+
+NXBool nx_check_dir(const char *path)
+{
+        NX_ASSERT_PTR(path);
+
+        DIR *dir = opendir(path);
+        if (!dir || closedir(dir)) {
+                return NX_FALSE;
+        }
+
+        return NX_TRUE;
+}
+
