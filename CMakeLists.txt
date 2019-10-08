@@ -40,7 +40,6 @@ set(virg_nexus_C_SOURCES
   src/nx_affine_warp_processor.c
   src/nx_homography.c
   src/nx_epipolar.c
-  src/nx_triangulation.c
   src/nx_image_pyr.c
   src/nx_image_pyr_builder.c
   src/nx_colorspace.c
@@ -102,7 +101,6 @@ set(virg_nexus_C_HEADERS
   include/virg/nexus/nx_affine_warp_processor.h
   include/virg/nexus/nx_homography.h
   include/virg/nexus/nx_epipolar.h
-  include/virg/nexus/nx_triangulation.h
   include/virg/nexus/nx_image_pyr.h
   include/virg/nexus/nx_image_pyr_builder.h
   include/virg/nexus/nx_colorspace.h
@@ -286,7 +284,7 @@ set(test_SOURCES
   tests/tests_rotation.cc
   tests/tests_homography.cc
   tests/tests_epipolar.cc
-  tests/tests_triangulation.cc
+  tests/tests_pinhole.cc
   tests/tests_image.cc
   tests/tests_image_pyr.cc
   tests/tests_fast_detector.cc

@@ -28,6 +28,7 @@
 #include <float.h>
 #include <math.h>
 
+#include "virg/nexus/nx_svd.h"
 #include "virg/nexus/nx_math.h"
 #include "virg/nexus/nx_mat234.h"
 #include "virg/nexus/nx_assert.h"
@@ -89,4 +90,79 @@ void nx_pinhole_project_h(const double *P, int n, const float *Xh, float *xh)
                 xh[1] = P[1]*Xh[0] + P[4]*Xh[1] + P[7]*Xh[2] + P[10]*Xh[3];
                 xh[2] = P[2]*Xh[0] + P[5]*Xh[1] + P[8]*Xh[2] + P[11]*Xh[3];
         }
+}
+
+static inline void
+nx_triangulation_constraints_from_corr(double *rcons,
+                                       const struct NXPointMatch2D *corr,
+                                       const double *P0, const double *P1)
+{
+        const float x = corr->x[0];
+        const float y = corr->x[1];
+        const float xp = corr->xp[0];
+        const float yp = corr->xp[1];
+
+        rcons[0] = x*P0[2]  - P0[0];
+        rcons[1] = x*P0[5]  - P0[3];
+        rcons[2] = x*P0[8]  - P0[6];
+        rcons[3] = x*P0[11] - P0[9];
+
+        rcons[4] = y*P0[2]  - P0[1];
+        rcons[5] = y*P0[5]  - P0[4];
+        rcons[6] = y*P0[8]  - P0[7];
+        rcons[7] = y*P0[11] - P0[10];
+
+        rcons[8]  = xp*P1[2]  - P1[0];
+        rcons[9]  = xp*P1[5]  - P1[3];
+        rcons[10] = xp*P1[8]  - P1[6];
+        rcons[11] = xp*P1[11] - P1[9];
+
+        rcons[12] = yp*P1[2]  - P1[1];
+        rcons[13] = yp*P1[5]  - P1[4];
+        rcons[14] = yp*P1[8]  - P1[7];
+        rcons[15] = yp*P1[11] - P1[10];
+
+}
+
+int nx_pinhole_triangulate(int n_pt, float *X, int *corr_ids,
+                           int n_corr, const struct NXPointMatch2D *corr_list,
+                           const double *P0, const double *P1)
+{
+        NX_ASSERT_PTR(X);
+        NX_ASSERT_PTR(corr_ids);
+        NX_ASSERT_PTR(corr_list);
+        NX_ASSERT_PTR(P0);
+        NX_ASSERT_PTR(P1);
+
+        int n = nx_point_match_2d_count_inliers(n_corr,
+                                                corr_list);
+        if (n > n_pt) {
+                n = n_pt;
+        }
+
+        double A[16];
+        double U[16];
+        double S[4];
+        int pt_i = 0;
+        for (int i = 0; i < n_corr; ++i) {
+                if (corr_list[i].is_inlier) {
+                        nx_triangulation_constraints_from_corr(&A[0],
+                                                               corr_list + i,
+                                                               P0, P1);
+                        nx_dsvd_us(&U[0], 4, &S[0], 4, 4, A, 4);
+
+                        float *Xi = X + 3*pt_i;
+                        double W = U[4*3+3];
+                        Xi[0] = U[4*3+0] / W;
+                        Xi[1] = U[4*3+1] / W;
+                        Xi[2] = U[4*3+2] / W;
+                        corr_ids[pt_i] = i;
+
+                        pt_i++;
+                }
+        }
+
+        NX_ASSERT(n == pt_i);
+
+        return n;
 }

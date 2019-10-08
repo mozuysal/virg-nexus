@@ -1,5 +1,5 @@
 /**
- * @file tests_triangulation.cc
+ * @file tests_pinhole.cc
  *
  * Copyright (C) 2019 Mustafa Ozuysal. All rights reserved.
  *
@@ -40,7 +40,6 @@
 #include "virg/nexus/nx_rotation_3d.h"
 #include "virg/nexus/nx_epipolar.h"
 #include "virg/nexus/nx_pinhole.h"
-#include "virg/nexus/nx_triangulation.h"
 
 using namespace std;
 
@@ -51,9 +50,9 @@ static int N_TESTS = 100;
 
 namespace {
 
-class NXTriangulationTest : public ::testing::Test {
+class NXPinholeTest : public ::testing::Test {
 protected:
-        NXTriangulationTest() {
+        NXPinholeTest() {
                 if (IS_VALGRIND_RUN)
                         N_TESTS = 2;
         }
@@ -101,11 +100,9 @@ protected:
                 return corr_list;
         }
 
-        void check_reconstruction(const float *X, struct NXRPoint3D *pt_list) {
+        void check_reconstruction(const float *X, const float *Xr) {
                 for (int i = 0; i < N_POINTS; ++i) {
-                        struct NXRPoint3D *pt = pt_list + i;
-                        nx_svec4h_to_euclidean(&pt->Xh[0]);
-                        double e = sqrt(nx_svec3_dist_sq(&pt->Xh[0], X + 3*i));
+                        double e = sqrt(nx_svec3_dist_sq(Xr + 3*i, X + 3*i));
                         // NX_LOG(NX_LOG_TAG, "%03d: e = %.2e", e);
 
                         EXPECT_GT(1e-4, e);
@@ -117,7 +114,7 @@ protected:
         double *P1;
 };
 
-TEST_F(NXTriangulationTest, rectified_test) {
+TEST_F(NXPinholeTest, rectified_triangulation_test) {
         float *X = gen_points_3d();
 
         double t[3] = { 1.0, 0.0, 0.0 };
@@ -127,18 +124,20 @@ TEST_F(NXTriangulationTest, rectified_test) {
         // nx_dmat34_print(P1, "P1");
         struct NXPointMatch2D *corr_list = gen_matches(X);
 
-        struct NXRPoint3D *pt_list = NX_NEW(N_POINTS, struct NXRPoint3D);
-        int n = nx_triangulate(N_POINTS, pt_list, N_POINTS, corr_list, P0, P1);
+        float *Xr = NX_NEW_S(3*N_POINTS);
+        int *corr_ids = NX_NEW_I(N_POINTS);
+        int n = nx_pinhole_triangulate(N_POINTS, Xr, corr_ids,
+                                       N_POINTS, corr_list, P0, P1);
         EXPECT_EQ(N_POINTS, n);
 
-        check_reconstruction(X, pt_list);
+        check_reconstruction(X, Xr);
 
-        nx_free(pt_list);
+        nx_free(Xr);
         nx_free(corr_list);
         nx_free(X);
 }
 
-TEST_F(NXTriangulationTest, generic_test) {
+TEST_F(NXPinholeTest, generic_triangulation_test) {
         for (int i = 0; i < N_TESTS; ++i) {
                 float *X = gen_points_3d();
 
@@ -155,13 +154,15 @@ TEST_F(NXTriangulationTest, generic_test) {
                 // nx_dmat34_print(P1, "P1");
                 struct NXPointMatch2D *corr_list = gen_matches(X);
 
-                struct NXRPoint3D *pt_list = NX_NEW(N_POINTS, struct NXRPoint3D);
-                int n = nx_triangulate(N_POINTS, pt_list, N_POINTS, corr_list, P0, P1);
+                float *Xr = NX_NEW_S(3*N_POINTS);
+                int *corr_ids = NX_NEW_I(N_POINTS);
+                int n = nx_pinhole_triangulate(N_POINTS, Xr, corr_ids,
+                                               N_POINTS, corr_list, P0, P1);
                 EXPECT_EQ(N_POINTS, n);
 
-                check_reconstruction(X, pt_list);
+                check_reconstruction(X, Xr);
 
-                nx_free(pt_list);
+                nx_free(Xr);
                 nx_free(corr_list);
                 nx_free(X);
         }

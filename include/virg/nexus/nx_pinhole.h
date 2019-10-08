@@ -27,6 +27,8 @@
 #define VIRG_NEXUS_NX_PINHOLE_H
 
 #include "virg/nexus/nx_config.h"
+#include "virg/nexus/nx_types.h"
+#include "virg/nexus/nx_point_match_2d.h"
 
 __NX_BEGIN_DECL
 
@@ -35,6 +37,10 @@ void nx_pinhole_projection_from_krt(double *P, const double *K,
 
 double nx_pinhole_project  (const double *P, int n, const float *X,  float *x);
 void   nx_pinhole_project_h(const double *P, int n, const float *Xh, float *xh);
+
+int nx_pinhole_triangulate(int n_pt, float *X, int *corr_ids,
+                           int n_corr, const struct NXPointMatch2D *corr_list,
+                           const double *P0, const double *P1);
 
 __NX_END_DECL
 
