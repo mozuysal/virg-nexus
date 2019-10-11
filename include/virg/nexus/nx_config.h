@@ -56,6 +56,7 @@
 
 #define NX_LOG_TAG "NX"
 #define VG_LOG_TAG "VG"
+#define NXGL_LOG_TAG "NXGL"
 
 #define NX_VERSION_MAJOR 0
 #define NX_VERSION_MINOR 1

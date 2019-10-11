@@ -45,7 +45,7 @@ GLuint nx_gl_shader_xcreate_and_compile(GLenum shader_type,
 {
         GLuint shader = glCreateShader(shader_type);
         if (shader == 0) {
-                NX_FATAL(NX_LOG_TAG, "Failed to create OpenGL %s",
+                NX_FATAL(NXGL_LOG_TAG, "Failed to create OpenGL %s",
                          nx_shader_type_string(shader_type));
         }
 
@@ -55,10 +55,10 @@ GLuint nx_gl_shader_xcreate_and_compile(GLenum shader_type,
         GLint stat;
         glGetShaderiv(shader, GL_COMPILE_STATUS, &stat);
         if (stat) {
-                NX_INFO(NX_LOG_TAG, "OpenGL %s compiled successfully",
+                NX_INFO(NXGL_LOG_TAG, "OpenGL %s compiled successfully",
                         nx_shader_type_string(shader_type));
         } else {
-                NX_ERROR(NX_LOG_TAG, "OpenGL %s compilation failed!",
+                NX_ERROR(NXGL_LOG_TAG, "OpenGL %s compilation failed!",
                          nx_shader_type_string(shader_type));
                 GLint log_len = 0;
                 glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &log_len);
@@ -71,7 +71,7 @@ GLuint nx_gl_shader_xcreate_and_compile(GLenum shader_type,
                         log = NX_NEW_C(1);
                         log[0] = '\0';
                 }
-                NX_FATAL(NX_LOG_TAG, "OpenGL %s compilation log:\n%s",
+                NX_FATAL(NXGL_LOG_TAG, "OpenGL %s compilation log:\n%s",
                          nx_shader_type_string(shader_type), log);
         }
 

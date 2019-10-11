@@ -34,7 +34,7 @@ struct NXGLBuffer *nx_gl_buffer_alloc()
         struct NXGLBuffer *buffer = NX_NEW(1, struct NXGLBuffer);
         glGenBuffers(1, &buffer->id);
         if (buffer->id == 0) {
-                NX_FATAL(NX_LOG_TAG, "OpenGL buffer allocation failed!");
+                NX_FATAL(NXGL_LOG_TAG, "OpenGL buffer allocation failed!");
         }
 
         buffer->target = GL_ARRAY_BUFFER;

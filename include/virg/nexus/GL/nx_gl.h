@@ -33,6 +33,8 @@
 __NX_BEGIN_DECL
 
 void nx_gl_info();
+void nx_gl_debug_enable();
+void nx_gl_debug_disable();
 
 __NX_END_DECL
 

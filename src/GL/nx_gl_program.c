@@ -34,7 +34,7 @@ GLuint nx_gl_program_xcreate_and_link(GLuint v_shader, GLuint f_shader)
 {
         GLuint program = glCreateProgram();
         if (program == 0) {
-                NX_FATAL(NX_LOG_TAG, "Failed to create OpenGL program");
+                NX_FATAL(NXGL_LOG_TAG, "Failed to create OpenGL program");
         }
 
         glAttachShader(program, v_shader);
@@ -44,9 +44,9 @@ GLuint nx_gl_program_xcreate_and_link(GLuint v_shader, GLuint f_shader)
         GLint stat;
         glGetProgramiv(program, GL_LINK_STATUS, &stat);
         if (stat) {
-                NX_INFO(NX_LOG_TAG, "OpenGL program linked successfully");
+                NX_INFO(NXGL_LOG_TAG, "OpenGL program linked successfully");
         } else {
-                NX_ERROR(NX_LOG_TAG, "OpenGL program link failed!");
+                NX_ERROR(NXGL_LOG_TAG, "OpenGL program link failed!");
                 GLint log_len = 0;
                 glGetProgramiv(program, GL_INFO_LOG_LENGTH, &log_len);
 
@@ -59,7 +59,7 @@ GLuint nx_gl_program_xcreate_and_link(GLuint v_shader, GLuint f_shader)
                         log = NX_NEW_C(1);
                         log[0] = '\0';
                 }
-                NX_FATAL(NX_LOG_TAG, "OpenGL program info log:\n%s",
+                NX_FATAL(NXGL_LOG_TAG, "OpenGL program info log:\n%s",
                          log);
         }
 
@@ -75,9 +75,9 @@ void nx_gl_program_xvalidate(GLuint program)
         GLint stat;
         glGetProgramiv(program, GL_VALIDATE_STATUS, &stat);
         if (stat) {
-                NX_INFO(NX_LOG_TAG, "OpenGL program validated successfully");
+                NX_INFO(NXGL_LOG_TAG, "OpenGL program validated successfully");
         } else {
-                NX_ERROR(NX_LOG_TAG, "OpenGL program validation failed!");
+                NX_ERROR(NXGL_LOG_TAG, "OpenGL program validation failed!");
                 GLint log_len = 0;
                 glGetProgramiv(program, GL_INFO_LOG_LENGTH, &log_len);
 
@@ -90,7 +90,7 @@ void nx_gl_program_xvalidate(GLuint program)
                         log = NX_NEW_C(1);
                         log[0] = '\0';
                 }
-                NX_FATAL(NX_LOG_TAG, "OpenGL program info log:\n%s",
+                NX_FATAL(NXGL_LOG_TAG, "OpenGL program info log:\n%s",
                          log);
         }
 }

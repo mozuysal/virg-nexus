@@ -25,13 +25,50 @@
  */
 #include "virg/nexus/GL/nx_gl.h"
 
+#include <stdlib.h>
+
 #include "virg/nexus/nx_log.h"
 
 void nx_gl_info()
 {
         const GLubyte* version_str = glGetString(GL_VERSION);
-        NX_INFO(NX_LOG_TAG, "%s", (const char *)version_str);
+        NX_INFO(NXGL_LOG_TAG, "%s", (const char *)version_str);
 
         const GLubyte* sl_version_str = glGetString(GL_SHADING_LANGUAGE_VERSION);
-        NX_INFO(NX_LOG_TAG, "%s", (const char *)sl_version_str);
+        NX_INFO(NXGL_LOG_TAG, "%s", (const char *)sl_version_str);
+}
+
+static void
+nx_gl_debug_callback(GLenum source, GLenum type,
+                     GLuint id, GLenum severity,
+                     GLsizei length, const GLchar* message,
+                     const void* userParam)
+{
+        const char *msg = message;
+        switch (severity) {
+        case GL_DEBUG_SEVERITY_NOTIFICATION:
+                NX_INFO(NXGL_LOG_TAG, "%s", msg);
+                break;
+        case GL_DEBUG_SEVERITY_LOW:
+                NX_LOG(NXGL_LOG_TAG, "%s", msg);
+                break;
+        case GL_DEBUG_SEVERITY_MEDIUM:
+                NX_WARNING(NXGL_LOG_TAG, "%s", msg);
+                break;
+        case GL_DEBUG_SEVERITY_HIGH:
+        default:
+                NX_ERROR(NXGL_LOG_TAG, "%s", msg);
+                break;
+        };
+}
+
+void nx_gl_debug_enable()
+{
+        glEnable(GL_DEBUG_OUTPUT);
+        glDebugMessageCallback(nx_gl_debug_callback, NULL);
+}
+
+void nx_gl_debug_disable()
+{
+        glDisable(GL_DEBUG_OUTPUT);
 }
