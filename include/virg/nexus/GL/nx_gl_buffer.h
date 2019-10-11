@@ -27,7 +27,7 @@
 #define VIRG_NEXUS_NX_GL_BUFFER_H
 
 #include "virg/nexus/nx_config.h"
-#include "virg/nexus/nx_gl.h"
+#include "virg/nexus/GL/nx_gl.h"
 
 __NX_BEGIN_DECL
 

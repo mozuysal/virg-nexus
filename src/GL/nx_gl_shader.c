@@ -23,7 +23,7 @@
  * Contact mustafaozuysal@iyte.edu.tr for comments and bug reports.
  *
  */
-#include "virg/nexus/nx_gl_shader.h"
+#include "virg/nexus/GL/nx_gl_shader.h"
 
 #include <stdlib.h>
 

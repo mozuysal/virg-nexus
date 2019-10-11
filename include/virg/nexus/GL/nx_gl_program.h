@@ -1,5 +1,5 @@
 /**
- * @file nx_gl_shader.h
+ * @file nx_gl_program.h
  *
  * Copyright (C) 2019 Mustafa Ozuysal. All rights reserved.
  *
@@ -23,18 +23,16 @@
  * Contact mustafaozuysal@iyte.edu.tr for comments and bug reports.
  *
  */
-#ifndef VIRG_NEXUS_NX_GL_SHADER_H
-#define VIRG_NEXUS_NX_GL_SHADER_H
+#ifndef VIRG_NEXUS_NX_GL_PROGRAM_H
+#define VIRG_NEXUS_NX_GL_PROGRAM_H
 
 #include "virg/nexus/nx_config.h"
-#include "virg/nexus/nx_gl.h"
+#include "virg/nexus/GL/nx_gl.h"
 
 __NX_BEGIN_DECL
 
-const char *nx_shader_type_string(GLenum shader_type);
-
-GLuint nx_gl_shader_xcreate_and_compile(GLenum shader_type,
-                                        const char *shader_source);
+GLuint nx_gl_program_xcreate_and_link(GLuint v_shader, GLuint f_shader);
+void   nx_gl_program_xvalidate(GLuint program);
 
 __NX_END_DECL
 

@@ -23,7 +23,7 @@
  * Contact mustafaozuysal@iyte.edu.tr for comments and bug reports.
  *
  */
-#include "virg/nexus/nx_gl_program.h"
+#include "virg/nexus/GL/nx_gl_program.h"
 
 #include "virg/nexus/nx_alloc.h"
 #include "virg/nexus/nx_assert.h"

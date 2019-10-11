@@ -1,5 +1,5 @@
 /**
- * @file nx_gl_program.h
+ * @file nx_gl.c
  *
  * Copyright (C) 2019 Mustafa Ozuysal. All rights reserved.
  *
@@ -23,17 +23,15 @@
  * Contact mustafaozuysal@iyte.edu.tr for comments and bug reports.
  *
  */
-#ifndef VIRG_NEXUS_NX_GL_PROGRAM_H
-#define VIRG_NEXUS_NX_GL_PROGRAM_H
+#include "virg/nexus/GL/nx_gl.h"
 
-#include "virg/nexus/nx_config.h"
-#include "virg/nexus/nx_gl.h"
+#include "virg/nexus/nx_log.h"
 
-__NX_BEGIN_DECL
+void nx_gl_info()
+{
+        const GLubyte* version_str = glGetString(GL_VERSION);
+        NX_INFO(NX_LOG_TAG, "%s", (const char *)version_str);
 
-GLuint nx_gl_program_xcreate_and_link(GLuint v_shader, GLuint f_shader);
-void   nx_gl_program_xvalidate(GLuint program);
-
-__NX_END_DECL
-
-#endif
+        const GLubyte* sl_version_str = glGetString(GL_SHADING_LANGUAGE_VERSION);
+        NX_INFO(NX_LOG_TAG, "%s", (const char *)sl_version_str);
+}

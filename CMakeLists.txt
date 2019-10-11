@@ -151,17 +151,17 @@ set(virg_nexus_CXX_HEADERS
 )
 
 set(virg_nexus_OPENGL_C_HEADERS
-  include/virg/nexus/nx_gl.h
-  include/virg/nexus/nx_gl_shader.h
-  include/virg/nexus/nx_gl_program.h
-  include/virg/nexus/nx_gl_buffer.h
+  include/virg/nexus/GL/nx_gl.h
+  include/virg/nexus/GL/nx_gl_shader.h
+  include/virg/nexus/GL/nx_gl_program.h
+  include/virg/nexus/GL/nx_gl_buffer.h
 )
 
 set(virg_nexus_OPENGL_C_SOURCES
-  src/nx_gl.c
-  src/nx_gl_shader.c
-  src/nx_gl_program.c
-  src/nx_gl_buffer.c
+  src/GL/nx_gl.c
+  src/GL/nx_gl_shader.c
+  src/GL/nx_gl_program.c
+  src/GL/nx_gl_buffer.c
 )
 
 set(virg_nexus_HEADERS ${virg_nexus_C_HEADERS})
