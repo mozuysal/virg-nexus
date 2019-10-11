@@ -147,6 +147,16 @@ set(virg_nexus_CXX_HEADERS
   include/virg/nexus/vg_image_annotator.hpp
 )
 
+set(virg_nexus_OPENGL_C_HEADERS
+  include/virg/nexus/nx_gl.h
+  include/virg/nexus/nx_gl_shader.h
+)
+
+set(virg_nexus_OPENGL_C_SOURCES
+  src/nx_gl.c
+  src/nx_gl_shader.c
+)
+
 set(virg_nexus_HEADERS ${virg_nexus_C_HEADERS})
 set(virg_nexus_SOURCES ${virg_nexus_C_SOURCES})
 
@@ -156,6 +166,12 @@ if (VIRG_NEXUS_CXX_API)
    list(APPEND virg_nexus_SOURCES ${virg_nexus_CXX_SOURCES})
 endif (VIRG_NEXUS_CXX_API)
 
+option(VIRG_NEXUS_OPENGL_C_HELPERS "Compile and install OpenGL C Helpers"  ON)
+if (VIRG_NEXUS_OPENGL_C_HELPERS)
+   list(APPEND virg_nexus_HEADERS ${virg_nexus_OPENGL_C_HEADERS})
+   list(APPEND virg_nexus_SOURCES ${virg_nexus_OPENGL_C_SOURCES})
+endif (VIRG_NEXUS_OPENGL_C_HELPERS)
+
 add_library(virg-nexus STATIC ${virg_nexus_SOURCES})
 set_target_properties(virg-nexus PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 
@@ -163,6 +179,9 @@ add_library(virg-nexus-shared SHARED ${virg_nexus_SOURCES})
 target_link_libraries(virg-nexus-shared -lm -llapack)
 set_target_properties(virg-nexus-shared PROPERTIES OUTPUT_NAME virg-nexus)
 set_target_properties(virg-nexus-shared PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
+
+# -------------------------------- Dependencies ----------------------------------
+set(EXEC_LIBRARIES -lm)
 
 # --------------------------- configuration ----------------------------
 set(CMAKE_INSTALL_PREFIX "$ENV{DEVEL_DIR}")
@@ -230,6 +249,7 @@ include_directories(${JPEG_INCLUDE_DIR})
 link_directories(${PNG_LIBRARY_DIR})
 link_directories(${JPEG_LIBRARY_DIR})
 
+list(APPEND EXEC_LIBRARIES ${PNG_LIBRARIES} ${JPEG_LIBRARIES})
 # --------------------------------- cblas/lapack ----------------------------------
 option(VIRG_NEXUS_USE_TUNED_LAPACK "Use ATLAS generated cblas/lapack version" OFF)
 
@@ -246,14 +266,25 @@ endif (VIRG_NEXUS_USE_TUNED_LAPACK)
 include_directories(${LAPACK_INCLUDE_DIR})
 link_directories(${LAPACK_LIBRARY_DIRS})
 
+list(APPEND EXEC_LIBRARIES ${LAPACK_LIBRARIES})
 # ------------------------------------ Cairo -------------------------------------
 include(FindPkgConfig)
 
 pkg_check_modules(CAIRO REQUIRED cairo)
 include_directories(${CAIRO_INCLUDE_DIRS})
 link_directories(${CAIRO_LIBRARY_DIRS})
+
+list(APPEND EXEC_LIBRARIES ${CAIRO_LDFLAGS})
+# ----------------------------------- OpenGL -------------------------------------
+if(VIRG_NEXUS_OPENGL_C_HELPERS)
+  find_package(OpenGL REQUIRED)
+
+  include_directories(${OpenGL_INCLUDE_DIR})
+  link_directories(${OpenGL_LIBRARY_DIR})
+
+  list(APPEND EXEC_LIBRARIES ${OpenGL_LIBRARIES})
+endif(VIRG_NEXUS_OPENGL_C_HELPERS)
 # -------------------------------- Dependencies ----------------------------------
-set(EXEC_LIBRARIES ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LAPACK_LIBRARIES} ${CAIRO_LDFLAGS} -lm)
 foreach(LIB ${EXEC_LIBRARIES})
   set(MODULE_LIBS "${MODULE_LIBS} ${LIB}")
 endforeach()
