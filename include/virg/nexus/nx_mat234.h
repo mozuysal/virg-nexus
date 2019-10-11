@@ -40,6 +40,9 @@ static inline float  nx_smat3_inv(float *M3i, const float *M3);
 static inline double nx_sdmat3_inv(float *M3i, const float *M3);
 static inline void   nx_smat3_mul(float *C, const float *A, const float *B);
 
+static inline void   nx_smat4_mul  (float *C, const float *A, const float *B);
+static inline void   nx_smat4_print(const float *A, const char *label);
+
 static inline double nx_dmat3_inv(double *M3i, const double *M3);
 static inline void   nx_dmat3_mul(double *C, const double *A, const double *B);
 static inline void   nx_dmat3_mul_ua(double *C, const double *U, const double *A);
@@ -118,6 +121,40 @@ static inline void nx_smat3_mul(float *C, const float *A, const float *B)
         C[6] = A[0]*B[6]+A[3]*B[7]+A[6]*B[8];
         C[7] = A[1]*B[6]+A[4]*B[7]+A[7]*B[8];
         C[8] = A[2]*B[6]+A[5]*B[7]+A[8]*B[8];
+}
+
+static inline void nx_smat4_mul(float *C, const float *A, const float *B)
+{
+        C[0] = A[0]*B[0] + A[4]*B[1] + A[8]*B[2]  + A[12]*B[3];
+        C[1] = A[1]*B[0] + A[5]*B[1] + A[9]*B[2]  + A[13]*B[3];
+        C[2] = A[2]*B[0] + A[6]*B[1] + A[10]*B[2] + A[14]*B[3];
+        C[3] = A[3]*B[0] + A[7]*B[1] + A[11]*B[2] + A[15]*B[3];
+
+        C[4] = A[0]*B[4] + A[4]*B[5] + A[8]*B[6]  + A[12]*B[7];
+        C[5] = A[1]*B[4] + A[5]*B[5] + A[9]*B[6]  + A[13]*B[7];
+        C[6] = A[2]*B[4] + A[6]*B[5] + A[10]*B[6] + A[14]*B[7];
+        C[7] = A[3]*B[4] + A[7]*B[5] + A[11]*B[6] + A[15]*B[7];
+
+        C[8]  = A[0]*B[8] + A[4]*B[9] + A[8]*B[10]  + A[12]*B[11];
+        C[9]  = A[1]*B[8] + A[5]*B[9] + A[9]*B[10]  + A[13]*B[11];
+        C[10] = A[2]*B[8] + A[6]*B[9] + A[10]*B[10] + A[14]*B[11];
+        C[11] = A[3]*B[8] + A[7]*B[9] + A[11]*B[10] + A[15]*B[11];
+
+        C[12] = A[0]*B[12] + A[4]*B[13] + A[8]*B[14]  + A[12]*B[15];
+        C[13] = A[1]*B[12] + A[5]*B[13] + A[9]*B[14]  + A[13]*B[15];
+        C[14] = A[2]*B[12] + A[6]*B[13] + A[10]*B[14] + A[14]*B[15];
+        C[15] = A[3]*B[12] + A[7]*B[13] + A[11]*B[14] + A[15]*B[15];
+}
+
+static inline void nx_smat4_print(const float *A, const char *label)
+{
+        if (label)
+                printf("%s\n---------\n", label);
+
+        printf("[ %10.4f%10.4f%10.4f%10.4f ]\n", A[0], A[4], A[8],  A[12]);
+        printf("[ %10.4f%10.4f%10.4f%10.4f ]\n", A[1], A[5], A[9],  A[13]);
+        printf("[ %10.4f%10.4f%10.4f%10.4f ]\n", A[2], A[6], A[10], A[14]);
+        printf("[ %10.4f%10.4f%10.4f%10.4f ]\n", A[3], A[7], A[11], A[15]);
 }
 
 static inline double nx_dmat3_inv(double *M3i, const double *M3)

@@ -150,7 +150,6 @@ set(virg_nexus_CXX_HEADERS
 set(virg_nexus_HEADERS ${virg_nexus_C_HEADERS})
 set(virg_nexus_SOURCES ${virg_nexus_C_SOURCES})
 
-
 option(VIRG_NEXUS_CXX_API "Compile and install C++ API"  ON)
 if (VIRG_NEXUS_CXX_API)
    list(APPEND virg_nexus_HEADERS ${virg_nexus_CXX_HEADERS})
