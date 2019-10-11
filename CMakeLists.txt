@@ -1,6 +1,9 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.1)
 
 project(virg-nexus C CXX)
+
+set(CMAKE_C_STANDARD 99)
+set(CMAKE_CXX_STANDARD 11)
 
 set(VERSION 0.1)
 
@@ -150,11 +153,15 @@ set(virg_nexus_CXX_HEADERS
 set(virg_nexus_OPENGL_C_HEADERS
   include/virg/nexus/nx_gl.h
   include/virg/nexus/nx_gl_shader.h
+  include/virg/nexus/nx_gl_program.h
+  include/virg/nexus/nx_gl_buffer.h
 )
 
 set(virg_nexus_OPENGL_C_SOURCES
   src/nx_gl.c
   src/nx_gl_shader.c
+  src/nx_gl_program.c
+  src/nx_gl_buffer.c
 )
 
 set(virg_nexus_HEADERS ${virg_nexus_C_HEADERS})
@@ -200,13 +207,12 @@ set(VIRG_NEXUS_FLAGS_DEBUG          "-Wall -g -rdynamic -DJSMN_PARENT_LINKS=1 ${
 set(VIRG_NEXUS_FLAGS_RELEASE        "-Wall -O2 -DNDEBUG -DJSMN_PARENT_LINKS=1 ${VIRG_NEXUS_FLAGS_PLATFORM} ${VIRG_NEXUS_FLAGS_SIMD}")
 set(VIRG_NEXUS_FLAGS_RELWITHDEBINFO "-Wall -O2 -DNDEBUG -g -rdynamic -DJSMN_PARENT_LINKS=1 ${VIRG_NEXUS_FLAGS_PLATFORM} ${VIRG_NEXUS_FLAGS_SIMD}")
 
-set(CMAKE_C_FLAGS_DEBUG          "${VIRG_NEXUS_FLAGS_DEBUG} -std=gnu99")
-set(CMAKE_C_FLAGS_RELEASE        "${VIRG_NEXUS_FLAGS_RELEASE} -std=gnu99")
-set(CMAKE_C_FLAGS_RELWITHDEBINFO "${VIRG_NEXUS_FLAGS_RELWITHDEBINFO} -std=gnu99")
-
-set(CMAKE_CXX_FLAGS_DEBUG          "${VIRG_NEXUS_FLAGS_DEBUG} -std=c++11")
-set(CMAKE_CXX_FLAGS_RELEASE        "${VIRG_NEXUS_FLAGS_RELEASE} -std=c++11")
-set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${VIRG_NEXUS_FLAGS_RELWITHDEBINFO} -std=c++11")
+set(CMAKE_C_FLAGS_DEBUG          "${VIRG_NEXUS_FLAGS_DEBUG}")
+set(CMAKE_C_FLAGS_RELEASE        "${VIRG_NEXUS_FLAGS_RELEASE}")
+set(CMAKE_C_FLAGS_RELWITHDEBINFO "${VIRG_NEXUS_FLAGS_RELWITHDEBINFO}")
+set(CMAKE_CXX_FLAGS_DEBUG          "${VIRG_NEXUS_FLAGS_DEBUG}")
+set(CMAKE_CXX_FLAGS_RELEASE        "${VIRG_NEXUS_FLAGS_RELEASE}")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${VIRG_NEXUS_FLAGS_RELWITHDEBINFO}")
 
 set(CMAKE_BUILD_TYPE Debug)
 # set(CMAKE_BUILD_TYPE Release)
