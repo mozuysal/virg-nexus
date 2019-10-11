@@ -32,7 +32,7 @@
 #include "virg/nexus/nx_log.h"
 #include "virg/nexus/nx_homography.h"
 #include "virg/nexus/nx_epipolar.h"
-#include "virg/nexus/nx_triangulation.h"
+#include "virg/nexus/nx_pinhole.h"
 
 #include "virg/nexus/vg_options.hpp"
 #include "virg/nexus/vg_image.hpp"

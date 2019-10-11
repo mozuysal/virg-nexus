@@ -1,10 +1,8 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.0)
 
 project(virg-nexus C CXX)
 
 set(VERSION 0.1)
-
-option(VIRG_NEXUS_PC_LINUX "Enable Linux Compilation"  ON)
 
 set(virg_nexus_C_SOURCES
   src/nx_alloc.c
@@ -165,17 +163,11 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR} )
 include_directories(include)
 
 option(VIRG_NEXUS_USE_SIMD "Enable SIMD flags"  ON)
-
-# Platform Specific Flags
-# PC-Linux
-if (VIRG_NEXUS_PC_LINUX)
-  set(VIRG_NEXUS_FLAGS_PLATFORM "-DVIRG_NEXUS_PC -DVIRG_NEXUS_PC_LINUX")
-  # SSE
-  if (VIRG_NEXUS_USE_SIMD)
-    set(VIRG_NEXUS_USE_SSE 1)
-    set(VIRG_NEXUS_FLAGS_SIMD "-DVIRG_NEXUS_USE_SIMD -msse -msse2 -mfpmath=sse -DVIRG_NEXUS_USE_SSE -DHAVE_SSE2")
-  endif (VIRG_NEXUS_USE_SIMD)
-endif(VIRG_NEXUS_PC_LINUX)
+# SSE
+if (VIRG_NEXUS_USE_SIMD)
+  set(VIRG_NEXUS_USE_SSE 1)
+  set(VIRG_NEXUS_FLAGS_SIMD "-DVIRG_NEXUS_USE_SIMD -msse -msse2 -mfpmath=sse -DVIRG_NEXUS_USE_SSE -DHAVE_SSE2")
+endif (VIRG_NEXUS_USE_SIMD)
 
 set(VIRG_NEXUS_FLAGS_DEBUG          "-Wall -g -rdynamic -DJSMN_PARENT_LINKS=1 ${VIRG_NEXUS_FLAGS_PLATFORM} ${VIRG_NEXUS_FLAGS_SIMD}")
 set(VIRG_NEXUS_FLAGS_RELEASE        "-Wall -O2 -DNDEBUG -DJSMN_PARENT_LINKS=1 ${VIRG_NEXUS_FLAGS_PLATFORM} ${VIRG_NEXUS_FLAGS_SIMD}")
