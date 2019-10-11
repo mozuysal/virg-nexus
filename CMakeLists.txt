@@ -279,10 +279,9 @@ list(APPEND EXEC_LIBRARIES ${CAIRO_LDFLAGS})
 if(VIRG_NEXUS_OPENGL_C_HELPERS)
   find_package(OpenGL REQUIRED)
 
-  include_directories(${OpenGL_INCLUDE_DIR})
-  link_directories(${OpenGL_LIBRARY_DIR})
+  include_directories(${OPENGL_INCLUDE_DIR})
 
-  list(APPEND EXEC_LIBRARIES ${OpenGL_LIBRARIES})
+  list(APPEND EXEC_LIBRARIES ${OPENGL_gl_LIBRARY})
 endif(VIRG_NEXUS_OPENGL_C_HELPERS)
 # -------------------------------- Dependencies ----------------------------------
 foreach(LIB ${EXEC_LIBRARIES})
