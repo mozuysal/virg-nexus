@@ -27,15 +27,48 @@
 
 #include <string.h>
 
+#include "virg/nexus/nx_assert.h"
+#include "virg/nexus/nx_mat234.h"
+
 void nx_gl_projection_sym_perspective_from_camera(double *P,
                                                   double fx, double fy,
                                                   double near, double far,
                                                   double vp_w, double vp_h)
 {
-       memset(P, 0, 16*sizeof(P[0]));
-       P[0]  = 2.0 * fx / vp_w;
-       P[5]  = 2.0 * fy / vp_h;
-       P[10] = -(far + near) / (far - near);
-       P[11] = -1.0f;
-       P[14] = -2.0 * near * far / (far - near);
+        NX_ASSERT_PTR(P);
+
+        memset(P, 0, 16*sizeof(P[0]));
+        P[0]  = 2.0 * fx / vp_w;
+        P[5]  = 2.0 * fy / vp_h;
+        P[10] = -(far + near) / (far - near);
+        P[11] = -1.0f;
+        P[14] = -2.0 * near * far / (far - near);
+}
+
+void nx_gl_projection_to_mvp(GLfloat *mvp, const double *M,
+                             const double *V, const double *P)
+{
+        NX_ASSERT_PTR(mvp);
+        NX_ASSERT_PTR(P);
+
+        double T1[16];
+        const double *PV = NULL;
+        if (V) {
+                nx_dmat4_mul(&T1[0], P, V);
+                PV = &T1[0];
+        } else {
+                PV = P;
+        }
+
+        double T2[16];
+        const double *PVM = NULL;
+        if (M) {
+                nx_dmat4_mul(&T2[0], PV, M);
+                PVM = &T2[0];
+        } else {
+                PVM = PV;
+        }
+
+        for (int i = 0; i < 16; ++i)
+                mvp[i] = PVM[i];
 }

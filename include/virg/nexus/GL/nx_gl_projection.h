@@ -27,6 +27,7 @@
 #define VIRG_NEXUS_NX_GL_PROJECTION_H
 
 #include "virg/nexus/nx_config.h"
+#include "virg/nexus/GL/nx_gl.h"
 
 __NX_BEGIN_DECL
 
@@ -34,6 +35,9 @@ void nx_gl_projection_sym_perspective_from_camera(double *P,
                                                   double fx, double fy,
                                                   double near, double far,
                                                   double vp_w, double vp_h);
+
+void nx_gl_projection_to_mvp(GLfloat *mvp, const double *M,
+                             const double *V, const double *P);
 
 __NX_END_DECL
 

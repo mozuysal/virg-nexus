@@ -58,6 +58,7 @@ static inline void nx_dmat34_print(const double *A, const char *label);
 
 static inline void   nx_dmat4_mul  (double *C, const double *A, const double *B);
 static inline void   nx_dmat4_print(const double *A, const char *label);
+static inline void   nx_dmat4_to_s(float *As, const double *A);
 
 /*
  * -----------------------------------------------------------------------------
@@ -319,6 +320,12 @@ static inline void nx_dmat4_print(const double *A, const char *label)
         printf("[ %10.4f%10.4f%10.4f%10.4f ]\n", A[1], A[5], A[9],  A[13]);
         printf("[ %10.4f%10.4f%10.4f%10.4f ]\n", A[2], A[6], A[10], A[14]);
         printf("[ %10.4f%10.4f%10.4f%10.4f ]\n", A[3], A[7], A[11], A[15]);
+}
+
+static inline void nx_dmat4_to_s(float *As, const double *A)
+{
+        for (int i = 0; i < 16; ++i)
+                As[i] = A[i];
 }
 
 
