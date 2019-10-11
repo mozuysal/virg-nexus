@@ -147,14 +147,23 @@ set(virg_nexus_CXX_HEADERS
   include/virg/nexus/vg_image_annotator.hpp
 )
 
-add_library(virg-nexus STATIC ${virg_nexus_C_SOURCES} ${virg_nexus_CXX_SOURCES})
+set(virg_nexus_HEADERS ${virg_nexus_C_HEADERS})
+set(virg_nexus_SOURCES ${virg_nexus_C_SOURCES})
+
+
+option(VIRG_NEXUS_CXX_API "Compile and install C++ API"  ON)
+if (VIRG_NEXUS_CXX_API)
+   list(APPEND virg_nexus_HEADERS ${virg_nexus_CXX_HEADERS})
+   list(APPEND virg_nexus_SOURCES ${virg_nexus_CXX_SOURCES})
+endif (VIRG_NEXUS_CXX_API)
+
+add_library(virg-nexus STATIC ${virg_nexus_SOURCES})
 set_target_properties(virg-nexus PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 
-add_library(virg-nexus-shared SHARED ${virg_nexus_C_SOURCES} ${virg_nexus_CXX_SOURCES})
+add_library(virg-nexus-shared SHARED ${virg_nexus_SOURCES})
 target_link_libraries(virg-nexus-shared -lm -llapack)
 set_target_properties(virg-nexus-shared PROPERTIES OUTPUT_NAME virg-nexus)
 set_target_properties(virg-nexus-shared PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
-
 
 # --------------------------- configuration ----------------------------
 set(CMAKE_INSTALL_PREFIX "$ENV{DEVEL_DIR}")
@@ -188,7 +197,7 @@ set(CMAKE_BUILD_TYPE Debug)
 # -------------------------- install target ----------------------------
 install(TARGETS virg-nexus ARCHIVE DESTINATION lib)
 install(TARGETS virg-nexus-shared LIBRARY DESTINATION lib)
-foreach(virg_nexus_header ${virg_nexus_C_HEADERS} ${virg_nexus_CXX_HEADERS})
+foreach(virg_nexus_header ${virg_nexus_HEADERS})
   get_filename_component(install_RELPATH ${virg_nexus_header} PATH)
   install(FILES ${virg_nexus_header} DESTINATION ${install_RELPATH})
 endforeach(virg_nexus_header)
@@ -289,6 +298,12 @@ set(test_SOURCES
   tests/tests_gc.cc
 )
 
+if(VIRG_NEXUS_CXX_API)
+  list(APPEND test_SOURCES
+    tests/tests_options_cxx.cc)
+endif(VIRG_NEXUS_CXX_API)
+
+
 set(VIRG_NEXUS_TEST_DATA_PATH "${CMAKE_SOURCE_DIR}/tests/data")
 configure_file(${CMAKE_SOURCE_DIR}/tests/test_data.hh.in ${CMAKE_SOURCE_DIR}/tests/test_data.hh @ONLY)
 include_directories(${CMAKE_SOURCE_DIR}/tests)
@@ -318,14 +333,17 @@ include_directories(${TOOL_INCLUDE_DIR})
 
 set(NEXUS_TOOLS
   nx-harris-detector
-  vg-stereo-matcher
 )
 
 add_executable(nx-harris-detector tools/nx_harris_detector_main.c)
 install(FILES ${TOOL_MAN_DIR}/nx-harris-detector.1 DESTINATION ${TOOL_MAN_INSTALL_DIR}/man1)
 
-add_executable(vg-stereo-matcher tools/vg_stereo_matcher_main.cc)
-install(FILES ${TOOL_MAN_DIR}/vg-stereo-matcher.1 DESTINATION ${TOOL_MAN_INSTALL_DIR}/man1)
+if(VIRG_NEXUS_CXX_API)
+  list(APPEND NEXUS_TOOLS vg-stereo-matcher)
+  
+  add_executable(vg-stereo-matcher tools/vg_stereo_matcher_main.cc)
+  install(FILES ${TOOL_MAN_DIR}/vg-stereo-matcher.1 DESTINATION ${TOOL_MAN_INSTALL_DIR}/man1)
+endif(VIRG_NEXUS_CXX_API)
 
 foreach(NEXUS_TOOL ${NEXUS_TOOLS})
   target_link_libraries(${NEXUS_TOOL} virg-nexus ${EXEC_LIBRARIES})
