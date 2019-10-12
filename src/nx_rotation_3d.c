@@ -78,7 +78,7 @@ void nx_rotation_3d_RxRyRz(double *R, double alpha, double beta, double gamma)
         R[8] =  cb*ca;
 }
 
-void nx_rotation_3d_angle_axis(double *R, double theta, const double *axis)
+void nx_rotation_3d_axis_angle(double *R, const double *axis, double theta)
 {
         NX_ASSERT_PTR(R);
 

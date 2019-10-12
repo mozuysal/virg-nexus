@@ -322,6 +322,7 @@ set(test_SOURCES
   tests/tests_filter.cc
   tests/tests_svd.cc
   tests/tests_rotation.cc
+  tests/tests_quaternion.cc
   tests/tests_homography.cc
   tests/tests_epipolar.cc
   tests/tests_pinhole.cc

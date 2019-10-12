@@ -41,7 +41,7 @@ static inline void nx_rotation_3d_invert(double *R)
 void nx_rotation_3d_RzRyRx(double *R, double alpha, double beta, double gamma);
 void nx_rotation_3d_RxRyRz(double *R, double alpha, double beta, double gamma);
 
-void nx_rotation_3d_angle_axis(double *R, double theta, const double *axis);
+void nx_rotation_3d_axis_angle(double *R, const double *axis, double theta);
 
 __NX_END_DECL
 

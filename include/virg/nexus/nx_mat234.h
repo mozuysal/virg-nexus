@@ -33,6 +33,7 @@
 #include "virg/nexus/nx_config.h"
 #include "virg/nexus/nx_log.h"
 #include "virg/nexus/nx_svd.h"
+#include "virg/nexus/nx_vec234.h"
 
 __NX_BEGIN_DECL
 
@@ -53,6 +54,7 @@ static inline void   nx_dmat3_print(const double *A, const char *label);
 static inline void   nx_dmat3_svd(const double *A, double *U, double *S, double *Vt);
 static inline double nx_dmat3_frob_norm(const double *A);
 static inline void   nx_dmat3_sub      (double *A, const double *B);
+static inline void   nx_dmat3_transform(const double *A, double *v);
 
 static inline void nx_dmat34_print(const double *A, const char *label);
 
@@ -280,6 +282,15 @@ static inline void nx_dmat3_sub(double *A, const double *B)
                 A[i] -= B[i];
 }
 
+static inline void nx_dmat3_transform(const double *A, double *v)
+{
+        double t[3];
+        t[0] = A[0]*v[0] + A[3]*v[1] + A[6]*v[2];
+        t[1] = A[1]*v[0] + A[4]*v[1] + A[7]*v[2];
+        t[2] = A[2]*v[0] + A[5]*v[1] + A[8]*v[2];
+
+        nx_dvec3_copy(v, &t[0]);
+}
 
 static inline void nx_dmat34_print(const double *A, const char *label)
 {

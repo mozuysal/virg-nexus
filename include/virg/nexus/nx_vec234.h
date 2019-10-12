@@ -27,6 +27,7 @@
 #define VIRG_NEXUS_NX_VEC234_H
 
 #include <stdio.h>
+#include <string.h>
 
 #include "virg/nexus/nx_config.h"
 
@@ -37,6 +38,7 @@ static inline float nx_svec3_dist_sq(const float *v0, const float *v1);
 
 static inline float nx_svec4h_to_euclidean(float *v);
 
+static inline void   nx_dvec3_copy  (double *v0, const double *v1);
 static inline void   nx_dvec3_cross (double *c, const double *a, const double *b);
 static inline double nx_dvec3_dot    (const double *v0, const double *v1);
 static inline double nx_dvec3_norm_sq(const double *v);
@@ -73,6 +75,11 @@ static inline float nx_svec4h_to_euclidean(float *v)
         v[3] = 1.0f;
 
         return w;
+}
+
+static inline void nx_dvec3_copy(double *v0, const double *v1)
+{
+        memcpy(v0, v1, 3*sizeof(*v0));
 }
 
 static inline void nx_dvec3_cross(double *c, const double *a, const double *b)
