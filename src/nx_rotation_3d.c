@@ -27,8 +27,13 @@
 
 #include <math.h>
 
+#include "virg/nexus/nx_assert.h"
+#include "virg/nexus/nx_vec234.h"
+
 void nx_rotation_3d_RzRyRx(double *R, double alpha, double beta, double gamma)
 {
+        NX_ASSERT_PTR(R);
+
         const double ca = cos(alpha);
         const double sa = sin(alpha);
         const double cb = cos(beta);
@@ -51,6 +56,8 @@ void nx_rotation_3d_RzRyRx(double *R, double alpha, double beta, double gamma)
 
 void nx_rotation_3d_RxRyRz(double *R, double alpha, double beta, double gamma)
 {
+        NX_ASSERT_PTR(R);
+
         const double ca = cos(alpha);
         const double sa = sin(alpha);
         const double cb = cos(beta);
@@ -71,3 +78,22 @@ void nx_rotation_3d_RxRyRz(double *R, double alpha, double beta, double gamma)
         R[8] =  cb*ca;
 }
 
+void nx_rotation_3d_angle_axis(double *R, double theta, const double *axis)
+{
+        NX_ASSERT_PTR(R);
+
+        double v[3] = { axis[0], axis[1], axis[2] };
+        nx_dvec3_to_unit(&v[0]);
+
+        double c = cos(theta);
+        double s = sin(theta);
+        R[0] = c + v[0]*v[0]*(1 - c);
+        R[1] = v[1]*v[0]*(1 - c) + v[2]*s;
+        R[2] = v[2]*v[0]*(1 - c) - v[1]*s;
+        R[3] = v[1]*v[0]*(1 - c) - v[2]*s;;
+        R[4] = c + v[1]*v[1]*(1 - c);
+        R[5] = v[2]*v[1]*(1 - c) + v[0]*s;;
+        R[6] = v[0]*v[2]*(1 - c) + v[1]*s;;
+        R[7] = v[1]*v[2]*(1 - c) - v[0]*s;;
+        R[8] = c + v[2]*v[2]*(1 - c);
+}

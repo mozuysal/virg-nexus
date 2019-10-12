@@ -26,6 +26,8 @@
 #ifndef VIRG_NEXUS_NX_VEC234_H
 #define VIRG_NEXUS_NX_VEC234_H
 
+#include <stdio.h>
+
 #include "virg/nexus/nx_config.h"
 
 __NX_BEGIN_DECL
