@@ -57,8 +57,11 @@ static inline void   nx_dmat3_sub      (double *A, const double *B);
 static inline void nx_dmat34_print(const double *A, const char *label);
 
 static inline void   nx_dmat4_mul  (double *C, const double *A, const double *B);
+static inline void   nx_dmat4_eye  (double *A);
 static inline void   nx_dmat4_print(const double *A, const char *label);
-static inline void   nx_dmat4_to_s(float *As, const double *A);
+static inline void   nx_dmat4_to_s (float *As, const double *A);
+static inline void   nx_dmat4_set_rotation   (double *M, const double *R);
+static inline void   nx_dmat4_set_translation(double *M, const double *t);
 
 /*
  * -----------------------------------------------------------------------------
@@ -311,6 +314,15 @@ static inline void nx_dmat4_mul(double *C, const double *A, const double *B)
         C[15] = A[3]*B[12] + A[7]*B[13] + A[11]*B[14] + A[15]*B[15];
 }
 
+static inline void nx_dmat4_eye(double *A)
+{
+        memset(A, 0, 16*sizeof(*A));
+        A[0]  = 1.0;
+        A[5]  = 1.0;
+        A[10] = 1.0;
+        A[15] = 1.0;
+}
+
 static inline void nx_dmat4_print(const double *A, const char *label)
 {
         if (label)
@@ -328,6 +340,19 @@ static inline void nx_dmat4_to_s(float *As, const double *A)
                 As[i] = A[i];
 }
 
+static inline void nx_dmat4_set_rotation(double *M, const double *R)
+{
+        M[0] = R[0]; M[4] = R[3]; M[8]  = R[6];
+        M[1] = R[1]; M[5] = R[4]; M[9]  = R[7];
+        M[2] = R[2]; M[6] = R[5]; M[10] = R[8];
+}
+
+static inline void nx_dmat4_set_translation(double *M, const double *t)
+{
+         M[12] = t[0];
+         M[13] = t[1];
+         M[14] = t[2];
+}
 
 __NX_END_DECL
 
