@@ -27,6 +27,9 @@
 
 void nx_quaternion_from_R(double *q, const double *R)
 {
+        NX_ASSERT_PTR(q);
+        NX_ASSERT_PTR(R);
+
         double d_sum = R[0] + R[4] + R[8];
 
         if (d_sum > 0) {
@@ -66,6 +69,9 @@ void nx_quaternion_from_R(double *q, const double *R)
 
 void nx_quaternion_to_R(const double *q, double *R)
 {
+        NX_ASSERT_PTR(q);
+        NX_ASSERT_PTR(R);
+
         const double q1_2 = q[1] * q[1];
         const double q2_2 = q[2] * q[2];
         const double q3_2 = q[3] * q[3];
@@ -90,6 +96,9 @@ void nx_quaternion_to_R(const double *q, double *R)
 
 void nx_quaternion_rotate(const double *q, double *v)
 {
+        NX_ASSERT_PTR(q);
+        NX_ASSERT_PTR(v);
+
         const double q0_2 = q[0]*q[0];
         const double q1_2 = q[1]*q[1];
         const double q2_2 = q[2]*q[2];

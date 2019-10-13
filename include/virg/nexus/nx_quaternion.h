@@ -29,6 +29,7 @@
 #include <math.h>
 
 #include "virg/nexus/nx_config.h"
+#include "virg/nexus/nx_assert.h"
 #include "virg/nexus/nx_vec234.h"
 
 __NX_BEGIN_DECL
@@ -36,7 +37,8 @@ __NX_BEGIN_DECL
 static inline void   nx_quaternion_scale(double *q, const double s);
 static inline void   nx_quaternion_add  (double *q, const double *r);
 static inline void   nx_quaternion_sum  (double *q, const double *r, const double *s);
-static inline void   nx_quaternion_mul  (double *q, const double *r, const double *s);
+static inline void   nx_quaternion_mul  (double *q, const double *r);
+static inline void   nx_quaternion_prod (double *q, const double *r, const double *s);
 static inline void   nx_quaternion_conj (double *q);
 static inline double nx_quaternion_dot  (const double *q, const double *r);
 static inline double nx_quaternion_to_unit(double *q);
@@ -49,10 +51,11 @@ static inline void nx_quaternion_to_Rt(const double *q, double *R, double *t);
 static inline void nx_quaternion_from_axis_angle(double *q, const double *axis,
                                                  double angle);
 
-
 /* --------------------------------- Definitions ---------------------------------- */
 static inline void nx_quaternion_scale(double *q, const double s)
 {
+        NX_ASSERT_PTR(q);
+
         q[0] *= s;
         q[1] *= s;
         q[2] *= s;
@@ -61,6 +64,9 @@ static inline void nx_quaternion_scale(double *q, const double s)
 
 static inline void nx_quaternion_add(double *q, const double *r)
 {
+        NX_ASSERT_PTR(q);
+        NX_ASSERT_PTR(r);
+
         q[0] += r[0];
         q[1] += r[1];
         q[2] += r[2];
@@ -69,14 +75,38 @@ static inline void nx_quaternion_add(double *q, const double *r)
 
 static inline void nx_quaternion_sum(double *q, const double *r, const double *s)
 {
+        NX_ASSERT_PTR(q);
+        NX_ASSERT_PTR(r);
+        NX_ASSERT_PTR(s);
+
         q[0] = r[0] + s[0];
         q[1] = r[1] + s[1];
         q[2] = r[2] + s[2];
         q[3] = r[3] + s[3];
 }
 
-static inline void nx_quaternion_mul(double *q, const double *r, const double *s)
+static inline void nx_quaternion_mul(double *q, const double *r)
 {
+        NX_ASSERT_PTR(q);
+        NX_ASSERT_PTR(r);
+
+        double q0 = q[0]*r[0] - q[1]*r[1] - q[2]*r[2] - q[3]*r[3];
+        double q1 = q[0]*r[1] + q[1]*r[0] + q[2]*r[3] - q[3]*r[2];
+        double q2 = q[0]*r[2] - q[1]*r[3] + q[2]*r[0] + q[3]*r[1];
+        double q3 = q[0]*r[3] + q[1]*r[2] - q[2]*r[1] + q[3]*r[0];
+
+        q[0] = q0;
+        q[1] = q1;
+        q[2] = q2;
+        q[3] = q3;
+}
+
+static inline void nx_quaternion_prod(double *q, const double *r, const double *s)
+{
+        NX_ASSERT_PTR(q);
+        NX_ASSERT_PTR(r);
+        NX_ASSERT_PTR(s);
+
         q[0] = r[0]*s[0] - r[1]*s[1] - r[2]*s[2] - r[3]*s[3];
         q[1] = r[0]*s[1] + r[1]*s[0] + r[2]*s[3] - r[3]*s[2];
         q[2] = r[0]*s[2] - r[1]*s[3] + r[2]*s[0] + r[3]*s[1];
@@ -85,6 +115,8 @@ static inline void nx_quaternion_mul(double *q, const double *r, const double *s
 
 static inline void nx_quaternion_conj(double *q)
 {
+        NX_ASSERT_PTR(q);
+
         q[1] = -q[1];
         q[2] = -q[2];
         q[3] = -q[3];
@@ -92,11 +124,16 @@ static inline void nx_quaternion_conj(double *q)
 
 static inline double nx_quaternion_dot(const double *q, const double *r)
 {
+        NX_ASSERT_PTR(q);
+        NX_ASSERT_PTR(r);
+
         return r[0]*q[0]+r[1]*q[1]+r[2]*q[2]+r[3]*q[3];
 }
 
 static inline double nx_quaternion_to_unit(double *q)
 {
+        NX_ASSERT_PTR(q);
+
         double nrm = sqrt(nx_quaternion_dot(q, q));
         nx_quaternion_scale(q, 1.0 / nrm);
         return nrm;
@@ -104,6 +141,10 @@ static inline double nx_quaternion_to_unit(double *q)
 
 static inline void nx_quaternion_to_Rt(const double *q, double *R, double *t)
 {
+        NX_ASSERT_PTR(q);
+        NX_ASSERT_PTR(R);
+        NX_ASSERT_PTR(t);
+
         nx_quaternion_to_R(q, R);
         t[0] = q[4];
         t[1] = q[5];
@@ -114,16 +155,27 @@ static inline void nx_quaternion_from_axis_angle(double *q,
                                                  const double *axis,
                                                  double angle)
 {
-        double ca2 = cos(angle*0.5);
-        double sa2 = sin(angle*0.5);
+        NX_ASSERT_PTR(q);
 
-        double n[3] = { axis[0], axis[1], axis[2] };
-        nx_dvec3_to_unit(&n[0]);
+        if (angle == 0.0) {
+                q[0] = 1.0;
+                q[1] = 0.0;
+                q[2] = 0.0;
+                q[3] = 0.0;
+        } else {
+                NX_ASSERT_PTR(axis);
 
-        q[0] = ca2;
-        q[1] = n[0] * sa2;
-        q[2] = n[1] * sa2;
-        q[3] = n[2] * sa2;
+                double ca2 = cos(angle*0.5);
+                double sa2 = sin(angle*0.5);
+
+                double n[3] = { axis[0], axis[1], axis[2] };
+                nx_dvec3_to_unit(&n[0]);
+
+                q[0] = ca2;
+                q[1] = n[0] * sa2;
+                q[2] = n[1] * sa2;
+                q[3] = n[2] * sa2;
+        }
 }
 
 __NX_END_DECL
