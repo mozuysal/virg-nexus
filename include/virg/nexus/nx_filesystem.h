@@ -35,6 +35,7 @@ __NX_BEGIN_DECL
 struct NXStringArray *nx_scan_dir(const char *path);
 
 NXBool nx_check_dir(const char *path);
+void   nx_ensure_dir(const char *path);
 
 __NX_END_DECL
 

@@ -28,6 +28,7 @@
 #include <stdlib.h>
 
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <dirent.h>
 
 #include "virg/nexus/nx_io.h"
@@ -67,3 +68,14 @@ NXBool nx_check_dir(const char *path)
         return NX_TRUE;
 }
 
+void nx_ensure_dir(const char *path)
+{
+        NX_ASSERT_PTR(path);
+
+        if (nx_check_dir(path))
+                return;
+
+        if (0 != mkdir(path, 0700)) {
+                NX_FATAL(NX_LOG_TAG, "Could not create directory %s", path);
+        }
+}
