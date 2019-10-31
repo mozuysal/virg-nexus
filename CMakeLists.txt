@@ -50,6 +50,7 @@ set(virg_nexus_C_SOURCES
   src/fast/fast_nonmax.c
   src/nx_fast_detector.c
   src/nx_harris_detector.c
+  src/nx_sift_detector.c
   src/nx_checkerboard_detector.c
   src/nx_keypoint_vector.c
   src/nx_brief_extractor.c
@@ -111,6 +112,7 @@ set(virg_nexus_C_HEADERS
   include/virg/nexus/nx_keypoint_vector.h
   include/virg/nexus/nx_fast_detector.h
   include/virg/nexus/nx_harris_detector.h
+  include/virg/nexus/nx_sift_detector.h
   include/virg/nexus/nx_checkerboard_detector.h
   include/virg/nexus/nx_brief_extractor.h
   include/virg/nexus/nx_point_match_2d.h
