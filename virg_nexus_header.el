@@ -22,7 +22,7 @@
                     " * GNU General Public License for more details.\n"
                     " *\n"
                     " * You should have received a copy of the GNU General Public License\n"
-                    " * along with Foobar.  If not, see <https://www.gnu.org/licenses/>.\n"
+                    " * along with VIRG-Nexus Library.  If not, see <https://www.gnu.org/licenses/>.\n"
                     " *\n"
                     " * @author " user-full-name "\n"))
           (when (boundp 'user-mail-address)
