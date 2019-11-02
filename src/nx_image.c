@@ -172,6 +172,7 @@ void nx_image_release(struct NXImage *img)
         img->width = 0;
         img->height = 0;
         img->type = NX_IMAGE_GRAYSCALE;
+        img->dtype = NX_IMAGE_UCHAR;
         img->n_channels = 1;
         img->data.v = NULL;
         img->row_stride = 0;
@@ -196,6 +197,7 @@ void nx_image_copy(struct NXImage *dest, const struct NXImage *src)
         dest->width = src->width;
         dest->height = src->height;
         dest->type = src->type;
+        dest->dtype = src->dtype;
         dest->n_channels = src->n_channels;
         dest->data.v = dest->mem->ptr;
         dest->row_stride = src->row_stride;
@@ -349,6 +351,7 @@ static inline void convert_image_rgba_to_gray(struct NXImage* dest,
 void nx_image_convert_type(struct NXImage* img, enum NXImageType type)
 {
         NX_ASSERT_PTR(img);
+        NX_IMAGE_ASSERT_GRAYSCALE(img);
 
         if (img->type == type || img->data.v == NULL)
                 return;
@@ -373,6 +376,60 @@ void nx_image_convert_type(struct NXImage* img, enum NXImageType type)
         }
 
         nx_image_free(cpy);
+}
+
+static void nx_image_convert_uc_to_f32(struct NXImage* dest, const struct NXImage *src)
+{
+        NX_ASSERT_PTR(src);
+        NX_ASSERT_PTR(dest);
+        NX_IMAGE_ASSERT_GRAYSCALE_UCHAR(src);
+
+        nx_image_resize(dest, src->width, src->height, NX_IMAGE_STRIDE_DEFAULT,
+                        src->type, NX_IMAGE_FLOAT32);
+
+        for (int y = 0; y < dest->height; ++y) {
+                const uchar *rsrc = src->data.uc + y * src->row_stride;
+                float *rdest = dest->data.f32 + y * dest->row_stride;
+                for (int x = 0; x < dest->width; ++x) {
+                        rdest[x] = rsrc[x];
+                }
+        }
+}
+
+static void nx_image_convert_f32_to_uc(struct NXImage* dest, const struct NXImage *src)
+{
+        NX_ASSERT_PTR(src);
+        NX_ASSERT_PTR(dest);
+        NX_IMAGE_ASSERT_GRAYSCALE_FLOAT32(src);
+
+        nx_image_resize(dest, src->width, src->height, NX_IMAGE_STRIDE_DEFAULT,
+                        src->type, NX_IMAGE_UCHAR);
+
+        for (int y = 0; y < dest->height; ++y) {
+                const float *rsrc = src->data.f32 + y * src->row_stride;
+                uchar *rdest = dest->data.uc + y * dest->row_stride;
+                for (int x = 0; x < dest->width; ++x) {
+                        rdest[x] = rsrc[x];
+                }
+        }
+}
+
+void nx_image_convert_dtype(struct NXImage* dest, const struct NXImage *src)
+{
+        NX_ASSERT_PTR(src);
+        NX_ASSERT_PTR(dest);
+
+        if (src->dtype == dest->dtype) {
+                nx_image_copy(dest, src);
+                return;
+        }
+
+        switch (src->dtype) {
+        case NX_IMAGE_UCHAR: nx_image_convert_uc_to_f32(dest, src); break;
+        case NX_IMAGE_FLOAT32: nx_image_convert_f32_to_uc(dest, src); break;
+        default:
+                NX_FATAL(NX_LOG_TAG, "Unhandled image data type in data type conversion");
+        }
 }
 
 void nx_image_apply_colormap(struct NXImage* color, struct NXImage* gray,
@@ -521,6 +578,43 @@ void nx_image_scale_uc(struct NXImage *dest, const struct NXImage *src, float sc
         }
 }
 
+void nx_image_subtract(struct NXImage *difference,
+                       const struct NXImage *img0,
+                       const struct NXImage *img1)
+{
+        NX_ASSERT_PTR(difference);
+        NX_ASSERT_PTR(img0);
+        NX_ASSERT_PTR(img1);
+
+        NX_IMAGE_ASSERT_GRAYSCALE(img0);
+        NX_IMAGE_ASSERT_EQUAL_TYPES_AND_DTYPES(img0, img1);
+
+        int w = nx_min_i(img0->width, img1->width);
+        int h = nx_min_i(img0->height, img1->height);
+        nx_image_resize(difference, w, h, NX_IMAGE_STRIDE_DEFAULT,
+                        NX_IMAGE_GRAYSCALE, NX_IMAGE_FLOAT32);
+        if (img0->dtype == NX_IMAGE_UCHAR) {
+                for (int y = 0; y < h; ++y) {
+                        float *drow = difference->data.f32 + y * difference->row_stride;
+                        const uchar *row0 = img0->data.uc + y * img0->row_stride;
+                        const uchar *row1 = img1->data.uc + y * img1->row_stride;
+                        for (int x = 0; x < w; ++x) {
+                                drow[x] = row0[x] - row1[x];
+                        }
+                }
+        } else {
+                for (int y = 0; y < h; ++y) {
+                        float *drow = difference->data.f32 + y * difference->row_stride;
+                        const float *row0 = img0->data.f32 + y * img0->row_stride;
+                        const float *row1 = img1->data.f32 + y * img1->row_stride;
+                        for (int x = 0; x < w; ++x) {
+                                drow[x] = row0[x] - row1[x];
+                        }
+                }
+        }
+}
+
+
 void nx_image_scale_f32(struct NXImage *dest, const struct NXImage *src, float scale_f)
 {
         NX_ASSERT_PTR(src);
@@ -578,7 +672,7 @@ void nx_image_scale(struct NXImage *dest, const struct NXImage *src, float scale
         }
 }
 
-#define DEFINE_DOWNSAMPLE_FUNC(F,T)                                     \
+#define NX_DEFINE_DOWNSAMPLE_FUNC(F,T)                                  \
         void nx_image_downsample_##F(struct NXImage *dest,              \
                                      const struct NXImage *src)         \
         {                                                               \
@@ -601,9 +695,9 @@ void nx_image_scale(struct NXImage *dest, const struct NXImage *src, float scale
                 }                                                       \
         }
 
-DEFINE_DOWNSAMPLE_FUNC(uc,uchar)
-DEFINE_DOWNSAMPLE_FUNC(f32,float)
-#undef DEFINE_DOWNSAMPLE_FUNC
+NX_DEFINE_DOWNSAMPLE_FUNC(uc,uchar)
+NX_DEFINE_DOWNSAMPLE_FUNC(f32,float)
+#undef NX_DEFINE_DOWNSAMPLE_FUNC
 void nx_image_downsample(struct NXImage *dest, const struct NXImage *src)
 {
         NX_ASSERT_PTR(src);
@@ -617,7 +711,7 @@ void nx_image_downsample(struct NXImage *dest, const struct NXImage *src)
         }
 }
 
-#define DEFINE_DOWNSAMPLE_AA_X_FUNC(F,T)                                \
+#define NX_DEFINE_DOWNSAMPLE_AA_X_FUNC(F,T)                             \
         void nx_image_downsample_aa_x_##F(struct NXImage *dest, const struct NXImage *src) \
         {                                                               \
                 NX_ASSERT_PTR(src);                                     \
@@ -655,9 +749,9 @@ void nx_image_downsample(struct NXImage *dest, const struct NXImage *src)
                 }                                                       \
         }
 
-DEFINE_DOWNSAMPLE_AA_X_FUNC(uc,uchar)
-DEFINE_DOWNSAMPLE_AA_X_FUNC(f32,float)
-#undef DEFINE_DOWNSAMPLE_AA_X_FUNC
+NX_DEFINE_DOWNSAMPLE_AA_X_FUNC(uc,uchar)
+NX_DEFINE_DOWNSAMPLE_AA_X_FUNC(f32,float)
+#undef NX_DEFINE_DOWNSAMPLE_AA_X_FUNC
 void nx_image_downsample_aa_x(struct NXImage *dest, const struct NXImage *src)
 {
         NX_ASSERT_PTR(src);
@@ -671,7 +765,7 @@ void nx_image_downsample_aa_x(struct NXImage *dest, const struct NXImage *src)
         }
 }
 
-#define DEFINE_DOWNSAMPLE_AA_Y_FUNC(F,T)                                \
+#define NX_DEFINE_DOWNSAMPLE_AA_Y_FUNC(F,T)                             \
         void nx_image_downsample_aa_y_##F(struct NXImage *dest, const struct NXImage *src) \
         {                                                               \
                 NX_ASSERT_PTR(src);                                     \
@@ -714,9 +808,9 @@ void nx_image_downsample_aa_x(struct NXImage *dest, const struct NXImage *src)
                 }                                                       \
         }
 
-DEFINE_DOWNSAMPLE_AA_Y_FUNC(uc,uchar)
-DEFINE_DOWNSAMPLE_AA_Y_FUNC(f32,float)
-#undef DEFINE_DOWNSAMPLE_AA_Y_FUNC
+NX_DEFINE_DOWNSAMPLE_AA_Y_FUNC(uc,uchar)
+NX_DEFINE_DOWNSAMPLE_AA_Y_FUNC(f32,float)
+#undef NX_DEFINE_DOWNSAMPLE_AA_Y_FUNC
 void nx_image_downsample_aa_y(struct NXImage *dest, const struct NXImage *src)
 {
         NX_ASSERT_PTR(src);
@@ -979,7 +1073,7 @@ void nx_image_filter_box(struct NXImage *dest, const struct NXImage *src,
                 nx_free(buffer);
 }
 
-#define DEFINE_DERIV_X_FUNC(F,T,S)                                       \
+#define NX_DEFINE_DERIV_X_FUNC(F,T,S)                                   \
         void nx_image_deriv_x_##F(struct NXImage *dest,                 \
                                   const struct NXImage *src)            \
         {                                                               \
@@ -1000,9 +1094,9 @@ void nx_image_filter_box(struct NXImage *dest, const struct NXImage *src,
                 }                                                       \
         }
 
-DEFINE_DERIV_X_FUNC(uc,uchar,255.0f)
-DEFINE_DERIV_X_FUNC(f32,float,1)
-#undef DEFINE_DERIV_X_FUNC
+NX_DEFINE_DERIV_X_FUNC(uc,uchar,255.0f)
+NX_DEFINE_DERIV_X_FUNC(f32,float,1)
+#undef NX_DEFINE_DERIV_X_FUNC
 
 void nx_image_deriv_x(struct NXImage *dest, const struct NXImage *src)
 {
@@ -1017,7 +1111,7 @@ void nx_image_deriv_x(struct NXImage *dest, const struct NXImage *src)
         }
 }
 
-#define DEFINE_DERIV_Y_FUNC(F,T,S)                                       \
+#define NX_DEFINE_DERIV_Y_FUNC(F,T,S)                                   \
         void nx_image_deriv_y_##F(struct NXImage *dest,                 \
                                   const struct NXImage *src)            \
         {                                                               \
@@ -1039,9 +1133,9 @@ void nx_image_deriv_x(struct NXImage *dest, const struct NXImage *src)
                 }                                                       \
         }
 
-DEFINE_DERIV_Y_FUNC(uc,uchar,255.0f)
-DEFINE_DERIV_Y_FUNC(f32,float,1)
-#undef DEFINE_DERIV_Y_FUNC
+NX_DEFINE_DERIV_Y_FUNC(uc,uchar,255.0f)
+NX_DEFINE_DERIV_Y_FUNC(f32,float,1)
+#undef NX_DEFINE_DERIV_Y_FUNC
 
 void nx_image_deriv_y(struct NXImage *dest, const struct NXImage *src)
 {
@@ -1052,6 +1146,56 @@ void nx_image_deriv_y(struct NXImage *dest, const struct NXImage *src)
         switch (src->dtype) {
         case NX_IMAGE_UCHAR: nx_image_deriv_y_uc(dest, src); break;
         case NX_IMAGE_FLOAT32: nx_image_deriv_y_f32(dest, src); break;
+        default: NX_FATAL(NX_LOG_TAG, "Unhandled switch case for image data type");
+        }
+}
+
+#define NX_DEFINE_GRADIENT_FUNC(F,T)                                    \
+        void nx_image_gradient_##F(struct NXImage *g_mag, struct NXImage *g_ori, \
+                                   const struct NXImage *img)           \
+        {                                                               \
+                NX_ASSERT_PTR(g_mag);                                   \
+                NX_ASSERT_PTR(g_ori);                                   \
+                NX_ASSERT_PTR(img);                                     \
+                NX_IMAGE_ASSERT_GRAYSCALE(img);                         \
+                                                                        \
+                nx_image_resize(g_mag, img->width, img->height, NX_IMAGE_STRIDE_DEFAULT, \
+                                img->type, NX_IMAGE_FLOAT32);           \
+                nx_image_resize(g_ori, img->width, img->height, NX_IMAGE_STRIDE_DEFAULT, \
+                                img->type, NX_IMAGE_FLOAT32);           \
+                nx_image_set_zero(g_mag);                               \
+                nx_image_set_zero(g_ori);                               \
+                                                                        \
+                for (int y = 1; y < img->height-1; ++y) {               \
+                        const T *row_m = img->data.F + (y-1)*img->row_stride; \
+                        const T *row   = img->data.F +     y*img->row_stride; \
+                        const T *row_p = img->data.F + (y+1)*img->row_stride; \
+                        float *r_mag = g_mag->data.f32 + y*g_mag->row_stride; \
+                        float *r_ori = g_ori->data.f32 + y*g_ori->row_stride; \
+                        for (int x = 1; x < img->width-1; ++x) {        \
+                                float dx = row[x+1] - row[x-1];         \
+                                float dy = row_p[x]-row_m[x];           \
+                                r_mag[x] = sqrt(dx*dx + dy*dy);         \
+                                r_ori[x] = atan2(dy, dx);               \
+                        }                                               \
+                }                                                       \
+        }
+
+NX_DEFINE_GRADIENT_FUNC(uc,uchar)
+NX_DEFINE_GRADIENT_FUNC(f32,float)
+#undef NX_DEFINE_GRADIENT_FUNC
+
+void nx_image_gradient(struct NXImage *g_mag, struct NXImage *g_ori,
+                       const struct NXImage *img)
+{
+        NX_ASSERT_PTR(img);
+        NX_ASSERT_PTR(g_mag);
+        NX_ASSERT_PTR(g_ori);
+        NX_IMAGE_ASSERT_GRAYSCALE(img);
+
+        switch (img->dtype) {
+        case NX_IMAGE_UCHAR: nx_image_gradient_uc(g_mag, g_ori, img); break;
+        case NX_IMAGE_FLOAT32: nx_image_gradient_f32(g_mag, g_ori, img); break;
         default: NX_FATAL(NX_LOG_TAG, "Unhandled switch case for image data type");
         }
 }

@@ -17,6 +17,7 @@ set(virg_nexus_C_SOURCES
   src/nx_rotation_3d.c
   src/nx_quaternion.c
   src/nx_svd.c
+  src/nx_linear_solvers.c
   src/nx_string.c
   src/nx_transform_2d.c
   src/nx_io.c
@@ -61,6 +62,7 @@ set(virg_nexus_C_SOURCES
   src/nx_log_c_impl.c
   src/nx_pinhole.c
   src/nx_kitti_slam.c
+  src/nx_temple_color_128.c
 )
 
 set(virg_nexus_C_HEADERS
@@ -76,6 +78,7 @@ set(virg_nexus_C_HEADERS
   include/virg/nexus/nx_rotation_3d.h
   include/virg/nexus/nx_quaternion.h
   include/virg/nexus/nx_svd.h
+  include/virg/nexus/nx_linear_solvers.h
   include/virg/nexus/nx_vec234.h
   include/virg/nexus/nx_mat234.h
   include/virg/nexus/nx_string.h
@@ -122,6 +125,7 @@ set(virg_nexus_C_HEADERS
   include/virg/nexus/nx_csv_parser.h
   include/virg/nexus/nx_pinhole.h
   include/virg/nexus/nx_kitti_slam.h
+  include/virg/nexus/nx_temple_color_128.h
 )
 
 set(virg_nexus_CXX_SOURCES

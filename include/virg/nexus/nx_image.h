@@ -168,6 +168,8 @@ void nx_image_copy(struct NXImage *dest, const struct NXImage *src);
 
 void nx_image_convert_type(struct NXImage* img, enum NXImageType type);
 
+void nx_image_convert_dtype(struct NXImage* dest, const struct NXImage *src);
+
 void nx_image_apply_colormap(struct NXImage* color, struct NXImage* gray,
                              enum NXColorMap map);
 
@@ -176,6 +178,9 @@ void nx_image_set_zero(struct NXImage *img);
 void nx_image_normalize_to_zero_one(struct NXImage *img, NXBool symmetric_around_zero);
 
 void nx_image_axpy(struct NXImage *img, float a, float y);
+
+void nx_image_subtract(struct NXImage *difference, const struct NXImage *img0,
+                       const struct NXImage *img1);
 
 void nx_image_wrap(struct NXImage *img, void *data, int width, int height,
                    int row_stride, enum NXImageType type,
@@ -209,6 +214,9 @@ void nx_image_filter_box(struct NXImage *dest, const struct NXImage *src,
 void nx_image_deriv_x(struct NXImage *dest, const struct NXImage *src);
 
 void nx_image_deriv_y(struct NXImage *dest, const struct NXImage *src);
+
+void nx_image_gradient(struct NXImage *g_mag, struct NXImage *g_ori,
+                       const struct NXImage *img);
 
 __NX_END_DECL
 

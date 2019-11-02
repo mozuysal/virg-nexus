@@ -33,6 +33,7 @@
 #include "virg/nexus/nx_config.h"
 #include "virg/nexus/nx_log.h"
 #include "virg/nexus/nx_svd.h"
+#include "virg/nexus/nx_linear_solvers.h"
 #include "virg/nexus/nx_vec234.h"
 
 __NX_BEGIN_DECL
@@ -52,6 +53,7 @@ static inline double nx_dmat3_det(const double *A);
 static inline double nx_dmat3_xptFx(const double *F, const double *x, const double* xp);
 static inline void   nx_dmat3_print(const double *A, const char *label);
 static inline void   nx_dmat3_svd(const double *A, double *U, double *S, double *Vt);
+static inline NXBool nx_dmat3_sym_solve_single(const double *A, double *b);
 static inline double nx_dmat3_frob_norm(const double *A);
 static inline void   nx_dmat3_sub      (double *A, const double *B);
 static inline void   nx_dmat3_transform(const double *A, double *v);
@@ -266,6 +268,13 @@ static inline void nx_dmat3_svd(const double *A, double *U, double *S, double *V
 {
         double AA[9] = { A[0], A[1], A[2], A[3], A[4], A[5], A[6], A[7], A[8] };
         nx_dsvd_usvt(U, 3, S, Vt, 3, 3, 3, AA, 3);
+}
+
+static inline NXBool nx_dmat3_sym_solve_single(const double *A, double *b)
+{
+        double AA[9] = { A[0], A[1], A[2], A[3], A[4], A[5], A[6], A[7], A[8] };
+        int ipiv[3];
+        return nx_dsym_solver(NX_SYMMETRIC_LOWER, 3, 1, &AA[0], 3, b, 3, &ipiv[0]);
 }
 
 static inline double nx_dmat3_frob_norm(const double *A)
