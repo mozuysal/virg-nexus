@@ -29,6 +29,7 @@
 #include "virg/nexus/nx_config.h"
 #include "virg/nexus/nx_types.h"
 #include "virg/nexus/nx_image.h"
+#include "virg/nexus/nx_image_io.h"
 
 __NX_BEGIN_DECL
 
@@ -96,7 +97,8 @@ void nx_temple_color_128_sequence_print(struct NXTempleColor128Sequence *seq);
 
 void nx_temple_color_128_sequence_xload_frame(const struct NXTempleColor128Sequence *seq,
                                               int frame_id,
-                                              struct NXImage *img);
+                                              struct NXImage *img,
+                                              enum NXImageLoadMode mode);
 
 
 __NX_END_DECL

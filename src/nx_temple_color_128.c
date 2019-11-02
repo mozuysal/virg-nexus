@@ -34,13 +34,12 @@
 #include "virg/nexus/nx_string.h"
 #include "virg/nexus/nx_io.h"
 #include "virg/nexus/nx_filesystem.h"
-#include "virg/nexus/nx_image_io.h"
 
 #define NX_TEMPLE_COLOR_128_SEQUENCE_DIR_FORMAT "%s/%s"
 #define NX_TEMPLE_COLOR_128_ATTRIB_FILE_FORMAT "%s/%s/%s_att.txt"
 #define NX_TEMPLE_COLOR_128_FRAMES_FILE_FORMAT "%s/%s/%s_frames.txt"
 #define NX_TEMPLE_COLOR_128_GT_FILE_FORMAT "%s/%s/%s_gt.txt"
-#define NX_TEMPLE_COLOR_128_FRAME_FILE_FORMAT "%s/%s/img/%04d.txt"
+#define NX_TEMPLE_COLOR_128_FRAME_FILE_FORMAT "%s/%s/img/%04d.jpg"
 
 #define NX_TEMPLE_COLOR_128_N_ATTRIBUTES 11
 
@@ -196,7 +195,8 @@ void nx_temple_color_128_sequence_print(struct NXTempleColor128Sequence *seq)
 
 void nx_temple_color_128_sequence_xload_frame(const struct NXTempleColor128Sequence *seq,
                                               int frame_id,
-                                              struct NXImage *img)
+                                              struct NXImage *img,
+                                              enum NXImageLoadMode mode)
 {
         NX_ASSERT_PTR(seq);
         NX_ASSERT_PTR(img);
@@ -206,6 +206,6 @@ void nx_temple_color_128_sequence_xload_frame(const struct NXTempleColor128Seque
                                  seq->base_dir,
                                  seq->name,
                                  frame_id);
-        nx_image_xload(img, filename, NX_IMAGE_LOAD_AS_IS);
+        nx_image_xload(img, filename, mode);
         nx_free(filename);
 }
