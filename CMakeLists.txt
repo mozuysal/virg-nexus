@@ -79,6 +79,7 @@ set(virg_nexus_C_HEADERS
   include/virg/nexus/nx_quaternion.h
   include/virg/nexus/nx_svd.h
   include/virg/nexus/nx_linear_solvers.h
+  include/virg/nexus/nx_vec.h
   include/virg/nexus/nx_vec234.h
   include/virg/nexus/nx_mat234.h
   include/virg/nexus/nx_string.h
