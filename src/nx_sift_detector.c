@@ -39,8 +39,10 @@
 #include "virg/nexus/nx_alloc.h"
 #include "virg/nexus/nx_assert.h"
 #include "virg/nexus/nx_image.h"
+#include "virg/nexus/nx_math.h"
 #include "virg/nexus/nx_mat234.h"
 #include "virg/nexus/nx_vec234.h"
+#include "virg/nexus/nx_vec.h"
 
 #define NX_SIFT_N_ORI_BINS 36
 
@@ -126,12 +128,12 @@ struct NXSIFTKeyStore {
         uchar *desc;
 };
 
-static int nx_sift_key_store_append(struct NXSIFTKeyStore *store)
+int nx_sift_key_store_append(struct NXSIFTKeyStore *store)
 {
-        if (store->n <= store->cap) {
+        if (store->n >= store->cap) {
                 int new_cap = (int)(store->cap * 1.6f);
                 store->keys = (struct NXKeypoint *)nx_xrealloc(store->keys,
-                                                               new_cap * sizeof(struct NXKeypoint));
+                                                               new_cap*sizeof(struct NXKeypoint));
                 store->desc = (uchar *)nx_xrealloc(store->desc,
                                                    new_cap*NX_SIFT_DESC_DIM*sizeof(uchar));
                 store->cap = new_cap;
@@ -143,8 +145,8 @@ static int nx_sift_key_store_append(struct NXSIFTKeyStore *store)
         return id;
 }
 
-static void nx_sift_detector_prepare_octave(struct NXSIFTDetector *det,
-                                            float sigma_c)
+void nx_sift_detector_prepare_octave(struct NXSIFTDetector *det,
+                                     float sigma_c)
 {
         const int n_scales = det->param.n_scales_per_octave;
         float scale_multiplier = pow(2.0, 1.0 / n_scales);
@@ -162,13 +164,40 @@ static void nx_sift_detector_prepare_octave(struct NXSIFTDetector *det,
         }
 }
 
-static float nx_sift_compute_ori_hist(float *hist, const struct NXImage *gx,
-                                      const struct NXImage *gy, float x, float y,
-                                      float sigma)
+void nx_sift_compute_fdescriptor(struct NXSIFTDetector *det,
+                                struct NXKeypoint *key,
+                                float *desc)
 {
-        memset(hist, 0, NX_SIFT_N_ORI_BINS*sizeof(*hist));
+        
+}
+
+void nx_sift_compute_descriptor(struct NXSIFTDetector *det,
+                                struct NXKeypoint *key,
+                                uchar *desc)
+{
+        float fdesc[NX_SIFT_DESC_DIM];
+        nx_sift_compute_fdescriptor(det, key, &fdesc[0]);
+        nx_svec_to_unit(NX_SIFT_DESC_DIM, &fdesc[0]);
+
+        for (int i = 0; i < NX_SIFT_DESC_DIM; ++i)
+                if (fdesc[i] > 0.2)
+                        fdesc[i] = 0.2;
+        nx_svec_to_unit(NX_SIFT_DESC_DIM, &fdesc[0]);
+
+        for (int i = 0; i < NX_SIFT_DESC_DIM; ++i)
+                desc[i] = nx_min_i(255, (int)(512.0f * fdesc[i]));
+}
+
+float nx_sift_compute_ori_hist(float *hist, const struct NXImage *gx,
+                               const struct NXImage *gy, float x, float y,
+                               float sigma)
+{
+        memset(&hist[1], 0, NX_SIFT_N_ORI_BINS*sizeof(*hist));
 
         sigma *= 1.5f; // Grow sigma for orientation estimation
+        const float sigma_sq = sigma * sigma;
+        const float dist_factor = -0.5 / sigma_sq;
+
         int r = (int)(sigma * 3.0f);
         int w = gx->width;
         int h = gx->height;
@@ -181,36 +210,101 @@ static float nx_sift_compute_ori_hist(float *hist, const struct NXImage *gx,
                 const float *rx = gx->data.f32 + v * gx->row_stride;
                 const float *ry = gy->data.f32 + v * gy->row_stride;
                 for (int u = xi - r; u <= xi + r; ++u) {
+                        // skip if outside image border or too far from the
+                        // center
                         float dr_sq = (u - x) * (u - x) + (v - y) * (v - y);
                         if (u <= 0 || u >= w - 1 || dr_sq > (r * r + 0.5))
                                 continue;
+
                         float gx_val = rx[u];
                         float gy_val = ry[u];
                         float gmag = sqrt(gx_val*gx_val + gy_val*gy_val);
                         float gori = atan2(gy_val, gx_val);
-                        
+                        int bin = (int)((0.5*(gori / NX_PI + 1.000001))*NX_SIFT_N_ORI_BINS);
+                        if (bin >= NX_SIFT_N_ORI_BINS)
+                                bin = NX_SIFT_N_ORI_BINS - 1;
+                        hist[bin+1] += exp(dist_factor * dr_sq) * gmag;
+                }
+        }
+
+        // Smooth buffer by averaging multiple times using an auxilary buffer to
+        // handle boundaries
+        float hist_buffer[NX_SIFT_N_ORI_BINS+2];
+        for (int i = 0; i < 6; ++i) {
+                memcpy(&hist_buffer[1], &hist[1], NX_SIFT_N_ORI_BINS*sizeof(*hist));
+                hist_buffer[0] = hist_buffer[NX_SIFT_N_ORI_BINS];
+                hist_buffer[NX_SIFT_N_ORI_BINS+1] = hist_buffer[1];
+                for (int j = 1; j <= NX_SIFT_N_ORI_BINS; ++j)
+                        hist_buffer[i-1] = (hist_buffer[i-1] + hist_buffer[i]
+                                            + hist_buffer[i+1]) / 3.0;
+                memcpy(&hist[1], &hist_buffer[0], NX_SIFT_N_ORI_BINS*sizeof(*hist));
+        }
+        // create cyclic border of length one
+        hist[0] = hist_buffer[NX_SIFT_N_ORI_BINS];
+        hist_buffer[NX_SIFT_N_ORI_BINS+1] = hist[1];
+
+        // Compute and return histogram peak
+        float hist_peak = hist[1];
+        for (int i = 2; i <= NX_SIFT_N_ORI_BINS; ++i)
+                if (hist[i] > hist_peak)
+                        hist_peak = hist[i];
+
+        return hist_peak;
+}
+
+void nx_sift_compute_keys(struct NXSIFTDetector *det,
+                          struct NXSIFTKeyStore *store,
+                          int octave, float sigma_c, float dog_val,
+                          float i, float x, float y)
+{
+        const int n_scales = det->param.n_scales_per_octave;
+
+        // To make histograms cyclic, we store histograms from hist[1] to
+        // hist[N], add two bins for the last and first elements in a cyclic
+        // fashion
+        float hist[NX_SIFT_N_ORI_BINS+2];
+        float sigma = sigma_c * pow(2.0, (octave + i) / n_scales);
+        float hist_peak = nx_sift_compute_ori_hist(&hist[0],
+                                                   det->gx, det->gy,
+                                                   x, y, sigma);
+
+        for (int b = 1; b < NX_SIFT_N_ORI_BINS; ++b) {
+                if (hist[b] > hist[b-1] && hist[b] > hist[b+1]
+                    && hist[b] > hist_peak * 0.8f) {
+                        // interpolate peak position for y = cx^2 + dx + e
+                        double d = 0.5f * (hist[b-1] - hist[b+1]);
+                        double two_c = hist[b-1] + hist[b+1] - 2.0f * hist[b];
+                        double peak_offset = -d / two_c; // (-1.0, 1.0)
+                        float ori = NX_PI * (2.0 * (b - 0.5 + peak_offset)
+                                             / NX_SIFT_N_ORI_BINS - 1.0);
+
+                        // Create keypoint
+                        int key_id = nx_sift_key_store_append(store);
+                        struct NXKeypoint *key = store->keys + key_id;
+                        key->x = (int)x;
+                        key->y = (int)y;
+                        key->xs = x;
+                        key->ys = y;
+                        key->level = octave;
+                        key->scale = pow(2.0, octave);
+                        key->sigma = sigma;
+                        key->score = dog_val;
+                        key->ori = ori;
+                        key->id = key_id;
+
+                        uchar *desc = store->desc + key_id * NX_SIFT_DESC_DIM;
+                        nx_sift_compute_descriptor(det, key, desc);
+
+                        NX_LOG(NX_LOG_TAG, "%d %8.2f, %8.2f, %8.2f -> Key (%8.2f, %8.2f), level = %d, scale = %8.2f, sigma = %8.2f, ori = %8.2f",
+                               octave, i, x, y, key->xs, key->ys, key->level, key->scale, key->sigma, (float)(key->ori*180.0f/NX_PI));
                 }
         }
 }
 
-static void nx_sift_compute_keys(struct NXSIFTDetector *det,
-                                 struct NXSIFTKeyStore *store,
-                                 int octave, float sigma_c,
-                                 float i, float x, float y)
-{
-        const int n_scales = det->param.n_scales_per_octave;
-
-        float ori_hist[NX_SIFT_N_ORI_BINS];
-        float sigma = sigma_c * pow(2.0, (octave + i) / n_scales);
-        float hist_peak = nx_sift_compute_ori_hist(&ori_hist[0],
-                                                   det->gx, det->gy,
-                                                   x, y, sigma);
-}
-
-static void nx_sift_interp_peak_location(struct NXSIFTDetector *det,
-                                         struct NXSIFTKeyStore *store,
-                                         int octave, float sigma_c,
-                                         int i, int x, int y)
+void nx_sift_interp_peak_location(struct NXSIFTDetector *det,
+                                  struct NXSIFTKeyStore *store,
+                                  int octave, float sigma_c,
+                                  int i, int x, int y)
 {
         float dval;
         double b[3];
@@ -281,7 +375,7 @@ static void nx_sift_interp_peak_location(struct NXSIFTDetector *det,
             || fabs(dval) < peak_thr)
                 return;
 
-        nx_sift_compute_keys(det, store, octave, sigma_c,
+        nx_sift_compute_keys(det, store, octave, sigma_c, dval,
                              i + b[2], x + b[0], y + b[1]);
 }
 
@@ -302,9 +396,9 @@ static inline NXBool nx_sift_check_edge_threshold(const float *dog_rowm,
         return det * edge_thr_p1 * edge_thr_p1 > edge_thr * tr * tr;
 }
 
-static void nx_sift_process_dog(struct NXSIFTDetector *det,
-                                struct NXSIFTKeyStore *store,
-                                int octave, float sigma_c, int i)
+void nx_sift_process_dog(struct NXSIFTDetector *det,
+                         struct NXSIFTKeyStore *store,
+                         int octave, float sigma_c, int i)
 {
         const int n_scales = det->param.n_scales_per_octave;
         const float peak_thr = det->param.peak_threshold / n_scales;
@@ -356,11 +450,12 @@ static void nx_sift_process_dog(struct NXSIFTDetector *det,
         }
 }
 
-static void nx_sift_detector_process_octave(struct NXSIFTDetector *det,
-                                            struct NXSIFTKeyStore *store,
-                                            int octave,
-                                            float sigma_c)
+void nx_sift_detector_process_octave(struct NXSIFTDetector *det,
+                                     struct NXSIFTKeyStore *store,
+                                     int octave,
+                                     float sigma_c)
 {
+        NX_LOG(NX_LOG_TAG, "Processing octave %d with sigma_c = %10.4f", octave, sigma_c);
         const int n_scales = det->param.n_scales_per_octave;
         for (int i = 1; i < n_scales + 1; ++i) {
                 nx_image_deriv_x(det->gx, det->dogs[i]);
