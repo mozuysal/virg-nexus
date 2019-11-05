@@ -237,6 +237,11 @@ foreach(virg_nexus_header ${virg_nexus_HEADERS})
 endforeach(virg_nexus_header)
 install(FILES lib/pkgconfig/virg-nexus.pc DESTINATION lib/pkgconfig)
 
+# --------------------------------- edit target ----------------------------------
+add_custom_target(edit emacsclient -n ${virg_nexus_SOURCES} ${virg_nexus_HEADERS}
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  COMMENT "Open source and header files using Emacs server")
+
 # --------------------------------- doc target -----------------------------------
 find_package(Doxygen)
 if (DOXYGEN_FOUND)
