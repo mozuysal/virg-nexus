@@ -28,6 +28,7 @@
 
 #include <math.h>
 #include <float.h>
+#include <string.h>
 
 #include "virg/nexus/nx_config.h"
 #include "virg/nexus/nx_log.h"
@@ -35,17 +36,23 @@
 
 __NX_BEGIN_DECL
 
-static inline float nx_svec_norm_sq(int n, const float *v);
-static inline float nx_svec_norm   (int n, const float *v);
-static inline float nx_svec_to_unit(int n, float *v);
-static inline int   nx_svec_max_idx(int n, const float *v);
-static inline float nx_svec_max_val(int n, const float *v);
+static inline void  nx_svec_set_zero(int n, float *v);
+static inline float nx_svec_norm_sq (int n, const float *v);
+static inline float nx_svec_norm    (int n, const float *v);
+static inline float nx_svec_to_unit (int n, float *v);
+static inline int   nx_svec_max_idx (int n, const float *v);
+static inline float nx_svec_max_val (int n, const float *v);
 
 /*
  * -----------------------------------------------------------------------------
  *                                   Definitions
  * -----------------------------------------------------------------------------
  */
+static inline void  nx_svec_set_zero(int n, float *v)
+{
+        memset(v, 0, n * sizeof(*v));
+}
+
 static inline float nx_svec_norm_sq(int n, const float *v)
 {
         NX_ASSERT_PTR(v);

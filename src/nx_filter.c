@@ -37,42 +37,20 @@ static inline void fill_buffer_border(int n, float *buffer, int n_border, enum N
 static inline double kernel_value_sym_gaussian(int i, double sigma);
 
 /**
- * Calculates the lost area under the Gaussian curve by using a kernel of length n.
- *
- * @param n Total width of the kernel
- * @param sigma Gaussian standard deviation
- *
- * @return The percentage of the area that is not covered by the kernel in [0, 1]
- */
-double nx_kernel_loss_gaussian(int n, double sigma)
-{
-        NX_ASSERT(n > 0);
-        NX_ASSERT(sigma > 0);
-
-        double erf_f = 1.0 / (sqrt(2.0)*sigma);
-        double g_n_plus = 0.5 * nx_erf(n * 0.5 * erf_f);
-        double g_n = 2.0 * g_n_plus;
-
-        return 1.0 - g_n;
-}
-
-/**
  * Calculates the minimum kernel size such that the loass is below the given
  * threshold.
  *
  * @param sigma Gaussian standard deviation
- * @param loss_threshold Maximum allowable loss (percentage of area under the Gaussian curve)
+ * @param kernel_truncation_factor Assume Gaussian becomes zero after this many sigmas
  *
  * @return Minimum kernel length
  */
-int nx_kernel_size_min_gaussian(double sigma, double loss_threshold)
+int nx_kernel_size_gaussian(float sigma, float kernel_truncation_factor)
 {
-        int n = 3;
-        while (nx_kernel_loss_gaussian(n, sigma) > loss_threshold) {
-                n += 2;
-        }
-
-        return n;
+        int n = 2.0 * kernel_truncation_factor * sigma + 1.0f;
+        if (n % 2 == 0)
+                n++;
+        return nx_max_i(n, 3);
 }
 
 double kernel_value_sym_gaussian(int i, double sigma)

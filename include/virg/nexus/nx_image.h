@@ -198,7 +198,8 @@ void nx_image_downsample_aa_x(struct NXImage *dest, const struct NXImage *src);
 void nx_image_downsample_aa_y(struct NXImage *dest, const struct NXImage *src);
 
 float *nx_image_filter_buffer_alloc(int width, int height,
-                                    float sigma_x, float sigma_y);
+                                    float sigma_x, float sigma_y,
+                                    int *nk_x, int *nk_y);
 
 void nx_image_smooth(struct NXImage *dest, const struct NXImage *src,
                      float sigma_x, float sigma_y, float *filter_buffer);

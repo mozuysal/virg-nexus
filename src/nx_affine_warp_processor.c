@@ -658,12 +658,13 @@ static void warp_processor_blur(struct NXImage *image,
 {
         const int N_THREADS = omp_get_max_threads();
         float *buffers[N_THREADS];
+        int nkx;
+        int nky;
         for (int i = 0; i < N_THREADS; ++i)
                 buffers[i] = nx_image_filter_buffer_alloc(image->width, image->height,
-                                                          sigma_x, sigma_y);
+                                                          sigma_x, sigma_y,
+                                                          &nkx, &nky);
 
-        int nkx = nx_kernel_size_min_gaussian(sigma_x, BLUR_KERNEL_LOSS);
-        int nky = nx_kernel_size_min_gaussian(sigma_y, BLUR_KERNEL_LOSS);
         int nk_max = nx_max_i(nkx, nky);
         int nk_sym = nk_max / 2 + 1;
         float *kernel = NX_NEW_S(nk_sym);

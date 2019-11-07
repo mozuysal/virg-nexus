@@ -40,7 +40,7 @@
 #include "virg/nexus/nx_transform_2d.h"
 #include "virg/nexus/nx_image_warp.h"
 
-static const double NX_IMAGE_SMOOTH_KERNEL_LOSS = 0.003;
+static const float NX_IMAGE_SMOOTH_KERNEL_TRUNCATION_FACTOR = 2.5f;
 
 struct NXImage *nx_image_alloc()
 {
@@ -825,11 +825,11 @@ void nx_image_downsample_aa_y(struct NXImage *dest, const struct NXImage *src)
 }
 
 float *nx_image_filter_buffer_alloc(int width, int height,
-                                    float sigma_x, float sigma_y)
+                                    float sigma_x, float sigma_y, int *nk_x, int *nk_y)
 {
-        int nkx = nx_kernel_size_min_gaussian(sigma_x, NX_IMAGE_SMOOTH_KERNEL_LOSS);
-        int nky = nx_kernel_size_min_gaussian(sigma_y, NX_IMAGE_SMOOTH_KERNEL_LOSS);
-        int nk_max = nx_max_i(nkx, nky);
+        *nk_x = nx_kernel_size_gaussian(sigma_x, NX_IMAGE_SMOOTH_KERNEL_TRUNCATION_FACTOR);
+        *nk_y = nx_kernel_size_gaussian(sigma_y, NX_IMAGE_SMOOTH_KERNEL_TRUNCATION_FACTOR);
+        int nk_max = nx_max_i(*nk_x, *nk_y);
 
         int max_dim = nx_max_i(width, height);
 
@@ -853,13 +853,14 @@ void nx_image_smooth(struct NXImage *dest, const struct NXImage *src,
         }
 
         float *buffer = filter_buffer;
+        int nkx;
+        int nky;
         if (!buffer) {
                 buffer = nx_image_filter_buffer_alloc(src->width, src->height,
-                                                      sigma_x, sigma_y);
+                                                      sigma_x, sigma_y,
+                                                      &nkx, &nky);
         }
 
-        int nkx = nx_kernel_size_min_gaussian(sigma_x, NX_IMAGE_SMOOTH_KERNEL_LOSS);
-        int nky = nx_kernel_size_min_gaussian(sigma_y, NX_IMAGE_SMOOTH_KERNEL_LOSS);
         int nk_max = nx_max_i(nkx, nky);
         int nk_sym = nk_max / 2 + 1;
         float *kernel = NX_NEW_S(nk_sym);
@@ -1150,7 +1151,7 @@ void nx_image_deriv_y(struct NXImage *dest, const struct NXImage *src)
         }
 }
 
-#define NX_DEFINE_GRADIENT_FUNC(F,T)                                    \
+#define NX_DEFINE_GRADIENT_FUNC(F,T,S)                                   \
         void nx_image_gradient_##F(struct NXImage *g_mag, struct NXImage *g_ori, \
                                    const struct NXImage *img)           \
         {                                                               \
@@ -1173,16 +1174,16 @@ void nx_image_deriv_y(struct NXImage *dest, const struct NXImage *src)
                         float *r_mag = g_mag->data.f32 + y*g_mag->row_stride; \
                         float *r_ori = g_ori->data.f32 + y*g_ori->row_stride; \
                         for (int x = 1; x < img->width-1; ++x) {        \
-                                float dx = row[x+1] - row[x-1];         \
-                                float dy = row_p[x]-row_m[x];           \
+                                float dx = (row[x+1] - row[x-1])/S;     \
+                                float dy = (row_p[x]-row_m[x])/S;       \
                                 r_mag[x] = sqrt(dx*dx + dy*dy);         \
                                 r_ori[x] = atan2(dy, dx);               \
                         }                                               \
                 }                                                       \
         }
 
-NX_DEFINE_GRADIENT_FUNC(uc,uchar)
-NX_DEFINE_GRADIENT_FUNC(f32,float)
+NX_DEFINE_GRADIENT_FUNC(uc,uchar,255.0f)
+NX_DEFINE_GRADIENT_FUNC(f32,float,1.0f)
 #undef NX_DEFINE_GRADIENT_FUNC
 
 void nx_image_gradient(struct NXImage *g_mag, struct NXImage *g_ori,

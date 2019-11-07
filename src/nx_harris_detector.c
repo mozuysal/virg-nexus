@@ -57,8 +57,11 @@ void nx_harris_deriv_images(struct NXImage **dimg,
         }
 
         if (sigma_win > 0.0f) {
+                int nkx;
+                int nky;
                 float * buffer = nx_image_filter_buffer_alloc(img->width, img->height,
-                                                              sigma_win, sigma_win);
+                                                              sigma_win, sigma_win,
+                                                              &nkx, &nky);
                 for (int i = 0; i < 3; ++i)
                         nx_image_smooth(dimg[i], dimg[i], sigma_win, sigma_win, buffer);
                 nx_free(buffer);

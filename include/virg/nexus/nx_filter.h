@@ -40,9 +40,7 @@ enum NXBorderMode {
         NX_BORDER_MIRROR        /**< The pixels are mirrored around the last pixel */
 };
 
-double nx_kernel_loss_gaussian(int n, double sigma);
-
-int nx_kernel_size_min_gaussian(double sigma, double loss_threshold);
+int nx_kernel_size_gaussian(float sigma, float kernel_truncation_factor);
 
 void nx_kernel_sym_gaussian(int n_k, float *kernel, float sigma);
 
