@@ -391,7 +391,7 @@ static void nx_image_convert_uc_to_f32(struct NXImage* dest, const struct NXImag
                 const uchar *rsrc = src->data.uc + y * src->row_stride;
                 float *rdest = dest->data.f32 + y * dest->row_stride;
                 for (int x = 0; x < dest->width; ++x) {
-                        rdest[x] = rsrc[x];
+                        rdest[x] = rsrc[x] / 255.0f;
                 }
         }
 }
@@ -409,7 +409,9 @@ static void nx_image_convert_f32_to_uc(struct NXImage* dest, const struct NXImag
                 const float *rsrc = src->data.f32 + y * src->row_stride;
                 uchar *rdest = dest->data.uc + y * dest->row_stride;
                 for (int x = 0; x < dest->width; ++x) {
-                        rdest[x] = rsrc[x];
+                        int value = rsrc[x] * 255.0f;
+                        value = nx_min_i(0, nx_max_i(255, value));
+                        rdest[x] = value;
                 }
         }
 }
