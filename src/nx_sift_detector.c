@@ -158,15 +158,12 @@ void nx_sift_compute_fdescriptor(struct NXSIFTDetector *det,
         float patch_size = key->sigma * det->param.magnification_factor;
         float radius_in_patches = (N_PATCH_XY + 1.0f) / 2.0f;
         int sample_radius = (int)(patch_size * radius_in_patches
-                                  * sqrtf(2.0f) + 0.5f) - 1;
+                                  * sqrtf(2.0f) + 0.5f);
         float cori = cosf(key->ori);
         float sori = sinf(key->ori);
         float rx_offset = key->xs - key->x;
         float ry_offset = key->ys - key->y;
 
-        fprintf(stderr, "patch_size = %8.4f\n", patch_size);
-        fprintf(stderr, "scale = %8.4f\n", key->sigma);
-        fprintf(stderr, "sample_radius = %d\n", sample_radius);
         for (int dy = -sample_radius; dy <= +sample_radius; ++dy) {
                 int sample_y = dy + key->y;
                 // skip if sample is out of the image
@@ -186,7 +183,7 @@ void nx_sift_compute_fdescriptor(struct NXSIFTDetector *det,
                         float patch_x = (rx - rx_offset) / patch_size;
                         float patch_y = (ry - ry_offset) / patch_size;
 
-                        if (NX_TRUE || patch_x > -radius_in_patches
+                        if (patch_x > -radius_in_patches
                             && patch_x < radius_in_patches
                             && patch_y > -radius_in_patches
                             && patch_y < radius_in_patches) {
@@ -217,7 +214,6 @@ void nx_sift_compute_fdescriptor(struct NXSIFTDetector *det,
                                 float xeps = px - pxi;
                                 float yeps = py - pyi;
                                 float heps = h  - hi;
-                                fprintf(stderr, "%8.4f ", gweight);
                                 if (pyi >= 0 && pyi < N_PATCH_XY) {
                                         float w = sample_weight * (1.0f - yeps);
                                         float *prow = desc + pyi * N_PATCH_XY * N_ORI_BINS;
@@ -228,19 +224,17 @@ void nx_sift_compute_fdescriptor(struct NXSIFTDetector *det,
                                                 prow[pxi * N_ORI_BINS + hi0] += ww0;
                                                 prow[pxi * N_ORI_BINS + hi1] += ww1;
                                         }
-                                        pxi++;
-                                        if (pxi >= 0 && pxi < N_PATCH_XY) {
+                                        if ((pxi+1) >= 0 && (pxi+1) < N_PATCH_XY) {
                                                 float ww = w * xeps;
                                                 float ww1 = ww * heps;
                                                 float ww0 = ww - ww1;
-                                                prow[pxi * N_ORI_BINS + hi0] += ww0;
-                                                prow[pxi * N_ORI_BINS + hi1] += ww1;
+                                                prow[(pxi+1) * N_ORI_BINS + hi0] += ww0;
+                                                prow[(pxi+1) * N_ORI_BINS + hi1] += ww1;
                                         }
                                 }
-                                pyi++;
-                                if (pyi >= 0 && pyi < N_PATCH_XY) {
+                                if ((pyi+1) >= 0 && (pyi+1) < N_PATCH_XY) {
                                         float w = sample_weight * yeps;
-                                        float *prow = desc + pyi * N_PATCH_XY * N_ORI_BINS;
+                                        float *prow = desc + (pyi+1) * N_PATCH_XY * N_ORI_BINS;
                                         if (pxi >= 0 && pxi < N_PATCH_XY) {
                                                 float ww = w * (1.0f - xeps);
                                                 float ww1 = ww * heps;
@@ -248,18 +242,16 @@ void nx_sift_compute_fdescriptor(struct NXSIFTDetector *det,
                                                 prow[pxi * N_ORI_BINS + hi0] += ww0;
                                                 prow[pxi * N_ORI_BINS + hi1] += ww1;
                                         }
-                                        pxi++;
-                                        if (pxi >= 0 && pxi < N_PATCH_XY) {
+                                        if ((pxi+1) >= 0 && (pxi+1) < N_PATCH_XY) {
                                                 float ww = w * xeps;
                                                 float ww1 = ww * heps;
                                                 float ww0 = ww - ww1;
-                                                prow[pxi * N_ORI_BINS + hi0] += ww0;
-                                                prow[pxi * N_ORI_BINS + hi1] += ww1;
+                                                prow[(pxi+1) * N_ORI_BINS + hi0] += ww0;
+                                                prow[(pxi+1) * N_ORI_BINS + hi1] += ww1;
                                         }
                                 }
                         }
                 }
-                fprintf(stderr, "\n");
         }
 }
 
@@ -296,13 +288,13 @@ float nx_sift_compute_ori_hist(float *hist, const struct NXImage *gx,
         int xi = (int)(x + 0.5f);
         int yi = (int)(y + 0.5f);
         for (int v = yi - r; v <= yi + r; ++v) {
-                if (v <= 0 || v >= h - 1)
+                if (v <= 0 || v >= h - 2)
                         continue;
                 const float *rx = gx->data.f32 + v * gx->row_stride;
                 const float *ry = gy->data.f32 + v * gy->row_stride;
                 for (int u = xi - r; u <= xi + r; ++u) {
                         // skip if outside image border
-                        if (u <= 0 || u >= w - 1)
+                        if (u <= 0 || u >= w - 2)
                                 continue;
 
                         float dr_sq = (u - x) * (u - x) + (v - y) * (v - y);
@@ -314,7 +306,8 @@ float nx_sift_compute_ori_hist(float *hist, const struct NXImage *gx,
                         float gy_val = -ry[u];
                         float gmag = sqrtf(gx_val*gx_val + gy_val*gy_val);
                         float gori = atan2f(gy_val, gx_val);
-                        int bin = (int)((0.5*(gori / NX_PI + 1.000001))*NX_SIFT_N_ORI_BINS);
+                        int bin = (int)(NX_SIFT_N_ORI_BINS * (gori + NX_PI + 0.00001f)
+                                        / (2.0 * NX_PI));
                         if (bin >= NX_SIFT_N_ORI_BINS)
                                 bin = NX_SIFT_N_ORI_BINS - 1;
                         hist[bin+1] += expf(dist_factor * dr_sq) * gmag;
@@ -390,13 +383,8 @@ void nx_sift_compute_keys(struct NXSIFTDetector *det,
                         uchar *desc = store->desc + key_id * NX_SIFT_DESC_DIM;
                         nx_sift_compute_descriptor(det, key, desc);
 
-                        NX_LOG(NX_LOG_TAG, "Key (%8.2f, %8.2f), sigma = %8.2f, ori = %8.2f",
-                               key->xs, key->ys, key->sigma, key->ori);
-                        for (int i = 0; i < NX_SIFT_DESC_DIM; ++i) {
-                                fprintf(stderr, "%3d ", desc[i]);
-                        }
-                        fprintf(stderr, "\n");
-                        exit(-1);
+                        /* NX_LOG(NX_LOG_TAG, "Key (%6.3f, %6.3f), sigma = %6.3f, ori = %6.3f", */
+                               /* key->xs, key->ys, key->sigma, key->ori); */
                 }
         }
 }
@@ -435,19 +423,19 @@ void nx_sift_interp_peak_location(struct NXSIFTDetector *det,
                 b[0] = -g[0];
                 b[1] = -g[1];
                 b[2] = -g[2];
-                double A[9] = {
-                        dog_row[x-1] - 2.0 * dog_row[x] + dog_row[x+1], // Hxx
-                        ((dog_rowp[x+1] - dog_rowp[x-1]) -
-                         (dog_rowm[x+1] - dog_rowm[x-1])) / 4.0,        // Hxy
-                        ((dogp_row[x+1] - dogp_row[x-1]) -
-                         (dogm_row[x+1] - dogm_row[x-1])) / 4.0,        // Hxs
-                        0.0,
-                        dog_rowm[x]  - 2.0 * dog_row[x] + dog_rowp[x],  // Hyy
-                        ((dogp_rowp[x] - dogp_rowm[x]) -
-                         (dogm_rowp[x] - dogm_rowm[x])) / 4.0,          // Hys
-                        0.0,
-                        0.0,
-                        dogm_row[x]  - 2.0 * dog_row[x] + dogp_row[x] };// Hss
+
+                double A[9] = { dog_row[x-1] - 2.0 * dog_row[x] + dog_row[x+1], // Hxx
+                                ((dog_rowp[x+1] - dog_rowp[x-1]) -
+                                 (dog_rowm[x+1] - dog_rowm[x-1])) / 4.0, // Hxy
+                                ((dogp_row[x+1] - dogp_row[x-1]) -
+                                 (dogm_row[x+1] - dogm_row[x-1])) / 4.0, // Hxs
+                                0.0,
+                                dog_rowm[x]  - 2.0 * dog_row[x] + dog_rowp[x],  // Hyy
+                                ((dogp_rowp[x] - dogp_rowm[x]) -
+                                 (dogm_rowp[x] - dogm_rowm[x])) / 4.0,   // Hys
+                                0.0,
+                                0.0,
+                                dogm_row[x]  - 2.0 * dog_row[x] + dogp_row[x] };  // Hss
 
                 NXBool sv_res = nx_dmat3_sym_solve_single(&A[0], &b[0]);
                 if (!sv_res)
@@ -557,8 +545,8 @@ void nx_sift_detector_process_octave(struct NXSIFTDetector *det,
 {
         const int n_scales = det->param.n_scales_per_octave;
         for (int i = 1; i < n_scales + 1; ++i) {
-                nx_image_deriv_x(det->gx, det->levels[i]);
-                nx_image_deriv_y(det->gy, det->levels[i]);
+                nx_image_deriv_x(det->gx, det->levels[i-1]);
+                nx_image_deriv_y(det->gy, det->levels[i-1]);
                 nx_sift_process_dog(det, store, octave, sigma_c, i);
         }
 }
@@ -595,7 +583,7 @@ int nx_sift_detector_compute(struct NXSIFTDetector *det,
 
         const int MIN_DIM = 2 * det->param.border_distance + 2;
 
-        float sigma_c = 0.5;
+        float sigma_c = 0.5f;
         nx_image_resize(det->levels[0], image->width, image->height,
                         NX_IMAGE_STRIDE_DEFAULT,
                         NX_IMAGE_GRAYSCALE, NX_IMAGE_FLOAT32);

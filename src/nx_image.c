@@ -40,7 +40,7 @@
 #include "virg/nexus/nx_transform_2d.h"
 #include "virg/nexus/nx_image_warp.h"
 
-static const float NX_IMAGE_SMOOTH_KERNEL_TRUNCATION_FACTOR = 2.5f;
+static const float NX_IMAGE_SMOOTH_KERNEL_TRUNCATION_FACTOR = 4.0f;
 
 struct NXImage *nx_image_alloc()
 {
@@ -864,6 +864,7 @@ void nx_image_smooth(struct NXImage *dest, const struct NXImage *src,
         }
 
         int nk_max = nx_max_i(nkx, nky);
+        /* fprintf(stderr, "Called with %.4f sigma, %d kernel size\n", sigma_x, nk_max); */
         int nk_sym = nk_max / 2 + 1;
         float *kernel = NX_NEW_S(nk_sym);
 
@@ -875,12 +876,12 @@ void nx_image_smooth(struct NXImage *dest, const struct NXImage *src,
                 case NX_IMAGE_UCHAR:
                         nx_filter_copy_to_buffer1_uc(src->width, buffer,
                                                      src->data.uc + y * src->row_stride,
-                                                     nkx / 2, NX_BORDER_MIRROR);
+                                                     nkx / 2, NX_BORDER_REPEAT);
                         break;
                 case NX_IMAGE_FLOAT32:
                         nx_filter_copy_to_buffer1(src->width, buffer,
                                                   src->data.f32 + y * src->row_stride,
-                                                  nkx / 2, NX_BORDER_MIRROR);
+                                                  nkx / 2, NX_BORDER_REPEAT);
                         break;
                 default:
                         NX_FATAL(NX_LOG_TAG, "Unhandled switch case for image data type");
@@ -909,13 +910,13 @@ void nx_image_smooth(struct NXImage *dest, const struct NXImage *src,
                         nx_filter_copy_to_buffer_uc(dest->height, buffer,
                                                     dest->data.uc + x,
                                                     dest->row_stride, nky / 2,
-                                                    NX_BORDER_MIRROR);
+                                                    NX_BORDER_REPEAT);
                         break;
                 case NX_IMAGE_FLOAT32:
                         nx_filter_copy_to_buffer(dest->height, buffer,
                                                  dest->data.f32 + x,
                                                  dest->row_stride, nky / 2,
-                                                 NX_BORDER_MIRROR);
+                                                 NX_BORDER_REPEAT);
                         break;
                 default:
                         NX_FATAL(NX_LOG_TAG, "Unhandled switch case for image data type");
@@ -965,12 +966,12 @@ void nx_image_filter_box_x(struct NXImage *dest, const struct NXImage *src,
                 case NX_IMAGE_UCHAR:
                         nx_filter_copy_to_buffer1_uc(src->width, buffer,
                                                      src->data.uc + y * src->row_stride,
-                                                     sum_radius, NX_BORDER_MIRROR);
+                                                     sum_radius, NX_BORDER_REPEAT);
                         break;
                 case NX_IMAGE_FLOAT32:
                         nx_filter_copy_to_buffer1(src->width, buffer,
                                                   src->data.f32 + y * src->row_stride,
-                                                  sum_radius, NX_BORDER_MIRROR);
+                                                  sum_radius, NX_BORDER_REPEAT);
                         break;
                 default:
                         NX_FATAL(NX_LOG_TAG, "Unhandled switch case for image data type");
@@ -1016,13 +1017,13 @@ void nx_image_filter_box_y(struct NXImage *dest, const struct NXImage *src,
                         nx_filter_copy_to_buffer_uc(src->height, buffer,
                                                     src->data.uc + x,
                                                     src->row_stride, sum_radius,
-                                                    NX_BORDER_MIRROR);
+                                                    NX_BORDER_REPEAT);
                         break;
                 case NX_IMAGE_FLOAT32:
                         nx_filter_copy_to_buffer(src->height, buffer,
                                                  src->data.f32 + x,
                                                  src->row_stride, sum_radius,
-                                                 NX_BORDER_MIRROR);
+                                                 NX_BORDER_REPEAT);
                         break;
                 default:
                         NX_FATAL(NX_LOG_TAG, "Unhandled switch case for image data type");
@@ -1086,14 +1087,15 @@ void nx_image_filter_box(struct NXImage *dest, const struct NXImage *src,
                                                                         \
                 nx_image_resize(dest, src->width, src->height, NX_IMAGE_STRIDE_DEFAULT, \
                                 src->type, NX_IMAGE_FLOAT32);           \
-                nx_image_set_zero(dest);                                \
                                                                         \
-                for (int y = 1; y < src->height-1; ++y) {                 \
+                for (int y = 0; y < src->height; ++y) {                 \
                         const T *src_row = src->data.F + y*src->row_stride; \
                         float *dest_row = dest->data.f32 + y*dest->row_stride; \
+                        dest_row[0] = 2.0f * (src_row[1]-src_row[0])/S; \
                         for (int x = 1; x < dest->width-1; ++x) {       \
                                 dest_row[x] = (src_row[x+1]-src_row[x-1])/S; \
                         }                                               \
+                        dest_row[dest->width-1] = 2.0f * (src_row[src->width-1]-src_row[src->width-2])/S; \
                 }                                                       \
         }
 
@@ -1126,18 +1128,26 @@ void nx_image_deriv_x(struct NXImage *dest, const struct NXImage *src)
                                 src->type, NX_IMAGE_FLOAT32);           \
                 nx_image_set_zero(dest);                                \
                                                                         \
-                for (int y = 1; y < src->height-1; ++y) {                 \
+                for (int x = 0; x < dest->width; ++x) {                 \
+                        dest->data.f32[x] = 2.0f * (src->data.F[x + src->row_stride] \
+                                                   - src->data.F[x])/S; \
+                }                                                       \
+                for (int y = 1; y < src->height-1; ++y) {               \
                         const T *src_row_m = src->data.F + (y-1)*src->row_stride; \
                         const T *src_row_p = src->data.F + (y+1)*src->row_stride; \
                         float *dest_row = dest->data.f32 + y*dest->row_stride; \
-                        for (int x = 1; x < dest->width-1; ++x) {       \
+                        for (int x = 0; x < dest->width; ++x) {         \
                                 dest_row[x] = (src_row_p[x]-src_row_m[x])/S; \
                         }                                               \
+                }                                                       \
+                for (int x = 0; x < dest->width; ++x) {                 \
+                        dest->data.f32[x + (src->height-1)*dest->row_stride] = 2.0f * (src->data.F[x + (src->height-1)*dest->row_stride] \
+                                                                                       - src->data.F[x + (src->height-2)*dest->row_stride])/S; \
                 }                                                       \
         }
 
 NX_DEFINE_DERIV_Y_FUNC(uc,uchar,255.0f)
-NX_DEFINE_DERIV_Y_FUNC(f32,float,1)
+NX_DEFINE_DERIV_Y_FUNC(f32,float,1.0f)
 #undef NX_DEFINE_DERIV_Y_FUNC
 
 void nx_image_deriv_y(struct NXImage *dest, const struct NXImage *src)
@@ -1153,52 +1163,3 @@ void nx_image_deriv_y(struct NXImage *dest, const struct NXImage *src)
         }
 }
 
-#define NX_DEFINE_GRADIENT_FUNC(F,T,S)                                   \
-        void nx_image_gradient_##F(struct NXImage *g_mag, struct NXImage *g_ori, \
-                                   const struct NXImage *img)           \
-        {                                                               \
-                NX_ASSERT_PTR(g_mag);                                   \
-                NX_ASSERT_PTR(g_ori);                                   \
-                NX_ASSERT_PTR(img);                                     \
-                NX_IMAGE_ASSERT_GRAYSCALE(img);                         \
-                                                                        \
-                nx_image_resize(g_mag, img->width, img->height, NX_IMAGE_STRIDE_DEFAULT, \
-                                img->type, NX_IMAGE_FLOAT32);           \
-                nx_image_resize(g_ori, img->width, img->height, NX_IMAGE_STRIDE_DEFAULT, \
-                                img->type, NX_IMAGE_FLOAT32);           \
-                nx_image_set_zero(g_mag);                               \
-                nx_image_set_zero(g_ori);                               \
-                                                                        \
-                for (int y = 1; y < img->height-1; ++y) {               \
-                        const T *row_m = img->data.F + (y-1)*img->row_stride; \
-                        const T *row   = img->data.F +     y*img->row_stride; \
-                        const T *row_p = img->data.F + (y+1)*img->row_stride; \
-                        float *r_mag = g_mag->data.f32 + y*g_mag->row_stride; \
-                        float *r_ori = g_ori->data.f32 + y*g_ori->row_stride; \
-                        for (int x = 1; x < img->width-1; ++x) {        \
-                                float dx = (row[x+1] - row[x-1])/S;     \
-                                float dy = (row_p[x]-row_m[x])/S;       \
-                                r_mag[x] = sqrt(dx*dx + dy*dy);         \
-                                r_ori[x] = atan2(dy, dx);               \
-                        }                                               \
-                }                                                       \
-        }
-
-NX_DEFINE_GRADIENT_FUNC(uc,uchar,255.0f)
-NX_DEFINE_GRADIENT_FUNC(f32,float,1.0f)
-#undef NX_DEFINE_GRADIENT_FUNC
-
-void nx_image_gradient(struct NXImage *g_mag, struct NXImage *g_ori,
-                       const struct NXImage *img)
-{
-        NX_ASSERT_PTR(img);
-        NX_ASSERT_PTR(g_mag);
-        NX_ASSERT_PTR(g_ori);
-        NX_IMAGE_ASSERT_GRAYSCALE(img);
-
-        switch (img->dtype) {
-        case NX_IMAGE_UCHAR: nx_image_gradient_uc(g_mag, g_ori, img); break;
-        case NX_IMAGE_FLOAT32: nx_image_gradient_f32(g_mag, g_ori, img); break;
-        default: NX_FATAL(NX_LOG_TAG, "Unhandled switch case for image data type");
-        }
-}

@@ -35,6 +35,7 @@ __NX_BEGIN_DECL
 
 static inline float nx_svec3_norm_sq(const float *v);
 static inline float nx_svec3_dist_sq(const float *v0, const float *v1);
+static inline float nx_svec3_dot    (const float *v0, const float *v1);
 
 static inline float nx_svec4h_to_euclidean(float *v);
 
@@ -64,6 +65,11 @@ static inline float nx_svec3_dist_sq(const float *v0, const float *v1)
         float d2 = v0[2] - v1[2];
 
         return d0*d0 + d1*d1 + d2*d2;
+}
+
+static inline float nx_svec3_dot(const float *v0, const float *v1)
+{
+        return v0[0]*v1[0] + v0[1]*v1[1] + v0[2]*v1[2];
 }
 
 static inline float nx_svec4h_to_euclidean(float *v)

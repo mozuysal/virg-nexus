@@ -216,9 +216,6 @@ void nx_image_deriv_x(struct NXImage *dest, const struct NXImage *src);
 
 void nx_image_deriv_y(struct NXImage *dest, const struct NXImage *src);
 
-void nx_image_gradient(struct NXImage *g_mag, struct NXImage *g_ori,
-                       const struct NXImage *img);
-
 __NX_END_DECL
 
 #endif
