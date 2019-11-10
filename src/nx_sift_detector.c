@@ -39,28 +39,13 @@
 #include "virg/nexus/nx_alloc.h"
 #include "virg/nexus/nx_assert.h"
 #include "virg/nexus/nx_image.h"
+#include "virg/nexus/nx_image_io.h"
 #include "virg/nexus/nx_math.h"
 #include "virg/nexus/nx_mat234.h"
 #include "virg/nexus/nx_vec234.h"
 #include "virg/nexus/nx_vec.h"
 
 #define NX_SIFT_N_ORI_BINS 36
-
-struct NXSIFTDetectorParams nx_sift_default_parameters()
-{
-        struct NXSIFTDetectorParams params;
-        params.double_image = NX_TRUE;
-        params.n_scales_per_octave = 3;
-        params.sigma0 = 1.6f;
-        params.kernel_truncation_factor = 4;
-        params.border_distance = 5;
-        params.peak_threshold = 0.08f;
-        params.edge_threshold = 10.0f;
-        params.magnification_factor = 3;
-
-        return params;
-}
-
 
 struct NXSIFTDetector
 {
@@ -264,8 +249,8 @@ void nx_sift_compute_descriptor(struct NXSIFTDetector *det,
         nx_svec_to_unit(NX_SIFT_DESC_DIM, &fdesc[0]);
 
         for (int i = 0; i < NX_SIFT_DESC_DIM; ++i)
-                if (fdesc[i] > 0.2)
-                        fdesc[i] = 0.2;
+                if (fdesc[i] > 0.2f)
+                        fdesc[i] = 0.2f;
         nx_svec_to_unit(NX_SIFT_DESC_DIM, &fdesc[0]);
 
         for (int i = 0; i < NX_SIFT_DESC_DIM; ++i)
@@ -579,16 +564,32 @@ int nx_sift_detector_compute(struct NXSIFTDetector *det,
 {
         NX_ASSERT_PTR(det);
         NX_ASSERT_PTR(image);
+        NX_IMAGE_ASSERT_GRAYSCALE(image);
         NX_ASSERT_PTR(keys);
         NX_ASSERT_PTR(desc);
 
         const int MIN_DIM = 2 * det->param.border_distance + 2;
 
         float sigma_c = 0.5f;
+        int octave = 0;
+
+        struct NXImage *dbl_img = nx_image_alloc();
+        if (det->param.double_image) {
+                nx_image_upsample(dbl_img, image);
+                image = dbl_img;
+
+                sigma_c *= 2.0f;
+                octave--;
+        }
+
         nx_image_resize(det->levels[0], image->width, image->height,
                         NX_IMAGE_STRIDE_DEFAULT,
                         NX_IMAGE_GRAYSCALE, NX_IMAGE_FLOAT32);
         nx_image_convert_dtype(det->levels[0], image);
+
+        nx_image_free(dbl_img);
+        image = NULL;
+        dbl_img = NULL;
 
         if (det->param.sigma0 > sigma_c) {
                 float sigma_g = kernel_sigma(sigma_c, det->param.sigma0);
@@ -604,7 +605,6 @@ int nx_sift_detector_compute(struct NXSIFTDetector *det,
         store.keys = *keys;
         store.desc = *desc;
 
-        int octave = 0;
         while (det->levels[0]->width > MIN_DIM
                && det->levels[0]->height > MIN_DIM) {
                 nx_sift_detector_prepare_octave(det, sigma_c);

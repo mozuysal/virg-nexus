@@ -193,6 +193,8 @@ void nx_image_scale(struct NXImage *dest, const struct NXImage *src,
 
 void nx_image_downsample(struct NXImage *dest, const struct NXImage *src);
 
+void nx_image_upsample(struct NXImage *dest, const struct NXImage *src);
+
 void nx_image_downsample_aa_x(struct NXImage *dest, const struct NXImage *src);
 
 void nx_image_downsample_aa_y(struct NXImage *dest, const struct NXImage *src);

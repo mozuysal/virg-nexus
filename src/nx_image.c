@@ -711,6 +711,109 @@ void nx_image_downsample(struct NXImage *dest, const struct NXImage *src)
         }
 }
 
+void nx_image_upsample_uc(struct NXImage *dest, const struct NXImage *src)
+{
+        NX_ASSERT_PTR(src);
+        NX_ASSERT_PTR(dest);
+        NX_IMAGE_ASSERT_GRAYSCALE_UCHAR(src);
+
+        int dest_width  = 2 * src->width;
+        int dest_height = 2 * src->height;
+        int n_ch = nx_image_n_channels(src->type);
+        int dest_row_stride = dest_width*n_ch;
+        nx_image_resize(dest, dest_width, dest_height, dest_row_stride,
+                        src->type, src->dtype);
+
+        for (int y = 0; y < src->height - 1; ++y) {
+                const uchar *src_row  = src->data.uc + y * src->row_stride;
+                const uchar *src_rowp = src_row + src->row_stride;
+                uchar *dest_row  = dest->data.uc + 2*y * dest->row_stride;
+                uchar *dest_rowp = dest_row + dest->row_stride;
+                for (int x = 0; x < src->width - 1; ++x) {
+                        dest_row[2*x]    = src_row[x];
+                        dest_row[2*x+1]  = (src_row[x] + (int)src_row[x+1]) / 2;
+                        dest_rowp[2*x]   = (src_row[x] + (int)src_rowp[x])  / 2;
+                        dest_rowp[2*x+1] = (src_row[x] + (int)src_row[x+1]
+                                            + src_rowp[x] + src_rowp[x+1]) / 4;
+                }
+                dest_row[2*src->width-2]  = src_row[src->width-1];
+                dest_row[2*src->width-1]  = src_row[src->width-1];
+                dest_rowp[2*src->width-2] = (src_row[src->width-1] + (int)src_rowp[src->width-1]) / 2;
+                dest_rowp[2*src->width-1] = (src_row[src->width-1] + (int)src_rowp[src->width-1]) / 2;
+        }
+        const uchar *src_row  = src->data.uc + (src->height-1) * src->row_stride;
+        uchar *dest_row  = dest->data.uc + 2*(src->height-1) * dest->row_stride;
+        uchar *dest_rowp = dest_row + dest->row_stride;
+        for (int x = 0; x < src->width - 1; ++x) {
+                dest_row[2*x]    = src_row[x];
+                dest_row[2*x+1]  = (src_row[x] + (int)src_row[x+1]) / 2;
+                dest_rowp[2*x]   = src_row[x];
+                dest_rowp[2*x+1] = (src_row[x] + (int)src_row[x+1]) / 2;
+        }
+        dest_row[2*src->width-2]  = src_row[src->width-1];
+        dest_row[2*src->width-1]  = src_row[src->width-1];
+        dest_rowp[2*src->width-2] = src_row[src->width-1];
+        dest_rowp[2*src->width-1] = src_row[src->width-1];
+}
+
+void nx_image_upsample_f32(struct NXImage *dest, const struct NXImage *src)
+{
+        NX_ASSERT_PTR(src);
+        NX_ASSERT_PTR(dest);
+        NX_IMAGE_ASSERT_GRAYSCALE_FLOAT32(src);
+
+        int dest_width  = 2 * src->width;
+        int dest_height = 2 * src->height;
+        int n_ch = nx_image_n_channels(src->type);
+        int dest_row_stride = dest_width*n_ch;
+        nx_image_resize(dest, dest_width, dest_height, dest_row_stride,
+                        src->type, src->dtype);
+
+        for (int y = 0; y < src->height - 1; ++y) {
+                const float *src_row  = src->data.f32 + y * src->row_stride;
+                const float *src_rowp = src_row + src->row_stride;
+                float *dest_row  = dest->data.f32 + 2*y * dest->row_stride;
+                float *dest_rowp = dest_row + dest->row_stride;
+                for (int x = 0; x < src->width - 1; ++x) {
+                        dest_row[2*x]    = src_row[x];
+                        dest_row[2*x+1]  = (src_row[x] + src_row[x+1]) * 0.5f;
+                        dest_rowp[2*x]   = (src_row[x] + src_rowp[x]) * 0.5f;
+                        dest_rowp[2*x+1] = (src_row[x] + src_row[x+1]
+                                            + src_rowp[x] + src_rowp[x+1]) * 0.25f;
+                }
+                dest_row[2*src->width-2]  = src_row[src->width-1];
+                dest_row[2*src->width-1]  = src_row[src->width-1];
+                dest_rowp[2*src->width-2] = (src_row[src->width-1] + src_rowp[src->width-1]) * 0.5f;
+                dest_rowp[2*src->width-1] = (src_row[src->width-1] + src_rowp[src->width-1]) * 0.5f;
+        }
+        const float *src_row  = src->data.f32 + (src->height-1) * src->row_stride;
+        float *dest_row  = dest->data.f32 + 2*(src->height-1) * dest->row_stride;
+        float *dest_rowp = dest_row + dest->row_stride;
+        for (int x = 0; x < src->width - 1; ++x) {
+                dest_row[2*x]    = src_row[x];
+                dest_row[2*x+1]  = (src_row[x] + src_row[x+1]) * 0.5f;
+                dest_rowp[2*x]   = src_row[x];
+                dest_rowp[2*x+1] = (src_row[x] + src_row[x+1]) * 0.5f;
+        }
+        dest_row[2*src->width-2]  = src_row[src->width-1];
+        dest_row[2*src->width-1]  = src_row[src->width-1];
+        dest_rowp[2*src->width-2] = src_row[src->width-1];
+        dest_rowp[2*src->width-1] = src_row[src->width-1];
+}
+
+void nx_image_upsample(struct NXImage *dest, const struct NXImage *src)
+{
+        NX_ASSERT_PTR(src);
+        NX_ASSERT_PTR(dest);
+        NX_IMAGE_ASSERT_GRAYSCALE(src);
+
+        switch (src->dtype) {
+        case NX_IMAGE_UCHAR: nx_image_upsample_uc(dest, src); break;
+        case NX_IMAGE_FLOAT32: nx_image_upsample_f32(dest, src); break;
+        default: NX_FATAL(NX_LOG_TAG, "Unhandled switch case for image data type");
+        }
+}
+
 #define NX_DEFINE_DOWNSAMPLE_AA_X_FUNC(F,T)                             \
         void nx_image_downsample_aa_x_##F(struct NXImage *dest, const struct NXImage *src) \
         {                                                               \

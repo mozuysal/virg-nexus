@@ -55,7 +55,20 @@ struct NXSIFTDetectorParams {
         int magnification_factor;
 };
 
-struct NXSIFTDetectorParams nx_sift_default_parameters();
+static inline struct NXSIFTDetectorParams nx_sift_default_parameters()
+{
+        struct NXSIFTDetectorParams params;
+        params.double_image = NX_TRUE;
+        params.n_scales_per_octave = 3;
+        params.sigma0 = 1.6f;
+        params.kernel_truncation_factor = 4;
+        params.border_distance = 5;
+        params.peak_threshold = 0.08f;
+        params.edge_threshold = 10.0f;
+        params.magnification_factor = 3;
+
+        return params;
+}
 
 struct NXSIFTDetector;
 
