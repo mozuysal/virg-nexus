@@ -215,7 +215,7 @@ TEST_F(NXImageTest, ImageGrayUCFilter) {
         img0_ = nx_image_new_gray_uc(NX, NY);
         memcpy(img0_->data.uc, TEST_IMAGE_DATA, sizeof(TEST_IMAGE_DATA));
         img1_ = nx_image_alloc();
-        nx_image_smooth(img1_, img0_, TEST_SIGMA, TEST_SIGMA, NULL);
+        nx_image_smooth(img1_, img0_, TEST_SIGMA, TEST_SIGMA, 4.0f, NULL);
         nx_image_free(img0_);
         nx_image_free(img1_);
 }

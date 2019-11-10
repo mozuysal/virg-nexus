@@ -101,5 +101,5 @@ void nx_checkers_score_image(struct NXImage *score_img,
                         s_row[x] = d*d;
                 }
         }
-        nx_image_smooth(score_img, score_img, 1.3, 1.3, NULL);
+        nx_image_smooth(score_img, score_img, 1.3f, 1.3f, 3.0f, NULL);
 }

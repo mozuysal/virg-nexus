@@ -92,7 +92,8 @@ public:
         VGImage& filter_box(const VGImage& src, int sum_radius_x, int sum_radius_y);
         VGImage& filter_box_y(const VGImage& src, int sum_radius);
         VGImage& filter_box_x(const VGImage& src, int sum_radius);
-        VGImage& smooth(const VGImage& src, float sigma_x, float sigma_y);
+        VGImage& smooth(const VGImage& src, float sigma_x,
+                        float sigma_y, float kernel_truncation_factor);
         VGImage& deriv_x_of(const VGImage& src);
         VGImage& deriv_y_of(const VGImage& src);
 

@@ -560,7 +560,8 @@ void nx_sift_detector_prepare_octave(struct NXSIFTDetector *det,
                 nx_image_copy(det->levels[i], det->levels[i-1]);
                 float sigma_g = kernel_sigma(sigma_c, scale_multiplier * sigma_c);
                 nx_image_smooth(det->levels[i], det->levels[i],
-                                sigma_g, sigma_g, NULL);
+                                sigma_g, sigma_g,
+                                det->param.kernel_truncation_factor, NULL);
                 sigma_c *= scale_multiplier;
         }
 
@@ -592,7 +593,8 @@ int nx_sift_detector_compute(struct NXSIFTDetector *det,
         if (det->param.sigma0 > sigma_c) {
                 float sigma_g = kernel_sigma(sigma_c, det->param.sigma0);
                 nx_image_smooth(det->levels[0], det->levels[0],
-                                sigma_g, sigma_g, NULL);
+                                sigma_g, sigma_g,
+                                det->param.kernel_truncation_factor, NULL);
                 sigma_c = det->param.sigma0;
         }
 

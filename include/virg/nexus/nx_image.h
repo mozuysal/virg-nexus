@@ -199,10 +199,12 @@ void nx_image_downsample_aa_y(struct NXImage *dest, const struct NXImage *src);
 
 float *nx_image_filter_buffer_alloc(int width, int height,
                                     float sigma_x, float sigma_y,
+                                    float kernel_truncation_factor,
                                     int *nk_x, int *nk_y);
 
 void nx_image_smooth(struct NXImage *dest, const struct NXImage *src,
-                     float sigma_x, float sigma_y, float *filter_buffer);
+                     float sigma_x, float sigma_y,
+                     float kernel_truncation_factor, float *filter_buffer);
 
 void nx_image_filter_box_x(struct NXImage *dest, const struct NXImage *src,
                            int sum_radius, float *filter_buffer);

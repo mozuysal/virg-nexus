@@ -29,6 +29,8 @@
 #include "virg/nexus/nx_assert.h"
 #include "virg/nexus/nx_alloc.h"
 
+#define NX_HARRIS_KERNEL_TRUNCATION_FACTOR 3.0f
+
 void nx_harris_deriv_images(struct NXImage **dimg,
                             const struct NXImage *img,
                             float sigma_win)
@@ -61,9 +63,11 @@ void nx_harris_deriv_images(struct NXImage **dimg,
                 int nky;
                 float * buffer = nx_image_filter_buffer_alloc(img->width, img->height,
                                                               sigma_win, sigma_win,
+                                                              NX_HARRIS_KERNEL_TRUNCATION_FACTOR,
                                                               &nkx, &nky);
                 for (int i = 0; i < 3; ++i)
-                        nx_image_smooth(dimg[i], dimg[i], sigma_win, sigma_win, buffer);
+                        nx_image_smooth(dimg[i], dimg[i], sigma_win, sigma_win,
+                                        NX_HARRIS_KERNEL_TRUNCATION_FACTOR, buffer);
                 nx_free(buffer);
         }
 }

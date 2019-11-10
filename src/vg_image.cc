@@ -182,9 +182,11 @@ VGImage& VGImage::downsampled_from(const VGImage& src)
         return *this;
 }
 
-VGImage& VGImage::smooth(const VGImage& src, float sigma_x, float sigma_y)
+VGImage& VGImage::smooth(const VGImage& src, float sigma_x,
+                         float sigma_y, float kernel_truncation_factor)
 {
-        nx_image_smooth(m_img.get(), src.m_img.get(), sigma_x, sigma_y, NULL);
+        nx_image_smooth(m_img.get(), src.m_img.get(), sigma_x,
+                        sigma_y, kernel_truncation_factor, NULL);
         return *this;
 }
 

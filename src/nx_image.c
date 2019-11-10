@@ -40,8 +40,6 @@
 #include "virg/nexus/nx_transform_2d.h"
 #include "virg/nexus/nx_image_warp.h"
 
-static const float NX_IMAGE_SMOOTH_KERNEL_TRUNCATION_FACTOR = 4.0f;
-
 struct NXImage *nx_image_alloc()
 {
         struct NXImage *img = NX_NEW(1, struct NXImage);
@@ -827,10 +825,12 @@ void nx_image_downsample_aa_y(struct NXImage *dest, const struct NXImage *src)
 }
 
 float *nx_image_filter_buffer_alloc(int width, int height,
-                                    float sigma_x, float sigma_y, int *nk_x, int *nk_y)
+                                    float sigma_x, float sigma_y,
+                                    float kernel_truncation_factor,
+                                    int *nk_x, int *nk_y)
 {
-        *nk_x = nx_kernel_size_gaussian(sigma_x, NX_IMAGE_SMOOTH_KERNEL_TRUNCATION_FACTOR);
-        *nk_y = nx_kernel_size_gaussian(sigma_y, NX_IMAGE_SMOOTH_KERNEL_TRUNCATION_FACTOR);
+        *nk_x = nx_kernel_size_gaussian(sigma_x, kernel_truncation_factor);
+        *nk_y = nx_kernel_size_gaussian(sigma_y, kernel_truncation_factor);
         int nk_max = nx_max_i(*nk_x, *nk_y);
 
         int max_dim = nx_max_i(width, height);
@@ -839,7 +839,8 @@ float *nx_image_filter_buffer_alloc(int width, int height,
 }
 
 void nx_image_smooth(struct NXImage *dest, const struct NXImage *src,
-                     float sigma_x, float sigma_y, float *filter_buffer)
+                     float sigma_x, float sigma_y,
+                     float kernel_truncation_factor, float *filter_buffer)
 {
         NX_ASSERT_PTR(src);
         NX_ASSERT_PTR(dest);
@@ -860,6 +861,7 @@ void nx_image_smooth(struct NXImage *dest, const struct NXImage *src,
         if (!buffer) {
                 buffer = nx_image_filter_buffer_alloc(src->width, src->height,
                                                       sigma_x, sigma_y,
+                                                      kernel_truncation_factor,
                                                       &nkx, &nky);
         }
 
