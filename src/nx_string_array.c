@@ -56,6 +56,16 @@ struct NXStringArray *nx_string_array_new(int n)
         return sa;
 }
 
+struct NXStringArray *nx_string_array_new_from_null_terminated_list(char **str_list)
+{
+        struct NXStringArray *sa = nx_string_array_alloc();
+        while (*str_list) {
+                nx_string_array_append(sa, *str_list);
+                str_list++;
+        }
+        return sa;
+}
+
 void nx_string_array_free(struct NXStringArray *sa)
 {
         if (sa) {

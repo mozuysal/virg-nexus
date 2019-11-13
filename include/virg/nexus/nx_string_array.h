@@ -37,6 +37,7 @@ struct NXStringArray;
 
 struct NXStringArray *nx_string_array_alloc();
 struct NXStringArray *nx_string_array_new(int n);
+struct NXStringArray *nx_string_array_new_from_null_terminated_list(char **str_list);
 void nx_string_array_free(struct NXStringArray *sa);
 
 int nx_string_array_size(struct NXStringArray *sa);

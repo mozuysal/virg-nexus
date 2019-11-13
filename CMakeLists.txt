@@ -387,10 +387,13 @@ include_directories(${TOOL_INCLUDE_DIR})
 
 set(NEXUS_TOOLS
   nx-harris-detector
+  nx-stitch
 )
 
 add_executable(nx-harris-detector tools/nx_harris_detector_main.c)
 install(FILES ${TOOL_MAN_DIR}/nx-harris-detector.1 DESTINATION ${TOOL_MAN_INSTALL_DIR}/man1)
+
+add_executable(nx-stitch tools/nx_stitch_main.c tools/nx_panorama_builder.c)
 
 if(VIRG_NEXUS_CXX_API)
   list(APPEND NEXUS_TOOLS vg-stereo-matcher)
