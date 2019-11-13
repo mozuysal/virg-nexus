@@ -63,6 +63,7 @@ set(virg_nexus_C_SOURCES
   src/nx_pinhole.c
   src/nx_kitti_slam.c
   src/nx_temple_color_128.c
+  src/nx_vgg_affine_dataset.c
 )
 
 set(virg_nexus_C_HEADERS
@@ -127,6 +128,7 @@ set(virg_nexus_C_HEADERS
   include/virg/nexus/nx_pinhole.h
   include/virg/nexus/nx_kitti_slam.h
   include/virg/nexus/nx_temple_color_128.h
+  include/virg/nexus/nx_vgg_affine_dataset.h
 )
 
 set(virg_nexus_CXX_SOURCES
