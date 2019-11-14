@@ -28,6 +28,7 @@
 
 #include <math.h>
 #include <float.h>
+#include <limits.h>
 #include <string.h>
 
 #include "virg/nexus/nx_config.h"
@@ -42,6 +43,8 @@ static inline float nx_svec_norm    (int n, const float *v);
 static inline float nx_svec_to_unit (int n, float *v);
 static inline int   nx_svec_max_idx (int n, const float *v);
 static inline float nx_svec_max_val (int n, const float *v);
+
+static inline int nx_ucvec_dist_sq(int n, const uchar *v0, const uchar *v1);
 
 /*
  * -----------------------------------------------------------------------------
@@ -114,6 +117,19 @@ static inline float nx_svec_max_val(int n, const float *v)
         }
         return max_val;
 }
+
+static inline int nx_ucvec_dist_sq(int n, const uchar *v0, const uchar *v1)
+{
+        int d_sq = 0;
+
+        for (int i = 0; i < n; ++i) {
+                int d = v0[i] - v1[i];
+                d_sq += d*d;
+        }
+
+        return d_sq;
+}
+
 
 __NX_END_DECL
 

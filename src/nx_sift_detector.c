@@ -44,6 +44,7 @@
 #include "virg/nexus/nx_mat234.h"
 #include "virg/nexus/nx_vec234.h"
 #include "virg/nexus/nx_vec.h"
+#include "virg/nexus/nx_types.h"
 
 #define NX_SIFT_N_ORI_BINS 36
 
@@ -619,4 +620,92 @@ int nx_sift_detector_compute(struct NXSIFTDetector *det,
         *desc = store.desc;
 
         return store.n;
+}
+
+int nx_sift_match_brute_force(int n,  const struct NXKeypoint *keys,
+                              const uchar *desc,
+                              int np, const struct NXKeypoint *keyps,
+                              const uchar *descp,
+                              struct NXPointMatch2D *corr,
+                              float dist_ratio_thr)
+{
+        NX_ASSERT(n >= 0);
+        NX_ASSERT_PTR(keys);
+        NX_ASSERT_PTR(desc);
+        NX_ASSERT(np >= 0);
+        NX_ASSERT_PTR(keyps);
+        NX_ASSERT_PTR(descp);
+        NX_ASSERT_PTR(corr);
+
+        const float SIFT_LOCALIZATION_STD_DEV = 0.3f;
+
+        NXBool check_dist_ratio = dist_ratio_thr > 0.0f && dist_ratio_thr < 1.0f;
+
+        if (check_dist_ratio) {
+                const float DIST_THR_SQ = dist_ratio_thr * dist_ratio_thr;
+                int n_matches = 0;
+
+                for (int i = 0; i < n; ++i) {
+                        int nn_ids[2] = {-1, -1};
+                        int nn_dist_sq[2] = { INT_MAX, INT_MAX };
+                        const struct NXKeypoint *k = keys + i;
+                        const uchar *desc_i = desc + i*NX_SIFT_DESC_DIM;
+
+                        for (int j = 0; j < np; ++j) {
+                                const uchar *desc_j = descp + j*NX_SIFT_DESC_DIM;
+
+                                int d_sq = nx_ucvec_dist_sq(NX_SIFT_DESC_DIM,
+                                                            desc_i, desc_j);
+                                if (d_sq < nn_dist_sq[0]) {
+                                        nn_dist_sq[1] = nn_dist_sq[0];
+                                        nn_dist_sq[0] = d_sq;
+
+                                        nn_ids[1] = nn_ids[0];
+                                        nn_ids[0] = j;
+                                } else if (d_sq < nn_dist_sq[1]) {
+                                        nn_dist_sq[1] = d_sq;
+                                        nn_ids[1] = j;
+                                }
+                        }
+
+                        if (nn_dist_sq[0]  > DIST_THR_SQ * nn_dist_sq[1]) {
+                                const struct NXKeypoint *kp = keyps + nn_ids[0];
+                                struct NXPointMatch2D *pm = corr + n_matches;
+                                *pm = nx_point_match_2d_from_keypoints(k, kp,
+                                                                       SIFT_LOCALIZATION_STD_DEV,
+                                                                       nn_dist_sq[0],
+                                                                       NX_FALSE);
+                                ++n_matches;
+                        }
+                }
+
+                return n_matches;
+        } else {
+                for (int i = 0; i < n; ++i) {
+                        int nn_id = -1;
+                        int nn_dist_sq = INT_MAX;
+                        const struct NXKeypoint *k = keys + i;
+                        const uchar *desc_i = desc + i*NX_SIFT_DESC_DIM;
+
+                        for (int j = 0; j < np; ++j) {
+                                const uchar *desc_j = descp + j*NX_SIFT_DESC_DIM;
+
+                                int d_sq = nx_ucvec_dist_sq(NX_SIFT_DESC_DIM,
+                                                            desc_i, desc_j);
+                                if (d_sq < nn_dist_sq) {
+                                        nn_dist_sq = d_sq;
+                                        nn_id = j;
+                                }
+                        }
+
+                        const struct NXKeypoint *kp = keyps + nn_id;
+                        struct NXPointMatch2D *pm = corr + i;
+                        *pm = nx_point_match_2d_from_keypoints(k, kp,
+                                                               SIFT_LOCALIZATION_STD_DEV,
+                                                               nn_dist_sq,
+                                                               NX_FALSE);
+                }
+
+                return n;
+        }
 }

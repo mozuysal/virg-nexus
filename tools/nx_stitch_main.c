@@ -50,7 +50,7 @@ int main(int argc, char **argv)
         nx_panorama_builder_run(builder);
 
         const struct NXImage *panorama = nx_panorama_builder_get_panorama(builder);
-        nx_image_xsave(panorama, "/tmp/panorama.jpeg");
+        /* nx_image_xsave(panorama, "/tmp/panorama.jpeg"); */
 
         nx_panorama_builder_free(builder);
         nx_options_free(opt);

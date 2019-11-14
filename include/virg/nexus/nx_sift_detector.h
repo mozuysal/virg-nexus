@@ -39,6 +39,7 @@
 #include "virg/nexus/nx_types.h"
 #include "virg/nexus/nx_image.h"
 #include "virg/nexus/nx_keypoint.h"
+#include "virg/nexus/nx_point_match_2d.h"
 
 __NX_BEGIN_DECL
 
@@ -81,6 +82,18 @@ int nx_sift_detector_compute(struct NXSIFTDetector *detector,
                              int *max_n_keys,
                              struct NXKeypoint **keys,
                              uchar **desc);
+
+/**
+   Match SIFT descriptors brute force from desc to descp and return the number
+   of matches. Applies distance ratio check if distance ratio threshold > 0 and
+   create a point match structure. corr must have at least n elements.
+ */
+int nx_sift_match_brute_force(int n,  const struct NXKeypoint *keys,
+                              const uchar *desc,
+                              int np, const struct NXKeypoint *keyps,
+                              const uchar *descp,
+                              struct NXPointMatch2D *corr,
+                              float dist_ratio_thr);
 
 __NX_END_DECL
 

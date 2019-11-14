@@ -28,6 +28,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 
 #include "virg/nexus/nx_config.h"
 
