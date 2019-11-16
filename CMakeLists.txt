@@ -19,6 +19,7 @@ set(virg_nexus_C_SOURCES
   src/nx_svd.c
   src/nx_linear_solvers.c
   src/nx_string.c
+  src/nx_hash_sha256.c
   src/nx_transform_2d.c
   src/nx_io.c
   src/nx_filesystem.c
@@ -84,6 +85,7 @@ set(virg_nexus_C_HEADERS
   include/virg/nexus/nx_vec234.h
   include/virg/nexus/nx_mat234.h
   include/virg/nexus/nx_string.h
+  include/virg/nexus/nx_hash_sha256.h
   include/virg/nexus/nx_vector_gen.h
   include/virg/nexus/nx_string_array.h
   include/virg/nexus/nx_transform_2d.h
@@ -335,6 +337,7 @@ set(test_SOURCES
   tests/tests_options.cc
   tests/tests_filter.cc
   tests/tests_svd.cc
+  tests/tests_sha256.cc
   tests/tests_rotation.cc
   tests/tests_quaternion.cc
   tests/tests_homography.cc

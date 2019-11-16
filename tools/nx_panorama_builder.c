@@ -32,6 +32,7 @@
 #include "virg/nexus/nx_string_array.h"
 #include "virg/nexus/nx_image_io.h"
 #include "virg/nexus/nx_vec234.h"
+#include "virg/nexus/nx_vec.h"
 #include "virg/nexus/nx_point_match_2d.h"
 #include "virg/nexus/nx_sift_detector.h"
 #include "virg/nexus/nx_homography.h"
@@ -68,6 +69,7 @@ struct NXPanoramaBuilder
         int *n_matches; // NxN matrix of int
         struct NXPointMatch2D**matches; // NxN matrix of struct NXPointMatch2D *
         double **H; // NxN matrix of double *
+        float *affinity; // NxN matrix of float
 
         // output data
         struct NXImage *panorama;
@@ -114,6 +116,8 @@ nx_panorama_builder_new_from_options(struct NXOptions *opt)
         builder->H = NX_NEW(N*N, double *);
         memset(builder->H, 0, N*N*sizeof(builder->H[0]));
 
+        builder->affinity = NX_NEW_S(N*N);
+        memset(builder->affinity, 0, N*N*sizeof(builder->affinity[0]));
         // Allocate output data
         builder->panorama = nx_image_alloc();
 
@@ -147,6 +151,7 @@ void nx_panorama_builder_free(struct NXPanoramaBuilder *builder)
                 }
                 nx_free(builder->matches);
                 nx_free(builder->H);
+                nx_free(builder->affinity);
 
                 // Deallocate output data
                 nx_image_free(builder->panorama);
@@ -261,7 +266,7 @@ void nx_panorama_builder_init(struct NXPanoramaBuilder *builder)
                 }
         }
 
-        // Estimate initial homographies
+        // Estimate initial homographies and inlier matches
         for (int i = 0; i < N; ++i) {
                 for (int j = 0; j < N; ++j) {
                         // skip estimation to self
@@ -274,10 +279,30 @@ void nx_panorama_builder_init(struct NXPanoramaBuilder *builder)
                         int ni = nx_panorama_builder_fit_initial_homography(hp,
                                                                             n_corr,
                                                                             corr);
+                        builder->affinity[j*N + i] = ni;
                         NX_LOG(NX_LOG_TAG, "%2d <-> %2d : %d inliers --> %s",
                                i, j, ni, *hp ? "OK" : "FAILED");
                 }
         }
+
+        // Pick central node
+        float *scores = NX_NEW_S(N);
+        for (int i = 0; i < N; ++i) {
+                for (int j = 0; j < N; ++j) {
+                        float aff = builder->affinity[j*N + i];
+                        fprintf(stderr, "%6.1f ", aff);
+                        scores[i] += aff;
+                        scores[j] += aff;
+                }
+                fprintf(stderr, "\n");
+        }
+
+        int central_node = nx_svec_max_idx(N, scores);
+        nx_free(scores);
+        scores = NULL;
+        NX_LOG(NX_LOG_TAG, "Selecting image %d as the central node", central_node);
+
+        
 }
 
 void nx_panorama_builder_refine_geometric(struct NXPanoramaBuilder *builder)
