@@ -32,7 +32,11 @@
 #include "gtest/gtest.h"
 
 #include "virg/nexus/nx_alloc.h"
-#include "virg/nexus/nx_hash.h"
+#include "virg/nexus/nx_log.h"
+#include "virg/nexus/nx_io.h"
+#include "virg/nexus/nx_hash_sha256.h"
+
+#include "test_data.hh"
 
 const char *SHA256_EMPTY_HASH = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
@@ -169,6 +173,73 @@ const char *SHA256_SHORT_HASH[N_SHORT_MSG] = {
         "18041bd4665083001fba8c5411d2d748e8abbfdcdfd9218cb02b68a78e7d4c23",
         "42e61e174fbb3897d6dd6cef3dd2802fe67b331953b06114a65c772859dfc1aa" };
 
+const int N_LONG_MSG = 64;
+const char *SHA256_LONG_HASH[N_LONG_MSG] = {
+        "3c593aa539fdcdae516cdf2f15000f6634185c88f505b39775fb9ab137a10aa2",
+        "46500b6ae1ab40bde097ef168b0f3199049b55545a1588792d39d594f493dca7",
+        "5f4e16a72d6c9857da0ba009ccacd4f26d7f6bf6c1b78a2ed35e68fcb15b8e40",
+        "044d823532092c22a4b48181cfb2c796e1f5b98bcd713a21f70b5afcceef1d73",
+        "db593a375cb27df689cd78b5154949e5bc30094a05d704c0295d547385176662",
+        "0599f88c429a3d4fcbb0206fa57e344121afdf8e56f78e3f5e61ba3bcf134ec6",
+        "6c83f9b69754facc3155da93261ed99c38e4225e748e8ebcd04ed62719fa56db",
+        "f574ac85532bc0c6c4e7614a2e084dbc49fbc474cda593144af28c5cc5f293f8",
+        "19636dfc80fef6d47c7ab8fa620909ccc387126cec56415c9a898f64be728515",
+        "3380c8dae5c0b68bb264b757e2451c21cbe2b899fe7a871ab1bae6041f48e7ad",
+        "c31bc10bed1384826cc30369b2d0b5880422e1a34d0eea0b67f29f40de17ba46",
+        "c3cd7be2de832774c614ccf60d030d75dfacf3cc7e49a37af349a4c3c196b106",
+        "888e223d5a497fc679c3ecfe98bf7dc531a4adf3ccf0e6d586c8912ebf781af1",
+        "e65812200409ad7e1684a2df8e15685dfab7079449c52d032870d80acceab3f6",
+        "2916d4595a3ede77f4165357977cf3529c672dcf4c39e76ec3aa848dba6ff4f6",
+        "df5f9f0898e0fa1bd9c3d3196fa8f7e6b01331d11eb214f7e5629bb7a1b7eb20",
+        "46d6071814544b8de5db52d4b4d22023ba2e630146ef4e47b9b280341985f189",
+        "0a147f33ab036e8ae148061028c6a557e2eeb1a6ea71b3760548734942743557",
+        "07ddd5dafcf04956cc36c1ff290f07c1c0e5832cc8dd9aea502da677ea04fe64",
+        "2ace8ba5195f54a7c501234431e99232dbb1d1365edbb593a3dd3b5810326570",
+        "4c7118050c64cb293f54c5cc199e99aa87c0a7aaeb7256af498e82d535b994c7",
+        "906c5b84ec1e480195860d89f859fc7d3c5f67f585ef8b738ffec08a3c07a98b",
+        "09247dc00c0060232407a4e69050b5112c9f72a65d7b0ff077f6be180c482cdb",
+        "7b2e8b28951a825924aed1b26e9c197ec080558a97120f34d6e22e341a90c978",
+        "a5e93544e86eb9960dcfcebb6bcc461d82f119cae1947e340c7cea1c7f351c0b",
+        "c525eef8b2ca56547565c947bb7e964e2ecae7c9c82c29228b6c932d2ace181c",
+        "31600a05842b12ea927796eafa30e6b1634a97f9bb41a2f75abbb2aa921c17c3",
+        "7ce7f53dc2287da4cf28c9fe64d5515e484c9cc57fd81ec76e66fa38b760565e",
+        "e026d0e1228ef882d093fe4dbb2ec5134dd122877ac2b380d399bff447fc9fa1",
+        "cd26132e2c223d19d3a75ae0664f7475b478695d7824dad856c19417ea0b3794",
+        "176b0c71e213031a29f56009aac7ebec591ba24a8b162d80506b2df8f59e11a2",
+        "36423179904261f57bf7405853a319058065857e67a510128baf09a68c30b987",
+        "54290349fbb1e8327a65b871f3fc2c6d3975775e48dd1d7b2c368142bcfc8c27",
+        "683712362407cefd2968ce6373cbd86c1a6170493c84025be740129120d327bc",
+        "76e3a0221b6d29a43a0c2929baaf46ab00b85571d59ef2b3f0facb315621f4ec",
+        "a7c4cff2f73c911d7e3f2f82b20adb9cf2caafc9254cf5997215a11046846d0e",
+        "977495dc59e74389b65ee1a7a33295014abdcf7916f9e0d1ca39a7cd395e6c41",
+        "6a5f09b3e0a8ae5d795f2dbed00ee521aed5b0875d2e487a82b2c687b527c278",
+        "5ba431851b1e2be373d818c3c6884e53d82273219c3f1c36c9aae099fa6690e1",
+        "d305c4ce0161386004c267eaa17180eb2433280716c894ed4094c2597a582da1",
+        "f98918c63e3a9238e78dbd5bebe4e47eaeec0ae1627387dcd2a5ae4725f7e47c",
+        "cf17b0770212e87516c080aad008d50cb5481044626a325be730d54a66f66662",
+        "10e88348b55c5c0683f4d4d3ef56c485be9888bf00806040de25204d25df4ea6",
+        "d46ef45eb47aa54032fc8ea47150d10334b208dc6b7ac5e09e8718231e87cd1c",
+        "982c20c2493fc9ae405b74b65a022662c014a38ef3d707217e56e57afac05994",
+        "8e28867538bc2c6c94d3428f05b1458f428d3f950430b09238209efe6bb267d9",
+        "022aa46f368252ce0a7b2431d55ac4767455865dfe65d2e372f4e82691a14cb2",
+        "5d1f1f7c14e34f79468bb5de195a60f3b422c4e48757facf1df01d1b022e6764",
+        "6025dc79681355ec9f3886a74b39dc4d1d2e6c77180080e9d296e5ca7742d04e",
+        "f52b3c537f28d89f0df1efee21c70f74df186f3928296d19582d5c51286e98bc",
+        "1ca0be9286023fb0b947f07cad056e59cff9d2d16c7cefdbedc33950a9312685",
+        "d8101ed4097b4bde7abbc16cd854e4c122460dbbabf08a9f56f4f2b882f59b00",
+        "9570f18459f97be85bfc8fca837e0891ef248ba6295119679280a136d60e57f2",
+        "8ff4c479d1230d8dc53493395e89ca712533b80e1b97cb5af448e0e78fab0f7a",
+        "c4558c7ec68df61d6bb65238397d49cc320a8c213f7bffdd4a397552d83ec20e",
+        "7ebc665ab5e5a1babbbae9e86bd00a09bfe68c4ca91b9f0da092c853c7732c3f",
+        "cecddb12b508e6cddcf3e96635abec8bc6031d588b21a4a4859cbdd79aaee47a",
+        "03deb53fbacc9e3701311efbff2ee0566c27355b6f30a22848a5b8618f6c0d63",
+        "0b6180f72608560023802ef42e0d80f862759a2a6b107667d7819e07bef00b08",
+        "71b950c0085388ddf90444c0918d72aa700319e789441fcd2da539c12a32ee19",
+        "d5ebd0d3d544e46023979d06b666f35758b69628d95abb808fa65f51f03b81bf",
+        "740e25c81e510d27735af90e3f8091596092c8136edb60f4df910f7204c289d5",
+        "90df9cc3a3b904415331eba9cd52750c2c5cb73cb91b42caca7eee3788fc2b30",
+        "33b6229592ca719e4e46f35b287617fedadd3b7c38be3c8c1c9f446d2d9085b3",
+};
 
 using namespace std;
 
@@ -200,36 +271,49 @@ protected:
 
 TEST_F(NXSHA256Test, EmptyString) {
         const char *msg = "";
-        nx_sha256(hash, (const void *)msg, 0);
-        expect_hash_equal(SHA256_EMPTY_HASH);
-        nx_sha256_fast(hash, (const uint8_t *)msg, 0);
+        nx_sha256(hash, (const uint8_t *)msg, 0);
         expect_hash_equal(SHA256_EMPTY_HASH);
 }
 
-TEST_F(NXSHA256Test, OneString) {
-        const char *msg = "A";
-        nx_sha256(hash, (const void *)msg, 1);
-        // expect_hash_equal(SHA256_EMPTY_HASH);
-        nx_sha256_fast(hash, (const uint8_t *)msg, 1);
-        // expect_hash_equal(SHA256_EMPTY_HASH);
+TEST_F(NXSHA256Test, ShortMessages) {
+        for (int t = 0; t < N_SHORT_MSG; ++t) {
+                int lbyte_str = strlen(SHA256_SHORT_MSG[t]);
+                int lmsg = lbyte_str / 2;
+                char *msg = NX_NEW_C(lmsg);
+                for (int c = 0; c < lmsg; ++c) {
+                        char msg_bytes[3] = { SHA256_SHORT_MSG[t][2*c],
+                                              SHA256_SHORT_MSG[t][2*c + 1],
+                                              0 };
+                        int msg_val = strtol(&msg_bytes[0], NULL, 16);
+                        msg[c] = msg_val;
+                }
+                nx_sha256(hash, (const uint8_t *)msg, lmsg);
+                nx_free(msg);
+                expect_hash_equal(SHA256_SHORT_HASH[t]);
+        }
 }
 
-// TEST_F(NXSHA256Test, ShortMessages) {
-//         for (int t = 0; t < N_SHORT_MSG; ++t) {
-//                 int lbyte_str = strlen(SHA256_SHORT_MSG[t]);
-//                 int lmsg = lbyte_str / 2;
-//                 char *msg = NX_NEW_C(lmsg);
-//                 for (int c = 0; c < lmsg; ++c) {
-//                         char msg_bytes[3] = { SHA256_SHORT_MSG[t][2*c],
-//                                               SHA256_SHORT_MSG[t][2*c + 1],
-//                                               0 };
-//                         int msg_val = strtol(&msg_bytes[0], NULL, 16);
-//                         msg[c] = msg_val;
-//                 }
-//                 nx_sha256_fast(hash, (const uint8_t *)msg, lmsg);
-//                 nx_free(msg);
-//                 expect_hash_equal(SHA256_SHORT_HASH[t]);
-//         }
-// }
+TEST_F(NXSHA256Test, LongMessages) {
+        size_t buffer_sz = 0;
+        char *buffer = NULL;
+        FILE *fin = nx_xfopen(TEST_DATA_SHA256_LONG_MSG, "r");
+        for (int t = 0; t < N_LONG_MSG; ++t) {
+                ssize_t n_read = nx_getline(&buffer, &buffer_sz, fin);
+                int lmsg = (n_read-1) / 2;
+                char *msg = NX_NEW_C(lmsg);
+                for (int c = 0; c < lmsg; ++c) {
+                        char msg_bytes[3] = { buffer[2*c],
+                                              buffer[2*c + 1],
+                                              0 };
+                        int msg_val = strtol(&msg_bytes[0], NULL, 16);
+                        msg[c] = msg_val;
+                }
+                nx_sha256(hash, (const uint8_t *)msg, lmsg);
+                nx_free(msg);
+                expect_hash_equal(SHA256_LONG_HASH[t]);
+        }
+        nx_xfclose(fin, TEST_DATA_SHA256_LONG_MSG);
+        nx_free(buffer);
+}
 
 } // namespace

@@ -33,8 +33,7 @@
 
 __NX_BEGIN_DECL
 
-void nx_sha256(uint8_t hash[32], const void *input, size_t len);
-void nx_sha256_fast(uint8_t hash[32], const uint8_t *msg, size_t lmsg);
+void nx_sha256(uint8_t hash[32], const uint8_t *msg, size_t lmsg);
 
 __NX_END_DECL
 

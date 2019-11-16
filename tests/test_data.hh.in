@@ -14,7 +14,7 @@
 #define TEST_DATA_HH
 
 #define TEST_DATA_PATH "@VIRG_NEXUS_TEST_DATA_PATH@"
-
-static const char *TEST_DATA_LENA_PPM = TEST_DATA_PATH "/lena.ppm";
+#define TEST_DATA_LENA_PPM  TEST_DATA_PATH "/lena.ppm"
+#define TEST_DATA_SHA256_LONG_MSG  TEST_DATA_PATH "/sha256_long_msg.txt"
 
 #endif

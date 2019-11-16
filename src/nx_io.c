@@ -27,8 +27,15 @@
 
 #include <errno.h>
 
+#include "virg/nexus/nx_assert.h"
+#include "virg/nexus/nx_alloc.h"
+#include "virg/nexus/nx_math.h"
+
 FILE *nx_xfopen(const char *path, const char *mode)
 {
+        NX_ASSERT_PTR(path);
+        NX_ASSERT_PTR(mode);
+
         FILE *stream = fopen(path, mode);
         if (!stream)
                 NX_IO_FATAL(NX_LOG_TAG, "Error opening file %s",
@@ -39,6 +46,8 @@ FILE *nx_xfopen(const char *path, const char *mode)
 
 void nx_xfclose(FILE *stream, const char *stream_label)
 {
+        NX_ASSERT_PTR(stream);
+
         int e = ferror(stream);
 
         fclose(stream);
@@ -51,6 +60,9 @@ void nx_xfclose(FILE *stream, const char *stream_label)
 
 FILE *nx_fopen(const char *path, const char *mode)
 {
+        NX_ASSERT_PTR(path);
+        NX_ASSERT_PTR(mode);
+
         FILE *stream = fopen(path, mode);
         if (!stream) {
                 NX_IO_ERROR(NX_LOG_TAG, "Error opening file %s",
@@ -62,6 +74,8 @@ FILE *nx_fopen(const char *path, const char *mode)
 
 NXResult nx_fclose(FILE *stream, const char *stream_label)
 {
+        NX_ASSERT_PTR(stream);
+
         int e = ferror(stream);
 
         fclose(stream);
@@ -136,4 +150,36 @@ FILE *nx_xtmpfile(void)
                 NX_IO_FATAL(NX_LOG_TAG, "Error creating and opening temporary file");
 
         return stream;
+}
+
+#define NX_EXPAND_IF_NECESSARY_AND_APPEND_CHAR(line,n,idx,c) \
+        do {                                                            \
+                if (idx >= *n) {                                        \
+                        int new_sz = nx_max_i(4, (int)(*n * 1.6f));     \
+                        *line = nx_xrealloc(*line, new_sz * sizeof(char)); \
+                        *n = new_sz;                                    \
+                }                                                       \
+                (*line)[idx++] = c;                                     \
+        } while (0)
+
+
+ssize_t nx_getline(char **line, size_t *n, FILE *stream)
+{
+        NX_ASSERT_PTR(line);
+        NX_ASSERT_PTR(n);
+        NX_ASSERT_PTR(stream);
+
+        int c;
+        int idx = 0;
+        while ((c = fgetc(stream)) != '\n' && c != EOF) {
+                NX_EXPAND_IF_NECESSARY_AND_APPEND_CHAR(line,n,idx,c);
+        }
+
+        if (c == '\n') {
+                NX_EXPAND_IF_NECESSARY_AND_APPEND_CHAR(line,n,idx,c);
+        }
+
+        NX_EXPAND_IF_NECESSARY_AND_APPEND_CHAR(line,n,idx,0);
+
+        return idx - 1;
 }
