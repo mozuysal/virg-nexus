@@ -205,4 +205,51 @@ TEST_F(NXStringTest, string_from_double_quoted) {
         nx_free(s);
 }
 
+TEST_F(NXStringTest, memncpy_multi) {
+        const char *COMBINED = "a string to test memory copy of n bytes from multiple sources";
+        const size_t COMBINED_LEN = strlen(COMBINED);
+
+        const char *SPLIT[] = { "a str",
+                                "ing to test memory copy of",
+                                "",
+                                " n bytes from multiple source",
+                                "s" };
+        const size_t SPLIT_LENS[] = { strlen(SPLIT[0]),
+                                      strlen(SPLIT[1]),
+                                      strlen(SPLIT[2]),
+                                      strlen(SPLIT[3]),
+                                      strlen(SPLIT[4]) };
+        EXPECT_EQ(COMBINED_LEN,
+                  SPLIT_LENS[0] + SPLIT_LENS[1] + SPLIT_LENS[2]
+                  + SPLIT_LENS[3] + SPLIT_LENS[4]);
+
+        char *dest = NX_NEW_C(COMBINED_LEN + 1);
+        int src_offset = 0;
+        size_t offset = 0;
+        size_t n_copied = nx_memncpy_multi(dest, 5,
+                                           (const void * const *)&SPLIT[0],
+                                           &SPLIT_LENS[0],
+                                           COMBINED_LEN, &src_offset, &offset);
+        EXPECT_EQ(COMBINED_LEN, n_copied);
+        EXPECT_EQ(5, src_offset);
+        EXPECT_EQ(0U, offset);
+
+        dest[COMBINED_LEN] = 0;
+        EXPECT_STREQ(COMBINED, dest);
+
+        memset(dest, 0, COMBINED_LEN+1);
+        src_offset = 3;
+        offset = 3;
+        n_copied = nx_memncpy_multi(dest, 5,
+                                    (const void * const *)&SPLIT[0],
+                                    &SPLIT_LENS[0],
+                                    27, &src_offset, &offset);
+        EXPECT_EQ(27U, n_copied);
+        EXPECT_EQ(5, src_offset);
+        EXPECT_EQ(0U, offset);
+        EXPECT_STREQ("bytes from multiple sources", dest);
+
+        nx_free(dest);
+}
+
 } // namespace

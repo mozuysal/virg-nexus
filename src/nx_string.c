@@ -30,12 +30,15 @@
 
 #include "virg/nexus/nx_types.h"
 #include "virg/nexus/nx_alloc.h"
+#include "virg/nexus/nx_assert.h"
 #include "virg/nexus/nx_log.h"
 
 #define NX_FSTR_INITIAL_LENGTH 64
 
 char *nx_strdup(const char *s)
 {
+        NX_ASSERT_PTR(s);
+
         size_t lcpy = strlen(s)+1;
         char *cpy = NX_NEW_C(lcpy);
 
@@ -56,6 +59,8 @@ void nx_strredup(char **dest, const char *src)
 
 char *nx_fstr(const char* format, ...)
 {
+        NX_ASSERT_PTR(format);
+
         va_list arg_list;
         va_start(arg_list, format);
         char *s = nx_vfstr(format, arg_list);
@@ -66,6 +71,8 @@ char *nx_fstr(const char* format, ...)
 
 char *nx_vfstr(const char* format, va_list args)
 {
+        NX_ASSERT_PTR(format);
+
         size_t ls = NX_FSTR_INITIAL_LENGTH+1;
         char *s = NX_NEW_C(ls);
 
@@ -91,6 +98,9 @@ char *nx_vfstr(const char* format, va_list args)
 
 int nx_strwrite(const char *s, FILE *stream)
 {
+        NX_ASSERT_PTR(s);
+        NX_ASSERT_PTR(stream);
+
         size_t ls = strlen(s);
         if (fwrite(&ls, sizeof(ls), 1, stream) != 1)
                 return 1;
@@ -103,6 +113,9 @@ int nx_strwrite(const char *s, FILE *stream)
 
 int nx_strread(char **s, size_t size, FILE *stream)
 {
+        NX_ASSERT_PTR(s);
+        NX_ASSERT_PTR(stream);
+
         size_t ls = 0;
         if (fread(&ls, sizeof(ls), 1, stream) != 1)
                 return 1;
@@ -121,6 +134,8 @@ int nx_strread(char **s, size_t size, FILE *stream)
 
 char *nx_strread0(FILE *stream)
 {
+        NX_ASSERT_PTR(stream);
+
         char *s = NULL;
         if (nx_strread(&s, 0, stream) != 0) {
                 if (s != NULL)
@@ -190,4 +205,43 @@ char *nx_xstr_from_double_quoted(size_t size, const char *dquoted)
         }
         *p = '\0';
         return s;
+}
+
+size_t nx_memncpy_multi(void *dest, int n_src, const void * const *src,
+                        const size_t *l_src, size_t n,
+                        int *src_offset, size_t *offset)
+{
+        NX_ASSERT_PTR(dest);
+        NX_ASSERT(n_src > 0);
+        NX_ASSERT_PTR(src);
+        NX_ASSERT_PTR(l_src);
+        NX_ASSERT_PTR(src_offset);
+        NX_ASSERT_PTR(offset);
+
+        if (*offset > l_src[*src_offset]) {
+                *offset = 0;
+                *src_offset += 1;
+        }
+
+        size_t n_copied = 0;
+        while (n > 0 && *src_offset < n_src) {
+                size_t l_i = l_src[*src_offset];
+                size_t l_left = l_i - *offset;
+                if (l_left > n) {
+                        memcpy(dest, src[*src_offset] + *offset, n);
+                        n_copied += n;
+                        *offset += n;
+                        dest += n;
+                        n = 0;
+                } else {
+                        memcpy(dest, src[*src_offset] + *offset, l_left);
+                        n -= l_left;
+                        n_copied += l_left;
+                        *offset = 0;
+                        *src_offset += 1;
+                        dest += l_left;
+                }
+        }
+
+        return n_copied;
 }

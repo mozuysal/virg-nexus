@@ -46,6 +46,10 @@ char *nx_strread0(FILE *stream);
 char *nx_xstr_from_readable(size_t size, const char *readable);
 char *nx_xstr_from_double_quoted(size_t size, const char *dquoted);
 
+size_t nx_memncpy_multi(void *dest, int n_src, const void * const *src,
+                        const size_t *l_src, size_t n,
+                        int *src_offset, size_t *offset);
+
 __NX_END_DECL
 
 #endif

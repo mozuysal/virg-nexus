@@ -29,6 +29,8 @@
 #include <stdio.h>
 
 #include "virg/nexus/nx_log.h"
+#include "virg/nexus/nx_assert.h"
+#include "virg/nexus/nx_string.h"
 #include "virg/nexus/nx_bit_ops.h"
 
 #define NX_SHA256_CH(x,y,z) (((x) & (y)) ^ (~(x) & (z)))
@@ -93,6 +95,12 @@ void nx_sha256_process_block(uint8_t *block, uint32_t *H)
 
 void nx_sha256(uint8_t hash[32], const uint8_t *msg, size_t lmsg)
 {
+        nx_sha256_multi(hash, 1, &msg, &lmsg);
+}
+
+void nx_sha256_multi(uint8_t hash[32], int n_msg,
+                     const uint8_t * const *msg, const size_t *lmsg)
+{
         // initial hash sequence
         uint32_t H[8] = {
                 0x6a09e667,
@@ -104,8 +112,12 @@ void nx_sha256(uint8_t hash[32], const uint8_t *msg, size_t lmsg)
                 0x1f83d9ab,
                 0x5be0cd19 };
 
-        size_t n_msg_only_blocks = lmsg / 64;
-        int l_remaining_msg = (int)(lmsg - n_msg_only_blocks * 64);
+        size_t lmsg_total = 0;
+        for (int i = 0; i < n_msg; ++i)
+                lmsg_total += lmsg[i];
+
+        size_t n_msg_only_blocks = lmsg_total / 64;
+        int l_remaining_msg = (int)(lmsg_total - n_msg_only_blocks * 64);
         int k; // number of all zero pad bytes
         if (l_remaining_msg <= 55)
                 k = 55 - l_remaining_msg;
@@ -114,16 +126,25 @@ void nx_sha256(uint8_t hash[32], const uint8_t *msg, size_t lmsg)
 
         // process the blocks containing only message data
         uint8_t block[64];
+        int msg_offset = 0;
+        size_t offset = 0;
         for (size_t b = 0; b < n_msg_only_blocks; ++b) {
-                memcpy(&block[0], msg, 64);
-                msg += 64;
+                size_t n_copied = nx_memncpy_multi(&block[0], n_msg,
+                                                   (const void * const *)msg,
+                                                   lmsg, 64,
+                                                   &msg_offset, &offset);
+                NX_ASSERT(n_copied == 64U);
 
                 nx_sha256_process_block(&block[0], &H[0]);
         }
 
         // process the last block containing message data by padding
         uint8_t *block_p = &block[0];
-        memcpy(block_p, msg, l_remaining_msg);
+        size_t n_copied = nx_memncpy_multi(&block[0], n_msg,
+                                           (const void * const *)msg,
+                                           lmsg, l_remaining_msg,
+                                           &msg_offset, &offset);
+        NX_ASSERT(n_copied == (size_t)l_remaining_msg);
         block_p += l_remaining_msg;
 
         *block_p = 0x80;
@@ -133,7 +154,7 @@ void nx_sha256(uint8_t hash[32], const uint8_t *msg, size_t lmsg)
                 // The rest of the message and padding fits in a single block
                 memset(block_p, 0, k);
                 block_p += k;
-                nx_split_big_endian64(block_p, lmsg * 8);
+                nx_split_big_endian64(block_p, lmsg_total * 8);
                 nx_sha256_process_block(&block[0], &H[0]);
         } else {
                 // We need to finish this block with k0 zeros and process it
@@ -147,7 +168,7 @@ void nx_sha256(uint8_t hash[32], const uint8_t *msg, size_t lmsg)
                 block_p = &block[0];
                 memset(block_p, 0, k1);
                 block_p += k1;
-                nx_split_big_endian64(block_p, lmsg * 8);
+                nx_split_big_endian64(block_p, lmsg_total * 8);
                 nx_sha256_process_block(&block[0], &H[0]);
         }
 

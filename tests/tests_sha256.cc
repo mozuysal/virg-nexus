@@ -316,4 +316,80 @@ TEST_F(NXSHA256Test, LongMessages) {
         nx_free(buffer);
 }
 
+TEST_F(NXSHA256Test, EmptyStringMulti) {
+        const char *msg[] = {"", "", "", "" };
+        const size_t lmsg[] = { 0U, 0U, 0U, 0U };
+        nx_sha256_multi(hash, 4, (const uint8_t * const *)msg, &lmsg[0]);
+        expect_hash_equal(SHA256_EMPTY_HASH);
+}
+
+TEST_F(NXSHA256Test, ShortMessagesMulti) {
+        for (int t = 0; t < N_SHORT_MSG; ++t) {
+                int lbyte_str = strlen(SHA256_SHORT_MSG[t]);
+                int lmsg_total = lbyte_str / 2;
+
+                size_t lmsg[2];
+                lmsg[0] = lmsg_total / 2;
+                lmsg[1] = lmsg_total - lmsg[0];
+                char *msg[] = { NX_NEW_C(lmsg[0]),
+                                NX_NEW_C(lmsg[1]) };
+                for (size_t c = 0; c < lmsg[0]; ++c) {
+                        char msg_bytes[3] = { SHA256_SHORT_MSG[t][2*c],
+                                              SHA256_SHORT_MSG[t][2*c + 1],
+                                              0 };
+                        int msg_val = strtol(&msg_bytes[0], NULL, 16);
+                        msg[0][c] = msg_val;
+                }
+                for (size_t c = 0; c < lmsg[1]; ++c) {
+                        char msg_bytes[3] = { SHA256_SHORT_MSG[t][2*c + 2*lmsg[0]],
+                                              SHA256_SHORT_MSG[t][2*c + 2*lmsg[0] + 1],
+                                              0 };
+                        int msg_val = strtol(&msg_bytes[0], NULL, 16);
+                        msg[1][c] = msg_val;
+                }
+
+                nx_sha256_multi(hash, 2, (const uint8_t * const *)msg, &lmsg[0]);
+                nx_free(msg[0]);
+                nx_free(msg[1]);
+                expect_hash_equal(SHA256_SHORT_HASH[t]);
+        }
+}
+
+TEST_F(NXSHA256Test, LongMessagesMulti) {
+        size_t buffer_sz = 0;
+        char *buffer = NULL;
+        FILE *fin = nx_xfopen(TEST_DATA_SHA256_LONG_MSG, "r");
+        for (int t = 0; t < N_LONG_MSG; ++t) {
+                ssize_t n_read = nx_getline(&buffer, &buffer_sz, fin);
+                int lmsg_total = (n_read-1) / 2;
+
+                size_t lmsg[2];
+                lmsg[0] = lmsg_total / 2;
+                lmsg[1] = lmsg_total - lmsg[0];
+                char *msg[] = { NX_NEW_C(lmsg[0]),
+                                NX_NEW_C(lmsg[1]) };
+                for (size_t c = 0; c < lmsg[0]; ++c) {
+                        char msg_bytes[3] = { buffer[2*c],
+                                              buffer[2*c + 1],
+                                              0 };
+                        int msg_val = strtol(&msg_bytes[0], NULL, 16);
+                        msg[0][c] = msg_val;
+                }
+                for (size_t c = 0; c < lmsg[1]; ++c) {
+                        char msg_bytes[3] = { buffer[2*c + 2*lmsg[0]],
+                                              buffer[2*c + 2*lmsg[0] + 1],
+                                              0 };
+                        int msg_val = strtol(&msg_bytes[0], NULL, 16);
+                        msg[1][c] = msg_val;
+                }
+
+                nx_sha256_multi(hash, 2, (const uint8_t * const *)msg, &lmsg[0]);
+                nx_free(msg[0]);
+                nx_free(msg[1]);
+                expect_hash_equal(SHA256_LONG_HASH[t]);
+        }
+        nx_xfclose(fin, TEST_DATA_SHA256_LONG_MSG);
+        nx_free(buffer);
+}
+
 } // namespace
