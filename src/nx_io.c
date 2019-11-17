@@ -170,7 +170,7 @@ ssize_t nx_getline(char **line, size_t *n, FILE *stream)
         NX_ASSERT_PTR(stream);
 
         int c;
-        int idx = 0;
+        size_t idx = 0;
         while ((c = fgetc(stream)) != '\n' && c != EOF) {
                 NX_EXPAND_IF_NECESSARY_AND_APPEND_CHAR(line,n,idx,c);
         }
@@ -181,5 +181,9 @@ ssize_t nx_getline(char **line, size_t *n, FILE *stream)
 
         NX_EXPAND_IF_NECESSARY_AND_APPEND_CHAR(line,n,idx,0);
 
-        return idx - 1;
+        if (idx == 0) {
+                return -1;
+        } else {
+                return idx - 1;
+        }
 }
