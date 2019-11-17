@@ -38,13 +38,17 @@
 
 #include "virg/nexus/nx_alloc.h"
 #include "virg/nexus/nx_assert.h"
+#include "virg/nexus/nx_string.h"
+#include "virg/nexus/nx_filesystem.h"
 #include "virg/nexus/nx_image.h"
 #include "virg/nexus/nx_image_io.h"
+#include "virg/nexus/nx_io.h"
 #include "virg/nexus/nx_math.h"
 #include "virg/nexus/nx_mat234.h"
 #include "virg/nexus/nx_vec234.h"
 #include "virg/nexus/nx_vec.h"
 #include "virg/nexus/nx_types.h"
+#include "virg/nexus/nx_hash_sha256.h"
 
 #define NX_SIFT_N_ORI_BINS 36
 
@@ -622,6 +626,79 @@ int nx_sift_detector_compute(struct NXSIFTDetector *det,
         return store.n;
 }
 
+int nx_sift_detector_compute_with_cache(struct NXSIFTDetector *detector,
+                                        struct NXImage *image,
+                                        int *max_n_keys,
+                                        struct NXKeypoint **keys,
+                                        uchar **desc,
+                                        const char *cache_dir)
+{
+        NX_ASSERT_PTR(detector);
+        NX_ASSERT_PTR(image);
+        NX_IMAGE_ASSERT_GRAYSCALE(image);
+        NX_ASSERT_PTR(keys);
+        NX_ASSERT_PTR(desc);
+
+        if (!cache_dir)
+                cache_dir = NX_DEFAULT_CACHE_DIRECTORY;
+
+        int n_rows = image->height;
+        int n_msgs = n_rows + 1;
+        uint8_t **msgs = NX_NEW(n_msgs, uint8_t *);
+        size_t *lmsg = NX_NEW_Z(n_msgs);
+        for (int i = 0; i < n_rows; ++i) {
+                if (image->dtype == NX_IMAGE_UCHAR) {
+                        msgs[i] = (uint8_t *)(image->data.uc + i * image->row_stride);
+                        lmsg[i] = image->width * image->n_channels * sizeof(uchar);
+                } else if (image->dtype == NX_IMAGE_UCHAR) {
+                        msgs[i] = (uint8_t *)(image->data.f32 + i * image->row_stride);
+                        lmsg[i] = image->width * image->n_channels * sizeof(float);
+                }
+        }
+        msgs[n_msgs - 1] = (uint8_t *)(&detector->param);
+        lmsg[n_msgs - 1] = sizeof(detector->param);
+        uint8_t hash[32];
+        nx_sha256_multi(&hash[0], n_msgs, (const uint8_t *const *)msgs, lmsg);
+
+        int n_keys = 0;
+        char *hash_str = nx_hash_to_str(32, &hash[0]);
+        char *cachefilepath = nx_fstr("%s/%s.sift", cache_dir, hash_str);
+        if (nx_check_file(cachefilepath)) {
+                // read from cache file
+                FILE *fin = nx_xfopen(cachefilepath, "rb");
+                nx_xfread(&n_keys, sizeof(n_keys), 1, fin);
+
+                if (*max_n_keys < n_keys) {
+                        *keys = (struct NXKeypoint *)nx_xrealloc(*keys, n_keys * sizeof(struct NXKeypoint));
+                        *desc = (uchar *)nx_xrealloc(*desc, n_keys * NX_SIFT_DESC_DIM * sizeof(uchar));
+                        *max_n_keys = n_keys;
+                }
+                nx_xfread(*keys, sizeof(struct NXKeypoint), n_keys, fin);
+                nx_xfread(*desc, sizeof(uchar), n_keys * NX_SIFT_DESC_DIM, fin);
+                nx_fclose(fin, cachefilepath);
+                NX_LOG(NX_LOG_TAG, "Read %d SIFT keypoints and descriptors from cache file %s",
+                       n_keys, cachefilepath);
+        } else {
+                n_keys = nx_sift_detector_compute(detector, image,
+                                                  max_n_keys, keys, desc);
+
+                // cache keys and descriptors
+                nx_ensure_dir(cache_dir);
+                FILE *fout = nx_xfopen(cachefilepath, "wb");
+                nx_xfwrite(&n_keys, sizeof(n_keys), 1, fout);
+                nx_xfwrite(*keys, sizeof(struct NXKeypoint), n_keys, fout);
+                nx_xfwrite(*desc, sizeof(uchar), n_keys * NX_SIFT_DESC_DIM, fout);
+                nx_fclose(fout, cachefilepath);
+                NX_LOG(NX_LOG_TAG, "Cached %d SIFT keypoints and descriptors to %s",
+                       n_keys, cachefilepath);
+        }
+
+        nx_free(hash_str);
+        nx_free(cachefilepath);
+
+        return n_keys;
+}
+
 int nx_sift_match_brute_force(int n,  const struct NXKeypoint *keys,
                               const uchar *desc,
                               int np, const struct NXKeypoint *keyps,
@@ -708,4 +785,73 @@ int nx_sift_match_brute_force(int n,  const struct NXKeypoint *keys,
 
                 return n;
         }
+}
+
+int nx_sift_match_brute_force_with_cache(int n,  const struct NXKeypoint *keys,
+                                         const uchar *desc,
+                                         int np, const struct NXKeypoint *keyps,
+                                         const uchar *descp,
+                                         struct NXPointMatch2D *corr,
+                                         float dist_ratio_thr,
+                                         const char *cache_dir)
+{
+        NX_ASSERT(n >= 0);
+        NX_ASSERT_PTR(keys);
+        NX_ASSERT_PTR(desc);
+        NX_ASSERT(np >= 0);
+        NX_ASSERT_PTR(keyps);
+        NX_ASSERT_PTR(descp);
+        NX_ASSERT_PTR(corr);
+
+        if (!cache_dir)
+                cache_dir = NX_DEFAULT_CACHE_DIRECTORY;
+
+        int n_msgs = 5;
+        uint8_t **msgs = NX_NEW(n_msgs, uint8_t *);
+        size_t *lmsg = NX_NEW_Z(n_msgs);
+        msgs[0] = (uint8_t *)(keys);
+        lmsg[0] = n * sizeof(struct NXKeypoint);
+        msgs[1] = (uint8_t *)(desc);
+        lmsg[1] = n * NX_SIFT_DESC_DIM * sizeof(uchar);
+
+        msgs[2] = (uint8_t *)(keyps);
+        lmsg[2] = np * sizeof(struct NXKeypoint);
+        msgs[3] = (uint8_t *)(descp);
+        lmsg[3] = np * NX_SIFT_DESC_DIM * sizeof(uchar);
+
+        msgs[4] = (uint8_t *)(&dist_ratio_thr);
+        lmsg[4] = sizeof(dist_ratio_thr);
+
+        uint8_t hash[32];
+        nx_sha256_multi(&hash[0], n_msgs, (const uint8_t *const *)msgs, lmsg);
+
+        int n_corr = 0;
+        char *hash_str = nx_hash_to_str(32, &hash[0]);
+        char *cachefilepath = nx_fstr("%s/%s.sift_matches", cache_dir, hash_str);
+        if (nx_check_file(cachefilepath)) {
+                // read from cache file
+                FILE *fin = nx_xfopen(cachefilepath, "rb");
+                nx_xfread(&n_corr, sizeof(n_corr), 1, fin);
+                nx_xfread(corr, sizeof(struct NXPointMatch2D), n_corr, fin);
+                nx_fclose(fin, cachefilepath);
+                NX_LOG(NX_LOG_TAG, "Read %d SIFT matches from cache file %s",
+                       n_corr, cachefilepath);
+        } else {
+                n_corr = nx_sift_match_brute_force(n, keys, desc,
+                                                   np, keyps, descp,
+                                                   corr, dist_ratio_thr);
+                // cache keys and descriptors
+                nx_ensure_dir(cache_dir);
+                FILE *fout = nx_xfopen(cachefilepath, "wb");
+                nx_xfwrite(&n_corr, sizeof(n_corr), 1, fout);
+                nx_xfwrite(corr, sizeof(struct NXPointMatch2D), n_corr, fout);
+                nx_fclose(fout, cachefilepath);
+                NX_LOG(NX_LOG_TAG, "Cached %d SIFT matches to %s",
+                       n_corr, cachefilepath);
+        }
+
+        nx_free(hash_str);
+        nx_free(cachefilepath);
+
+        return n_corr;
 }

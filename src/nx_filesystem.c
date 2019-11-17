@@ -68,6 +68,20 @@ NXBool nx_check_dir(const char *path)
         return NX_TRUE;
 }
 
+NXBool nx_check_file(const char *filepath)
+{
+        NX_ASSERT_PTR(filepath);
+
+        FILE *fin = fopen(filepath, "rb");
+
+        if (fin) {
+                nx_fclose(fin, filepath);
+                return NX_TRUE;
+        } else {
+                return NX_FALSE;
+        }
+}
+
 void nx_ensure_dir(const char *path)
 {
         NX_ASSERT_PTR(path);

@@ -61,5 +61,6 @@
 #define NX_VERSION_MAJOR 0
 #define NX_VERSION_MINOR 1
 
+#define NX_DEFAULT_CACHE_DIRECTORY "nx.cache"
 
 #endif

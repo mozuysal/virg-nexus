@@ -83,6 +83,13 @@ int nx_sift_detector_compute(struct NXSIFTDetector *detector,
                              struct NXKeypoint **keys,
                              uchar **desc);
 
+int nx_sift_detector_compute_with_cache(struct NXSIFTDetector *detector,
+                                        struct NXImage *image,
+                                        int *max_n_keys,
+                                        struct NXKeypoint **keys,
+                                        uchar **desc,
+                                        const char *cache_dir);
+
 /**
    Match SIFT descriptors brute force from desc to descp and return the number
    of matches. Applies distance ratio check if distance ratio threshold > 0 and
@@ -94,6 +101,14 @@ int nx_sift_match_brute_force(int n,  const struct NXKeypoint *keys,
                               const uchar *descp,
                               struct NXPointMatch2D *corr,
                               float dist_ratio_thr);
+
+int nx_sift_match_brute_force_with_cache(int n,  const struct NXKeypoint *keys,
+                                         const uchar *desc,
+                                         int np, const struct NXKeypoint *keyps,
+                                         const uchar *descp,
+                                         struct NXPointMatch2D *corr,
+                                         float dist_ratio_thr,
+                                         const char *cache_dir);
 
 __NX_END_DECL
 

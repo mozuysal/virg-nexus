@@ -41,6 +41,7 @@
 #define INIT_MIN_N_INLIERS 20
 #define INIT_HOMOGRAPHY_INLIER_THRESHOLD 3.0f
 #define INIT_HOMOGRAPHY_MAX_N_RANSAC_ITERS 500
+#define CACHE_DIR NULL
 
 void nx_panorama_builder_init(struct NXPanoramaBuilder *builder);
 void nx_panorama_builder_refine_geometric(struct NXPanoramaBuilder *builder);
@@ -228,11 +229,12 @@ void nx_panorama_builder_init(struct NXPanoramaBuilder *builder)
         struct NXSIFTDetector *detector = nx_sift_detector_new(sift_param);
 
         for (int i = 0; i < N; ++i) {
-                builder->n_keys[i] = nx_sift_detector_compute(detector,
-                                                              builder->images[i],
-                                                              builder->max_n_keys + i,
-                                                              builder->keys + i,
-                                                              builder->desc + i);
+                builder->n_keys[i] = nx_sift_detector_compute_with_cache(detector,
+                                                                         builder->images[i],
+                                                                         builder->max_n_keys + i,
+                                                                         builder->keys + i,
+                                                                         builder->desc + i,
+                                                                         CACHE_DIR);
                 NX_LOG(NX_LOG_TAG, "Detected %d keypoints on panorama input %s",
                        builder->n_keys[i],
                        nx_string_array_get(builder->image_names, i));
@@ -258,10 +260,11 @@ void nx_panorama_builder_init(struct NXPanoramaBuilder *builder)
                         struct NXPointMatch2D **pm = builder->matches + (j*N + i);
                         *pm = (struct NXPointMatch2D *)nx_xrealloc(*pm,
                                                                    n_keys_i * sizeof(**pm));
-                        *n_pm = nx_sift_match_brute_force(n_keys_i, keys_i, desc_i,
-                                                          n_keys_j, keys_j, desc_j,
-                                                          *pm,
-                                                          SIFT_DISTANCE_RATIO_THR);
+                        *n_pm = nx_sift_match_brute_force_with_cache(n_keys_i, keys_i, desc_i,
+                                                                     n_keys_j, keys_j, desc_j,
+                                                                     *pm,
+                                                                     SIFT_DISTANCE_RATIO_THR,
+                                                                     CACHE_DIR);
                         NX_LOG(NX_LOG_TAG, "%2d <-> %2d : %d initial matches", i, j, *n_pm);
                 }
         }

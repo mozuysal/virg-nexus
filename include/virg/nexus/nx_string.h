@@ -30,6 +30,7 @@
 #include <stdio.h>
 
 #include "virg/nexus/nx_config.h"
+#include "virg/nexus/nx_types.h"
 
 __NX_BEGIN_DECL
 
@@ -49,6 +50,8 @@ char *nx_xstr_from_double_quoted(size_t size, const char *dquoted);
 size_t nx_memncpy_multi(void *dest, int n_src, const void * const *src,
                         const size_t *l_src, size_t n,
                         int *src_offset, size_t *offset);
+
+char *nx_hash_to_str(int n, uint8_t *hash);
 
 __NX_END_DECL
 

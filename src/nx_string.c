@@ -245,3 +245,17 @@ size_t nx_memncpy_multi(void *dest, int n_src, const void * const *src,
 
         return n_copied;
 }
+
+char *nx_hash_to_str(int n, uint8_t *hash)
+{
+        NX_ASSERT(n >= 0);
+        NX_ASSERT_PTR(hash);
+
+        int ls = 2*n + 1;
+        char *s = NX_NEW_C(ls);
+        for (int i = 0; i < n; ++i)
+                sprintf(s + 2*i, "%02x", hash[i]);
+        s[ls-1] = '\0';
+
+        return s;
+}
