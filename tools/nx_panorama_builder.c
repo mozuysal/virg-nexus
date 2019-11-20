@@ -181,9 +181,11 @@ nx_panorama_builder_get_panorama(struct NXPanoramaBuilder *builder)
 int nx_panorama_builder_fit_initial_homography(double **hp, int n_corr,
                                                struct NXPointMatch2D *corr)
 {
+        NX_ASSERT(INIT_MIN_N_INLIERS >= 4);
+
         double h[9];
         int n_inliers = 0;
-        if (n_corr > 4) {
+        if (n_corr >= INIT_MIN_N_INLIERS) {
                 n_inliers = nx_homography_estimate_norm_ransac(&h[0],
                                                                n_corr, corr,
                                                                INIT_HOMOGRAPHY_INLIER_THRESHOLD,
@@ -195,6 +197,7 @@ int nx_panorama_builder_fit_initial_homography(double **hp, int n_corr,
                         *hp = NX_NEW_D(9);
                 nx_dvec3_copy(*hp, &h[0]);
         } else {
+                n_inliers = 0;
                 if (*hp) {
                         nx_free(*hp);
                         *hp = NULL;
@@ -290,6 +293,7 @@ void nx_panorama_builder_init(struct NXPanoramaBuilder *builder)
 
         // Pick central node
         float *scores = NX_NEW_S(N);
+        nx_svec_set_zero(N, scores);
         for (int i = 0; i < N; ++i) {
                 for (int j = 0; j < N; ++j) {
                         float aff = builder->affinity[j*N + i];

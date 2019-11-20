@@ -37,6 +37,9 @@
 
 __NX_BEGIN_DECL
 
+static inline void  nx_dvec_set_zero(int n, double *v);
+static inline void  nx_dvec_set     (int n, double *v, double value);
+
 static inline void  nx_svec_set_zero(int n, float *v);
 static inline float nx_svec_norm_sq (int n, const float *v);
 static inline float nx_svec_norm    (int n, const float *v);
@@ -51,14 +54,36 @@ static inline int nx_ucvec_dist_sq(int n, const uchar *v0, const uchar *v1);
  *                                   Definitions
  * -----------------------------------------------------------------------------
  */
-static inline void  nx_svec_set_zero(int n, float *v)
+static inline void nx_dvec_set_zero(int n, double *v)
 {
+        NX_ASSERT_PTR(v);
+        NX_ASSERT(n >= 0);
+
+        memset(v, 0, n * sizeof(*v));
+}
+
+static inline void nx_dvec_set(int n, double *v, double value)
+{
+        NX_ASSERT_PTR(v);
+        NX_ASSERT(n >= 0);
+
+        for (int i = 0; i < n; ++i) {
+                v[i] = value;
+        }
+}
+
+static inline void nx_svec_set_zero(int n, float *v)
+{
+        NX_ASSERT_PTR(v);
+        NX_ASSERT(n >= 0);
+
         memset(v, 0, n * sizeof(*v));
 }
 
 static inline float nx_svec_norm_sq(int n, const float *v)
 {
         NX_ASSERT_PTR(v);
+        NX_ASSERT(n >= 0);
 
         float nrm_sq = 0.0f;
         for (int i = 0; i < n; ++i) {
@@ -70,12 +95,16 @@ static inline float nx_svec_norm_sq(int n, const float *v)
 
 static inline float nx_svec_norm(int n, const float *v)
 {
+        NX_ASSERT_PTR(v);
+        NX_ASSERT(n >= 0);
+
         return sqrt(nx_svec_norm_sq(n, v));
 }
 
 static inline float nx_svec_to_unit(int n, float *v)
 {
         NX_ASSERT_PTR(v);
+        NX_ASSERT(n >= 0);
 
         float nrm = nx_svec_norm(n, v);
 
@@ -93,6 +122,7 @@ static inline float nx_svec_to_unit(int n, float *v)
 static inline int nx_svec_max_idx(int n, const float *v)
 {
         NX_ASSERT_PTR(v);
+        NX_ASSERT(n >= 0);
 
         int max_idx = -1;
         float max_val = -FLT_MAX;
@@ -108,6 +138,7 @@ static inline int nx_svec_max_idx(int n, const float *v)
 static inline float nx_svec_max_val(int n, const float *v)
 {
         NX_ASSERT_PTR(v);
+        NX_ASSERT(n >= 0);
 
         float max_val = -FLT_MAX;
         for (int i = 0; i < n; ++i) {
@@ -120,6 +151,10 @@ static inline float nx_svec_max_val(int n, const float *v)
 
 static inline int nx_ucvec_dist_sq(int n, const uchar *v0, const uchar *v1)
 {
+        NX_ASSERT_PTR(v0);
+        NX_ASSERT_PTR(v1);
+        NX_ASSERT(n >= 0);
+
         int d_sq = 0;
 
         for (int i = 0; i < n; ++i) {

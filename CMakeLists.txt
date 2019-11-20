@@ -14,6 +14,7 @@ set(virg_nexus_C_SOURCES
   src/nx_uniform_sampler.c
   src/nx_bit_ops.c
   src/nx_math.c
+  src/nx_graph.c
   src/nx_rotation_3d.c
   src/nx_quaternion.c
   src/nx_svd.c
@@ -77,12 +78,14 @@ set(virg_nexus_C_HEADERS
   include/virg/nexus/nx_uniform_sampler.h
   include/virg/nexus/nx_bit_ops.h
   include/virg/nexus/nx_math.h
+  include/virg/nexus/nx_graph.h
   include/virg/nexus/nx_rotation_3d.h
   include/virg/nexus/nx_quaternion.h
   include/virg/nexus/nx_svd.h
   include/virg/nexus/nx_linear_solvers.h
   include/virg/nexus/nx_vec.h
   include/virg/nexus/nx_vec234.h
+  include/virg/nexus/nx_mat.h
   include/virg/nexus/nx_mat234.h
   include/virg/nexus/nx_string.h
   include/virg/nexus/nx_hash_sha256.h
@@ -335,6 +338,7 @@ set(test_SOURCES
   tests/tests_string.cc
   tests/tests_string_array.cc
   tests/tests_options.cc
+  tests/tests_graph.cc
   tests/tests_filter.cc
   tests/tests_svd.cc
   tests/tests_sha256.cc
