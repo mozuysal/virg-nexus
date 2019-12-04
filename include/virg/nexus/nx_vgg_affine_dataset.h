@@ -34,8 +34,7 @@ __NX_BEGIN_DECL
 
 #define NX_VGG_AFFINE_N_SEQ 8
 
-static const char *NX_VGG_AFFINE_SEQ_NAMES[NX_VGG_AFFINE_N_SEQ] = {
-        "bark", "bikes", "boat", "graf", "leuven", "trees", "ubc", "wall"};
+extern const char *NX_VGG_AFFINE_SEQ_NAMES[NX_VGG_AFFINE_N_SEQ];
 
 struct NXVGGAffineSequence {
         char *base_dir;

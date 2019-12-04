@@ -220,10 +220,12 @@ void nx_image_normalize_to_zero_one(struct NXImage *img, NXBool symmetric_around
                 }
         }
         /* NX_LOG("D", "min and max values are %.12f and %.12f", vmin, vmax); */
-
         float a = 1.0f;
         float y = 0.0f;
-        if (symmetric_around_zero) {
+        if (vmax == vmin) {
+                a = 0.0f;
+                y = 0.0f;
+        } else if (symmetric_around_zero) {
                 // v = v/(2.0f*t)+0.5f; symmetric
                 float tmin = fabs(vmin);
                 float tmax = fabs(vmax);

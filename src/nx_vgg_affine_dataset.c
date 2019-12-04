@@ -36,6 +36,9 @@
 #include "virg/nexus/nx_filesystem.h"
 #include "virg/nexus/nx_mat234.h"
 
+const char *NX_VGG_AFFINE_SEQ_NAMES[NX_VGG_AFFINE_N_SEQ] = {
+        "bark", "bikes", "boat", "graf", "leuven", "trees", "ubc", "wall"};
+
 #define NX_VGG_AFFINE_SEQUENCE_DIR_FORMAT "%s/%s"
 #define NX_VGG_AFFINE_H_FILE_FORMAT "%s/%s/H1to%dp"
 #define NX_VGG_AFFINE_FRAME_FILE_FORMAT "%s/%s/img%d.ppm"
@@ -132,13 +135,13 @@ void nx_vgg_affine_sequence_xload_frame(const struct NXVGGAffineSequence *seq,
         char *filename = nx_fstr(NX_VGG_AFFINE_FRAME_FILE_FORMAT,
                                  seq->base_dir,
                                  seq->name,
-                                 frame_id);
+                                 frame_id + 1);
         if (NX_FAIL == nx_image_load(img, filename, mode)) {
                 nx_free(filename);
                 filename = nx_fstr(NX_VGG_AFFINE_FRAME_FILE_ALT_FORMAT,
                                    seq->base_dir,
                                    seq->name,
-                                   frame_id);
+                                   frame_id + 1);
                 nx_image_xload(img, filename, mode);
         }
 

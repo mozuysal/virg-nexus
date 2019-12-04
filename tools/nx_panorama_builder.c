@@ -309,7 +309,6 @@ void nx_panorama_builder_init(struct NXPanoramaBuilder *builder)
         scores = NULL;
         NX_LOG(NX_LOG_TAG, "Selecting image %d as the central node", central_node);
 
-        
 }
 
 void nx_panorama_builder_refine_geometric(struct NXPanoramaBuilder *builder)

@@ -38,6 +38,8 @@
 
 __NX_BEGIN_DECL
 
+static inline NXBool nx_dmat2_sym_solve_single(const double *A, double *b);
+
 static inline float  nx_smat3_inv(float *M3i, const float *M3);
 static inline double nx_sdmat3_inv(float *M3i, const float *M3);
 static inline void   nx_smat3_mul(float *C, const float *A, const float *B);
@@ -72,6 +74,13 @@ static inline void   nx_dmat4_set_translation(double *M, const double *t);
  *                                   Definitions
  * -----------------------------------------------------------------------------
  */
+static inline NXBool nx_dmat2_sym_solve_single(const double *A, double *b)
+{
+        double AA[4] = { A[0], A[1], A[2], A[3] };
+        int ipiv[2];
+        return nx_dsym_solver(NX_SYMMETRIC_LOWER, 2, 1, &AA[0], 2, b, 2, &ipiv[0]);
+}
+
 static inline float nx_smat3_inv(float *M3i, const float *M3)
 {
         const float t4  = M3[0] * M3[4];
