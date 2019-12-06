@@ -29,9 +29,12 @@
 #include <stdalign.h>
 
 #include "virg/nexus/nx_log.h"
+#include "virg/nexus/nx_assert.h"
 
 void *nx_aligned_alloc(size_t alignment, size_t sz)
 {
+        NX_ASSERT(sz % alignment == 0);
+
         void *ptr = aligned_alloc(alignment, sz);
 
         if (!ptr) {
@@ -44,6 +47,8 @@ void *nx_aligned_alloc(size_t alignment, size_t sz)
 
 void *nx_xaligned_alloc(size_t alignment, size_t sz)
 {
+        NX_ASSERT(sz % alignment == 0);
+
         void *ptr = aligned_alloc(alignment, sz);
 
         if (!ptr) {

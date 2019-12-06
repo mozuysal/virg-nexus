@@ -56,7 +56,7 @@
 
 #define NX_EXIT_FATAL -99
 
-#define NX_SIMD_ALIGNMENT 32
+#define NX_SIMD_ALIGNMENT 64
 
 #define NX_LOG_TAG "NX"
 #define VG_LOG_TAG "VG"
