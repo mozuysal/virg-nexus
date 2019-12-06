@@ -253,8 +253,12 @@ void nx_filter_copy_to_buffer(int n, float *buffer, const float *data, int strid
 float *nx_filter_buffer_alloc(int n, int n_border)
 {
         size_t l = n + 2 * n_border;
+#if (NX_HAVE_SIMD)
         size_t sz = l * sizeof(float);
         if (sz % NX_SIMD_ALIGNMENT != 0)
                 sz = ((sz / NX_SIMD_ALIGNMENT) + 1) * NX_SIMD_ALIGNMENT;
         return (float *)nx_xaligned_alloc(NX_SIMD_ALIGNMENT, sz);
+#else
+        return NX_NEW_S(l);
+#endif
 }
