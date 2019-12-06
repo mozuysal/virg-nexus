@@ -38,7 +38,7 @@
 #  define __NX_NO_RETURN __attribute__((noreturn))
 #  define __NX_NO_RETURN_PTR __attribute__((__noreturn__))
 #  define __NX_FUNCTION __func__
-#elif defined(__CLANG__)
+#elif defined(__clang__)
 #  define __NX_NO_RETURN __attribute__((noreturn))
 #  define __NX_NO_RETURN_PTR __attribute__((__noreturn__))
 #  define __NX_FUNCTION __func__
