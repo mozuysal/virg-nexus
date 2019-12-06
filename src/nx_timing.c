@@ -25,14 +25,15 @@
  */
 #include "virg/nexus/nx_timing.h"
 
-#include <sys/time.h>
+#include <ctime>
+#include <time.h>
 
 #include "virg/nexus/nx_alloc.h"
 
 struct NXTimer
 {
-        struct timeval start;
-        struct timeval stop;
+        struct timespec start;
+        struct timespec stop;
 };
 
 struct NXTimer *nx_timer_new()
@@ -48,12 +49,12 @@ void nx_timer_free(struct NXTimer *t)
 
 void nx_timer_start(struct NXTimer *t)
 {
-        gettimeofday(&t->start, NULL);
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t->start);
 }
 
 void nx_timer_stop(struct NXTimer *t)
 {
-        gettimeofday(&t->stop, NULL);
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t->stop);
 }
 
 static inline double nx_timing_diff_in_sec(const struct timeval *ts, const struct timeval *te)

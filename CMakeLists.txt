@@ -24,7 +24,6 @@ set(virg_nexus_C_SOURCES
   src/nx_transform_2d.c
   src/nx_io.c
   src/nx_filesystem.c
-  src/nx_timing.c
   src/nx_string_array.c
   src/nx_options.c
   src/nx_lexer.c
@@ -217,13 +216,12 @@ include_directories(include)
 option(VIRG_NEXUS_USE_SIMD "Enable SIMD flags"  ON)
 # SSE
 if (VIRG_NEXUS_USE_SIMD)
-  set(VIRG_NEXUS_USE_SSE 1)
-  set(VIRG_NEXUS_FLAGS_SIMD "-DVIRG_NEXUS_USE_SIMD -msse -msse2 -mfpmath=sse -DVIRG_NEXUS_USE_SSE -DHAVE_SSE2")
+  set(VIRG_NEXUS_FLAGS_SIMD "-mavx2 -mfpmath=sse")
 endif (VIRG_NEXUS_USE_SIMD)
 
-set(VIRG_NEXUS_FLAGS_DEBUG          "-Wall -g -rdynamic -DJSMN_PARENT_LINKS=1 ${VIRG_NEXUS_FLAGS_PLATFORM} ${VIRG_NEXUS_FLAGS_SIMD}")
-set(VIRG_NEXUS_FLAGS_RELEASE        "-Wall -O2 -DNDEBUG -DJSMN_PARENT_LINKS=1 ${VIRG_NEXUS_FLAGS_PLATFORM} ${VIRG_NEXUS_FLAGS_SIMD}")
-set(VIRG_NEXUS_FLAGS_RELWITHDEBINFO "-Wall -O2 -DNDEBUG -g -rdynamic -DJSMN_PARENT_LINKS=1 ${VIRG_NEXUS_FLAGS_PLATFORM} ${VIRG_NEXUS_FLAGS_SIMD}")
+set(VIRG_NEXUS_FLAGS_DEBUG          "-Wall -g -DJSMN_PARENT_LINKS=1 ${VIRG_NEXUS_FLAGS_PLATFORM} ${VIRG_NEXUS_FLAGS_SIMD}")
+set(VIRG_NEXUS_FLAGS_RELEASE        "-Wall -O3 -DNDEBUG -DJSMN_PARENT_LINKS=1 ${VIRG_NEXUS_FLAGS_PLATFORM} ${VIRG_NEXUS_FLAGS_SIMD}")
+set(VIRG_NEXUS_FLAGS_RELWITHDEBINFO "-Wall -O3 -DNDEBUG -g -fno-omit-frame-pointer -DJSMN_PARENT_LINKS=1 ${VIRG_NEXUS_FLAGS_PLATFORM} ${VIRG_NEXUS_FLAGS_SIMD}")
 
 set(CMAKE_C_FLAGS_DEBUG          "${VIRG_NEXUS_FLAGS_DEBUG}")
 set(CMAKE_C_FLAGS_RELEASE        "${VIRG_NEXUS_FLAGS_RELEASE}")
@@ -232,9 +230,9 @@ set(CMAKE_CXX_FLAGS_DEBUG          "${VIRG_NEXUS_FLAGS_DEBUG}")
 set(CMAKE_CXX_FLAGS_RELEASE        "${VIRG_NEXUS_FLAGS_RELEASE}")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${VIRG_NEXUS_FLAGS_RELWITHDEBINFO}")
 
-set(CMAKE_BUILD_TYPE Debug)
+# set(CMAKE_BUILD_TYPE Debug)
 # set(CMAKE_BUILD_TYPE Release)
-# set(CMAKE_BUILD_TYPE RelWithDebInfo)
+set(CMAKE_BUILD_TYPE RelWithDebInfo)
 
 # -------------------------- install target ----------------------------
 install(TARGETS virg-nexus ARCHIVE DESTINATION lib)

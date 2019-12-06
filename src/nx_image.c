@@ -961,8 +961,8 @@ void nx_image_smooth(struct NXImage *dest, const struct NXImage *src,
         }
 
         float *buffer = filter_buffer;
-        int nkx;
-        int nky;
+        int nkx = nx_kernel_size_gaussian(sigma_x, kernel_truncation_factor);
+        int nky = nx_kernel_size_gaussian(sigma_y, kernel_truncation_factor);
         if (!buffer) {
                 buffer = nx_image_filter_buffer_alloc(src->width, src->height,
                                                       sigma_x, sigma_y,

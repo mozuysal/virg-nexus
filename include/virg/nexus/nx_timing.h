@@ -28,18 +28,31 @@
 
 #include "virg/nexus/nx_config.h"
 
+#include <time.h>
+
 __NX_BEGIN_DECL
 
-struct NXTimer;
+struct NXTimer
+{
+        struct timespec start;
+        struct timespec stop;
+};
 
-struct NXTimer *nx_timer_new();
-void nx_timer_free(struct NXTimer *t);
+static inline void nx_timer_start(struct NXTimer *t)
+{
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t->start);
+}
 
-void nx_timer_start(struct NXTimer *t);
-void nx_timer_stop (struct NXTimer *t);
+static inline void nx_timer_stop(struct NXTimer *t)
+{
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t->stop);
+}
 
-double nx_timing_measure_in_sec(const struct NXTimer *t);
-double nx_timing_lap_in_sec    (const struct NXTimer *t);
+static inline double nx_timer_measure_in_msec(const struct NXTimer *t)
+{
+        return (t->stop.tv_sec - t->start.tv_sec) * 1e+3
+                + (t->stop.tv_nsec - t->start.tv_nsec) * 1e-6;
+}
 
 __NX_END_DECL
 

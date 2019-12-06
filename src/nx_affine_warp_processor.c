@@ -652,7 +652,6 @@ void fill_warp_buffer_bg(const struct NXImage* image,
         }
 }
 
-static const double BLUR_KERNEL_LOSS = 0.003;
 static void warp_processor_blur(struct NXImage *image,
                                 float sigma_x, float sigma_y)
 {

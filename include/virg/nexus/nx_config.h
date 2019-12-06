@@ -37,7 +37,11 @@
 #if defined(__GNUC__)
 #  define __NX_NO_RETURN __attribute__((noreturn))
 #  define __NX_NO_RETURN_PTR __attribute__((__noreturn__))
-#  define __NX_FUNCTION __PRETTY_FUNCTION__
+#  define __NX_FUNCTION __func__
+#elif defined(__CLANG__)
+#  define __NX_NO_RETURN __attribute__((noreturn))
+#  define __NX_NO_RETURN_PTR __attribute__((__noreturn__))
+#  define __NX_FUNCTION __func__
 #elif defined(_MSC_VER)
 #  define __NX_NO_RETURN __declspec(noreturn)
 #  define __NX_NO_RETURN_PTR

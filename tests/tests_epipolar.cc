@@ -133,14 +133,6 @@ protected:
         double err;
 };
 
-
-static inline double point_dist(const float *p, double qx, double qy)
-{
-        double dx = p[0] - qx;
-        double dy = p[1] - qy;
-        return sqrt(dx*dx+dy*dy);
-}
-
 double NXEpipolarTest::measure_test_error(const double *f, int n,
                                           const struct NXPointMatch2D *corr,
                                           bool only_inliers)

@@ -132,7 +132,7 @@ void nx_mem_block_swap(struct NXMemBlock *mem0, struct NXMemBlock *mem1)
 struct NXMemBlock *nx_mem_block_copy0(struct NXMemBlock *mem)
 {
         NX_ASSERT_PTR(mem);
-        struct NXMemBlock *cpy = nx_mem_block_alloc(0);
+        struct NXMemBlock *cpy = nx_mem_block_alloc();
 
         nx_mem_block_copy(cpy, mem);
         return cpy;

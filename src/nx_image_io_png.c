@@ -88,10 +88,7 @@ static NXResult save_as_png(const struct NXImage *img, FILE *fout)
                      PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
         png_write_info(png_ptr, info_ptr);
 
-        if ((unsigned int)img->height > PNG_UINT_32_MAX/sizeof(png_bytep)) {
-                png_error(png_ptr, "Image is too tall to process in memory");
-                return NX_FAIL;
-        }
+        NX_ASSERT((unsigned int)img->height <= PNG_UINT_32_MAX/sizeof(png_bytep));
 
         png_bytepp row_pointers = NX_NEW(img->height, png_bytep);
         if (!row_pointers) {

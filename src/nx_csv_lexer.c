@@ -119,11 +119,13 @@ void nx_csv_lexer_free(struct NXCSVLexer *clex)
         }
 }
 
-static inline void nx_csv_lexer_match(struct NXCSVLexer *clex, const char *s)
-{
-        if (!nx_lexer_match(clex->lex, s))
-                NX_CSV_LEXER_ERROR(clex,"Expecting '%s'!",s);
-}
+/*
+ * static inline void nx_csv_lexer_match(struct NXCSVLexer *clex, const char *s)
+ * {
+ *         if (!nx_lexer_match(clex->lex, s))
+ *                 NX_CSV_LEXER_ERROR(clex,"Expecting '%s'!",s);
+ * }
+ */
 
 static void nx_csv_lexer_FIELD(struct NXCSVLexer *clex, struct NXCSVToken *t)
 {

@@ -35,18 +35,21 @@
 #include "virg/nexus/nx_string.h"
 #include "virg/nexus/nx_assert.h"
 #include "virg/nexus/nx_options.h"
+#include "virg/nexus/nx_timing.h"
 #include "virg/nexus/nx_image.h"
 #include "virg/nexus/nx_image_io.h"
 #include "virg/nexus/nx_homography.h"
 #include "virg/nexus/nx_sift_detector.h"
 #include "virg/nexus/nx_vgg_affine_dataset.h"
 
+#define N_TOL 3
+
 const int N_KEYS_INIT = 1000;
+static double INLIER_TOL[N_TOL] = { 3.0, 2.0, 1.0 };
 
 struct BenchmarkOptions {
         char *vgg_base;
         float dist_ratio_thr;
-        double inlier_thr;
         NXBool is_verbose;
 };
 
@@ -83,10 +86,9 @@ int main(int argc, char **argv)
 
 void add_options(struct NXOptions *opt)
 {
-        nx_options_add(opt, "sddb",
+        nx_options_add(opt, "sdb",
                        "--vgg-base", "base directory for Oxford affine sequences", "/opt/data/vgg/affine",
                        "--dist-ratio-thr", "near neighbor distance ratio threshold", 0.6,
-                       "--inlier-thr", "inlier threshold for homography forward transfer error", 1.0,
                        "-v|--verbose", "display more information", NX_FALSE);
         nx_options_add_help(opt);
 }
@@ -97,7 +99,6 @@ struct BenchmarkOptions *parse_options(struct NXOptions *opt)
 
         bopt->vgg_base = nx_strdup(nx_options_get_string(opt, "--vgg-base"));
         bopt->dist_ratio_thr = nx_options_get_double(opt, "--dist-ratio-thr");
-        bopt->inlier_thr = nx_options_get_double(opt, "--inlier-thr");
         bopt->is_verbose = nx_options_get_bool(opt, "-v");
 
         return bopt;
@@ -118,23 +119,45 @@ void evaluate_vgg_pair(struct BenchmarkOptions *bopt,
         NX_INFO(NX_LOG_TAG, "Loaded image %d/%d: %dx%d",
                 pair_id, vgg_seq->length - 1, imgi->width, imgi->height);
 
+        // Detect keypoints
         struct NXKeypoint *keysi = NX_NEW(N_KEYS_INIT, struct NXKeypoint);
         uchar *desci = NX_NEW_UC(N_KEYS_INIT * NX_SIFT_DESC_DIM);
         int max_n_keysi = N_KEYS_INIT;
+        struct NXTimer timer;
+        nx_timer_start(&timer);
         int n_keysi = nx_sift_detector_compute(detector, imgi,
                                                &max_n_keysi,
                                                &keysi, &desci);
+        nx_timer_stop(&timer);
+        double compute_time = nx_timer_measure_in_msec(&timer);
         NX_INFO(NX_LOG_TAG, "Detected %d keypoints on image %d",
                 n_keysi, pair_id);
 
+        // Match keypoints
         struct NXPointMatch2D *pm = NX_NEW(n_keys0,
                                            struct NXPointMatch2D);
+        nx_timer_start(&timer);
         int n_pm = nx_sift_match_brute_force(n_keys0, keys0, desc0,
                                              n_keysi, keysi, desci,
                                              pm, bopt->dist_ratio_thr);
+        nx_timer_stop(&timer);
+        double match_time = nx_timer_measure_in_msec(&timer);
         NX_INFO(NX_LOG_TAG, "0 <-> %d : %d SIFT matches", pair_id, n_pm);
 
-        
+        // Count inliers
+        int n_inliers[N_TOL];
+        for (int i = 0; i < N_TOL; ++i) {
+                n_inliers[i] = nx_homography_mark_inliers(vgg_seq->h[pair_id],
+                                                          n_pm, pm,
+                                                          INLIER_TOL[i]);
+        }
+
+        // Report
+        // seq, pair_id, n_keys0, n_keysi, compute_time, match_time, inliers0, ...
+        printf("%s,%d,%d,%d,%.3f,%.3f,%d,%d,%d\n",
+               vgg_seq->name, pair_id, n_keys0, n_keysi,
+               compute_time, match_time,
+               n_inliers[0], n_inliers[1], n_inliers[2]);
 
         nx_free(pm);
         nx_free(desci);
