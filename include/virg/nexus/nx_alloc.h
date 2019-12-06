@@ -42,9 +42,9 @@ void *nx_xcalloc(size_t n_memb, size_t sz);
 
 void *nx_xrealloc(void *ptr, size_t sz);
 
-void *nx_aligned_alloc(size_t sz, size_t alignment);
+void *nx_aligned_alloc(size_t alignment, size_t sz);
 
-void *nx_xaligned_alloc(size_t sz, size_t alignment);
+void *nx_xaligned_alloc(size_t alignment, size_t sz);
 
 void nx_free(void *ptr);
 

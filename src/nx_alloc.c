@@ -30,7 +30,7 @@
 
 #include "virg/nexus/nx_log.h"
 
-void *nx_aligned_alloc(size_t sz, size_t alignment)
+void *nx_aligned_alloc(size_t alignment, size_t sz)
 {
         void *ptr = aligned_alloc(alignment, sz);
 
@@ -42,7 +42,7 @@ void *nx_aligned_alloc(size_t sz, size_t alignment)
         }
 }
 
-void *nx_xaligned_alloc(size_t sz, size_t alignment)
+void *nx_xaligned_alloc(size_t alignment, size_t sz)
 {
         void *ptr = aligned_alloc(alignment, sz);
 
