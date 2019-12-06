@@ -2,8 +2,9 @@ cmake_minimum_required(VERSION 3.1)
 
 project(virg-nexus C CXX)
 
-set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(VERSION 0.1)
 
@@ -209,7 +210,6 @@ set(EXEC_LIBRARIES -lm)
 
 # --------------------------- configuration ----------------------------
 set(CMAKE_INSTALL_PREFIX "$ENV{DEVEL_DIR}")
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR} )
 include_directories(include)
 

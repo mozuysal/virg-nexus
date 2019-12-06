@@ -26,17 +26,15 @@
 #include "virg/nexus/nx_alloc.h"
 
 #include <string.h>
+#include <stdalign.h>
 
 #include "virg/nexus/nx_log.h"
 
-extern int posix_memalign(void **memptr, size_t alignment, size_t size);
-
 void *nx_aligned_alloc(size_t sz, size_t alignment)
 {
-        void *ptr = 0;
-        int alloc_res = posix_memalign(&ptr, alignment, sz);
+        void *ptr = aligned_alloc(alignment, sz);
 
-        if (alloc_res) {
+        if (!ptr) {
                 NX_ERROR(NX_LOG_TAG, "Error allocating %zd bytes, out of memory!", sz);
                 return NULL;
         } else {
@@ -46,12 +44,10 @@ void *nx_aligned_alloc(size_t sz, size_t alignment)
 
 void *nx_xaligned_alloc(size_t sz, size_t alignment)
 {
-        void *ptr = 0;
-        int alloc_res = posix_memalign(&ptr, alignment, sz);
+        void *ptr = aligned_alloc(alignment, sz);
 
-        if (alloc_res) {
+        if (!ptr) {
                 NX_FATAL(NX_LOG_TAG, "Error allocating %zd bytes, out of memory!", sz);
-                return NULL;
         } else {
                 return ptr;
         }
