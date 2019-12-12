@@ -118,6 +118,8 @@ void nx_log_formatted(enum NXLogLevel log_level, const char* function_name, int 
                 case NX_LOG_NORMAL: type_string = "L"; break;
                 case NX_LOG_WARNING: type_string = "W"; break;
                 case NX_LOG_ERROR: type_string = "E"; break;
+                default:
+                        type_string = "?"; break;
                 }
                 fprintf(LOG_STREAM, LOG_HEADER_FORMAT, type_string, tag, function_name, line_no);
                 vfprintf(LOG_STREAM, msg, prm);

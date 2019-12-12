@@ -40,6 +40,7 @@ __NX_BEGIN_DECL
 
 static inline NXBool nx_dmat2_sym_solve_single(const double *A, double *b);
 
+static inline void   nx_smat3_set_zero(float *A);
 static inline float  nx_smat3_inv(float *M3i, const float *M3);
 static inline double nx_sdmat3_inv(float *M3i, const float *M3);
 static inline void   nx_smat3_mul(float *C, const float *A, const float *B);
@@ -51,6 +52,7 @@ static inline double nx_dmat3_inv(double *M3i, const double *M3);
 static inline void   nx_dmat3_mul(double *C, const double *A, const double *B);
 static inline void   nx_dmat3_mul_ua(double *C, const double *U, const double *A);
 static inline void   nx_dmat3_eye(double *A);
+static inline void   nx_dmat3_set_zero(double *A);
 static inline double nx_dmat3_det(const double *A);
 static inline double nx_dmat3_xptFx(const double *F, const double *x, const double* xp);
 static inline void   nx_dmat3_print(const double *A, const char *label);
@@ -81,6 +83,11 @@ static inline NXBool nx_dmat2_sym_solve_single(const double *A, double *b)
         return nx_dsym_solver(NX_SYMMETRIC_LOWER, 2, 1, &AA[0], 2, b, 2, &ipiv[0]);
 }
 
+static inline void nx_smat3_set_zero(float *A)
+{
+        memset(A, 0, 9*sizeof(*A));
+}
+
 static inline float nx_smat3_inv(float *M3i, const float *M3)
 {
         const float t4  = M3[0] * M3[4];
@@ -103,8 +110,9 @@ static inline float nx_smat3_inv(float *M3i, const float *M3)
                 M3i[6] = (M3[3] * M3[7] - M3[6] * M3[4]) * t17;
                 M3i[7] = -(t6 - t10) * t17;
                 M3i[8] = (t4 - t8) * t17;
-        /* } else { */
-                /* nx_warning(NX_LOG_TAG, "Zero determinant in matrix3 inversion!"); */
+        } else {
+                nx_smat3_set_zero(M3i);
+                NX_WARNING(NX_LOG_TAG, "Zero determinant in matrix3 inversion!");
         }
 
         return detM3;
@@ -199,8 +207,9 @@ static inline double nx_dmat3_inv(double *M3i, const double *M3)
                 M3i[6] = (M3[3] * M3[7] - M3[6] * M3[4]) * t17;
                 M3i[7] = -(t6 - t10) * t17;
                 M3i[8] = (t4 - t8) * t17;
-        /* } else { */
-                /* nx_warning(NX_LOG_TAG, "Zero determinant in matrix3 inversion!"); */
+        } else {
+                nx_dmat3_set_zero(M3i);
+                NX_WARNING(NX_LOG_TAG, "Zero determinant in matrix3 inversion!");
         }
 
         return detM3;
@@ -236,9 +245,14 @@ static inline void nx_dmat3_mul_ua(double *C, const double *U, const double *A)
         C[8] = U[8]*A[8];
 }
 
-static inline void nx_dmat3_eye(double *A)
+static inline void nx_dmat3_set_zero(double *A)
 {
         memset(A, 0, 9*sizeof(*A));
+}
+
+static inline void nx_dmat3_eye(double *A)
+{
+        nx_dmat3_set_zero(A);
         A[0] = 1.0;
         A[4] = 1.0;
         A[8] = 1.0;

@@ -397,10 +397,13 @@ TEST_F(NXDataFrameTest, set_rows) {
         EXPECT_STREQ(v_string, nx_data_frame_get_string(df, 3, 3));
         EXPECT_EQ(v_double, nx_data_frame_get_double(df, 4, 4));
 
-        for (int i = 0; i < n_columns; ++i)
-                for (int j = 0; j < n_columns; ++j)
-                        if (i != j)
+        for (int i = 0; i < n_columns; ++i) {
+                for (int j = 0; j < n_columns; ++j) {
+                        if (i != j) {
                                 EXPECT_TRUE(nx_data_frame_is_na(df, i, j));
+                        }
+                }
+        }
 
         nx_data_frame_free(df);
 }
