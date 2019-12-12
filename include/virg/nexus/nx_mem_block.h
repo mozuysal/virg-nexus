@@ -47,19 +47,19 @@ struct NXMemBlock *nx_mem_block_new(size_t init_sz);
 
 void nx_mem_block_free(struct NXMemBlock *mem);
 
-void nx_mem_block_reserve(struct NXMemBlock *mem, size_t new_capacity);
+void *nx_mem_block_reserve(struct NXMemBlock *mem, size_t new_capacity);
 
-void nx_mem_block_resize(struct NXMemBlock *mem, size_t new_sz);
+void *nx_mem_block_resize(struct NXMemBlock *mem, size_t new_sz);
 
 void nx_mem_block_release(struct NXMemBlock *mem);
 
-void nx_mem_block_wrap(struct NXMemBlock *mem, void *ptr, size_t sz, size_t capacity, NXBool own_memory);
+void *nx_mem_block_wrap(struct NXMemBlock *mem, void *ptr, size_t sz, size_t capacity, NXBool own_memory);
 
 void nx_mem_block_swap(struct NXMemBlock *mem0, struct NXMemBlock *mem1);
 
 struct NXMemBlock *nx_mem_block_copy0(struct NXMemBlock *mem);
 
-void nx_mem_block_copy(struct NXMemBlock *dest, const struct NXMemBlock *src);
+void *nx_mem_block_copy(struct NXMemBlock *dest, const struct NXMemBlock *src);
 
 void nx_mem_block_set_zero(struct NXMemBlock *mem);
 

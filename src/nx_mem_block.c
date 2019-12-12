@@ -60,7 +60,7 @@ void nx_mem_block_free(struct NXMemBlock *mem)
         }
 }
 
-void nx_mem_block_reserve(struct NXMemBlock *mem, size_t new_capacity)
+void *nx_mem_block_reserve(struct NXMemBlock *mem, size_t new_capacity)
 {
         NX_ASSERT_PTR(mem);
 
@@ -77,14 +77,18 @@ void nx_mem_block_reserve(struct NXMemBlock *mem, size_t new_capacity)
 
                 mem->capacity = new_capacity;
         }
+
+        return mem->ptr;
 }
 
-void nx_mem_block_resize(struct NXMemBlock *mem, size_t new_sz)
+void *nx_mem_block_resize(struct NXMemBlock *mem, size_t new_sz)
 {
         NX_ASSERT_PTR(mem);
 
         nx_mem_block_reserve(mem, new_sz);
         mem->size = new_sz;
+
+        return mem->ptr;
 }
 
 void nx_mem_block_release(struct NXMemBlock *mem)
@@ -101,7 +105,7 @@ void nx_mem_block_release(struct NXMemBlock *mem)
         mem->own_memory = NX_FALSE;
 }
 
-void nx_mem_block_wrap(struct NXMemBlock *mem, void *ptr, size_t sz, size_t capacity, NXBool own_memory)
+void *nx_mem_block_wrap(struct NXMemBlock *mem, void *ptr, size_t sz, size_t capacity, NXBool own_memory)
 {
         NX_ASSERT_PTR(mem);
         NX_ASSERT_PTR(ptr);
@@ -112,6 +116,8 @@ void nx_mem_block_wrap(struct NXMemBlock *mem, void *ptr, size_t sz, size_t capa
         mem->size = sz;
         mem->capacity = capacity;
         mem->own_memory = own_memory;
+
+        return mem->ptr;
 }
 
 void nx_mem_block_swap(struct NXMemBlock *mem0, struct NXMemBlock *mem1)
@@ -138,7 +144,7 @@ struct NXMemBlock *nx_mem_block_copy0(struct NXMemBlock *mem)
         return cpy;
 }
 
-void nx_mem_block_copy(struct NXMemBlock *dest, const struct NXMemBlock *src)
+void *nx_mem_block_copy(struct NXMemBlock *dest, const struct NXMemBlock *src)
 {
         NX_ASSERT_PTR(src);
         NX_ASSERT_PTR(dest);
@@ -148,6 +154,8 @@ void nx_mem_block_copy(struct NXMemBlock *dest, const struct NXMemBlock *src)
         if (src->ptr) {
                 memcpy(dest->ptr, src->ptr, dest->size);
         }
+
+        return dest->ptr;
 }
 
 void nx_mem_block_set_zero(struct NXMemBlock *mem)
