@@ -317,13 +317,13 @@ int main(int argc, char** argv)
                 estimate_guided_homography(sf, is_verbose);
         }
 
-        int n_inliers_f = estimate_initial_fundamental_matrix(sf, is_verbose);
-        if (n_inliers_f >= 30) {
-                double E[9];
-                // nx_essential_from_fundamental(&E[0], sf.F.data(),
-                                              // &sf.Kl[0], &sf.Kr[0]);
-                
-        }
+        // int n_inliers_f = estimate_initial_fundamental_matrix(sf, is_verbose);
+        // if (n_inliers_f >= 30) {
+        //         double E[9];
+        //         // nx_essential_from_fundamental(&E[0], sf.F.data(),
+        //                                       // &sf.Kl[0], &sf.Kr[0]);
+
+        // }
 
         return EXIT_SUCCESS;
 }
