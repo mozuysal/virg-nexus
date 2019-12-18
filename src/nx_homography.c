@@ -569,18 +569,21 @@ double nx_homography_transfer_error_fwd(const double *h, int n_corr,
                                         const struct NXPointMatch2D *corr_list)
 {
         double e = 0.0;
+        int n_inliers = 0;
         for (int i = 0; i < n_corr; ++i) {
                 const struct NXPointMatch2D *pm = corr_list + i;
                 if (pm->is_inlier) {
+                        n_inliers++;
                         float xp[2];
                         nx_homography_transfer_fwd(h, &xp[0], &pm->x[0]);
                         double dx = xp[0] - pm->xp[0];
                         double dy = xp[1] - pm->xp[1];
-                        double e_i = sqrt(dx*dx + dy*dy) / pm->sigma_xp;
+                        double s_i = pm->sigma_xp;
+                        double e_i = sqrt(dx*dx + dy*dy) / s_i;
                         e += e_i;
                 }
         }
-        return e / n_corr;
+        return e / n_inliers;
 }
 
 double nx_homography_transfer_error_bwd(const double *h, int n_corr,
@@ -590,9 +593,11 @@ double nx_homography_transfer_error_bwd(const double *h, int n_corr,
         nx_dmat3_inv(&h_inv[0], h);
 
         double e = 0.0;
+        int n_inliers = 0;
         for (int i = 0; i < n_corr; ++i) {
                 const struct NXPointMatch2D *pm = corr_list + i;
                 if (pm->is_inlier) {
+                        n_inliers++;
                         float x[2];
                         nx_homography_transfer_fwd(&h_inv[0], &x[0], &pm->xp[0]);
                         double dx = x[0] - pm->x[0];
@@ -600,7 +605,7 @@ double nx_homography_transfer_error_bwd(const double *h, int n_corr,
                         e += sqrt(dx*dx + dy*dy) / pm->sigma_x;
                 }
         }
-        return e / n_corr;
+        return e / n_inliers;
 }
 
 double nx_homography_transfer_error_sym(const double *h, int n_corr,
