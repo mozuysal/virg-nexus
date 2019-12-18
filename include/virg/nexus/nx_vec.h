@@ -32,13 +32,17 @@
 #include <string.h>
 
 #include "virg/nexus/nx_config.h"
+#include "virg/nexus/nx_types.h"
 #include "virg/nexus/nx_log.h"
 #include "virg/nexus/nx_assert.h"
 
 __NX_BEGIN_DECL
 
-static inline void  nx_dvec_set_zero(int n, double *v);
-static inline void  nx_dvec_set     (int n, double *v, double value);
+static inline void   nx_dvec_set_zero(int n, double *v);
+static inline void   nx_dvec_set     (int n, double *v, double value);
+static inline double nx_dvec_norm_sq (int n, const double *v);
+static inline double nx_dvec_norm    (int n, const double *v);
+static inline void   nx_dvec_axpy    (int n, double *y, double a, const double *x);
 
 static inline void  nx_svec_set_zero(int n, float *v);
 static inline float nx_svec_norm_sq (int n, const float *v);
@@ -72,6 +76,37 @@ static inline void nx_dvec_set(int n, double *v, double value)
         }
 }
 
+static inline double nx_dvec_norm_sq(int n, const double *v)
+{
+        NX_ASSERT_PTR(v);
+        NX_ASSERT(n >= 0);
+
+        double nrm_sq = 0.0;
+        for (int i = 0; i < n; ++i) {
+                nrm_sq += v[i]*v[i];
+        }
+        return nrm_sq;
+}
+
+static inline double nx_dvec_norm(int n, const double *v)
+{
+        NX_ASSERT_PTR(v);
+        NX_ASSERT(n >= 0);
+
+        return sqrt(nx_dvec_norm_sq(n, v));
+}
+
+static inline void nx_dvec_axpy(int n, double *y, double a, const double *x)
+{
+        NX_ASSERT_PTR(x);
+        NX_ASSERT_PTR(y);
+        NX_ASSERT(n >= 0);
+
+        for (int i = 0; i < n; ++i) {
+                y[i] += a * x[i];
+        }
+}
+
 static inline void nx_svec_set_zero(int n, float *v)
 {
         NX_ASSERT_PTR(v);
@@ -98,7 +133,7 @@ static inline float nx_svec_norm(int n, const float *v)
         NX_ASSERT_PTR(v);
         NX_ASSERT(n >= 0);
 
-        return sqrt(nx_svec_norm_sq(n, v));
+        return sqrtf(nx_svec_norm_sq(n, v));
 }
 
 static inline float nx_svec_to_unit(int n, float *v)
