@@ -30,6 +30,7 @@
 #include <ctime>
 
 #include "gtest/gtest.h"
+#include <memory>
 
 #include "virg/nexus/nx_gnuplot.h"
 
@@ -39,13 +40,30 @@ namespace {
 
 class NXGNUPlotTest : public ::testing::Test {
 protected:
-  NXGNUPlotTest() {}
+        NXGNUPlotTest() {}
 
-  virtual void SetUp() { gnuplot = nullptr; }
+        virtual void SetUp() { gnuplot = nullptr; }
 
-  virtual void TearDown() { nx_gnuplot_free(gnuplot); }
+        virtual void TearDown() { nx_gnuplot_free(gnuplot); }
 
-  struct NXGNUPlot *gnuplot;
+        struct NXDataFrame *make_line_data(int n, double a, double b) {
+                struct NXDataFrame *df = nx_data_frame_alloc();
+                const int n_cols = 2;
+                enum NXDataColumnType types[n_cols] = { NX_DCT_DOUBLE,
+                                                        NX_DCT_DOUBLE };
+                const char* labels[n_cols] = {"x", "y"};
+                nx_data_frame_add_columns(df, n_cols, &types[0], &labels[0]);
+
+                for (int i = 0; i < n; ++i) {
+                        double x = i - n/2;
+                        double y = a * x + b;
+                        nx_data_frame_append_row(df, x, y);
+                }
+
+                return df;
+        }
+
+        struct NXGNUPlot *gnuplot;
 };
 
 TEST_F(NXGNUPlotTest, PDFSineTest) {
@@ -53,6 +71,16 @@ TEST_F(NXGNUPlotTest, PDFSineTest) {
         nx_gnuplot_set_terminal_pdf(gnuplot, 20.0, 20.0, "/tmp/sine.pdf");
         nx_gnuplot_send_command(gnuplot, "plot sin(x);");
         nx_gnuplot_flush(gnuplot);
+}
+
+TEST_F(NXGNUPlotTest, PDFLine) {
+        gnuplot = nx_gnuplot_new(nullptr, NX_FALSE);
+        nx_gnuplot_set_terminal_pdf(gnuplot, 20.0, 20.0, "/tmp/line.pdf");
+        nx_gnuplot_send_command(gnuplot, "plot '-' using 1:2;\n");
+        struct NXDataFrame *df = make_line_data(20, 2.0, 1.0);
+        nx_gnuplot_send_data_frame(gnuplot, df);
+        nx_gnuplot_flush(gnuplot);
+        nx_data_frame_free(df);
 }
 
 } // namespace

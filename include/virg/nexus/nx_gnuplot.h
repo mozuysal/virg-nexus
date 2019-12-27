@@ -30,6 +30,7 @@
 
 #include "virg/nexus/nx_config.h"
 #include "virg/nexus/nx_types.h"
+#include "virg/nexus/nx_data_frame.h"
 
 __NX_BEGIN_DECL
 
@@ -47,7 +48,8 @@ struct NXGNUPlot *nx_gnuplot_new(FILE *stream, NXBool persist);
 void nx_gnuplot_free(struct NXGNUPlot *gnuplot);
 
 void nx_gnuplot_send_command(struct NXGNUPlot *gnuplot, const char *cmd, ...);
-/* void nx_gnuplot_send_data_frame(struct NXGNUPlot *gnuplot, ); */
+void nx_gnuplot_send_data_frame(struct NXGNUPlot *gnuplot,
+                                const struct NXDataFrame *frm);
 void nx_gnuplot_flush(struct NXGNUPlot *gnuplot);
 
 void nx_gnuplot_set_terminal_window(struct NXGNUPlot *gnuplot, int width, int height, const char *title, int id);
@@ -58,8 +60,10 @@ void nx_gnuplot_set_terminal_ascii(struct NXGNUPlot *gnuplot, int width,  int he
 void nx_gnuplot_set_terminal(struct NXGNUPlot *gnuplot, enum NXTerminalType type, double width, double height, const char *name, int id);
 
 void nx_gnuplot_set_title(struct NXGNUPlot *gnuplot, const char *title);
-void nx_gnuplot_set_label(struct NXGNUPlot *gnuplot, const char *axis, const char *label);
-void nx_gnuplot_set_title_and_labels(struct NXGNUPlot *gnuplot, const char *title, const char *xlabel, const char *ylabel);
+void nx_gnuplot_set_xlabel(struct NXGNUPlot *gnuplot, const char *label);
+void nx_gnuplot_set_ylabel(struct NXGNUPlot *gnuplot, const char *label);
+void nx_gnuplot_set_title_and_labels(struct NXGNUPlot *gnuplot, const char *title,
+                                     const char *xlabel, const char *ylabel);
 
 __NX_END_DECL
 

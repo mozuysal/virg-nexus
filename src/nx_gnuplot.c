@@ -92,6 +92,18 @@ void nx_gnuplot_send_command(struct NXGNUPlot *gnuplot, const char *cmd, ...)
         va_end(args);
 }
 
+void nx_gnuplot_send_data_frame(struct NXGNUPlot *gnuplot,
+                                const struct NXDataFrame *frm)
+{
+        NX_ASSERT_PTR(gnuplot);
+        NX_ASSERT_PTR(frm);
+
+        if (!nx_data_frame_fprintf(frm, gnuplot->pgplot, " ")) {
+                NX_ERROR(NX_LOG_TAG, "Error sending data frame to GNUPlot");
+        }
+        fprintf(gnuplot->pgplot, "e\n");
+}
+
 void nx_gnuplot_flush(struct NXGNUPlot *gnuplot)
 {
         NX_ASSERT_PTR(gnuplot);
@@ -173,14 +185,22 @@ void nx_gnuplot_set_title(struct NXGNUPlot *gnuplot, const char *title)
         nx_gnuplot_send_command(gnuplot, "set title \"%s\"\n", title);
 }
 
-void nx_gnuplot_set_label(struct NXGNUPlot *gnuplot, const char *axis,
+void nx_gnuplot_set_xlabel(struct NXGNUPlot *gnuplot,
                           const char *label)
 {
         NX_ASSERT_PTR(gnuplot);
-        NX_ASSERT_PTR(axis);
         NX_ASSERT_PTR(label);
 
-        nx_gnuplot_send_command(gnuplot, "set title %slabel \"%s\"\n", axis, label);
+        nx_gnuplot_send_command(gnuplot, "set title xlabel \"%s\"\n", label);
+}
+
+void nx_gnuplot_set_ylabel(struct NXGNUPlot *gnuplot,
+                          const char *label)
+{
+        NX_ASSERT_PTR(gnuplot);
+        NX_ASSERT_PTR(label);
+
+        nx_gnuplot_send_command(gnuplot, "set title ylabel \"%s\"\n", label);
 }
 
 void nx_gnuplot_set_title_and_labels(struct NXGNUPlot *gnuplot, const char *title,
