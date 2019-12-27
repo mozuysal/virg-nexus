@@ -18,6 +18,7 @@ set(virg_nexus_C_SOURCES
   src/nx_mem_block.c
   src/SFMT/SFMT.c
   src/nx_uniform_sampler.c
+  src/nx_gaussian_sampler.c
   src/nx_bit_ops.c
   src/nx_math.c
   src/nx_graph.c
@@ -81,6 +82,7 @@ set(virg_nexus_C_HEADERS
   include/virg/nexus/nx_alloc.h
   include/virg/nexus/nx_mem_block.h
   include/virg/nexus/nx_uniform_sampler.h
+  include/virg/nexus/nx_gaussian_sampler.h
   include/virg/nexus/nx_bit_ops.h
   include/virg/nexus/nx_math.h
   include/virg/nexus/nx_graph.h
