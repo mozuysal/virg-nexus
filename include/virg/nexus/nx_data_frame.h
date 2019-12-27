@@ -15,8 +15,8 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU General Public License along with
+ * the VIRG-Nexus Library.  If not, see <https://www.gnu.org/licenses/>.
  *
  * @author Mustafa Ozuysal
  *
@@ -45,28 +45,29 @@ enum NXDataColumnType {
 };
 
 struct NXDataFrame *nx_data_frame_alloc();
-
 void nx_data_frame_free(struct NXDataFrame *df);
 
-void nx_data_frame_add_column(struct NXDataFrame *df, enum NXDataColumnType type, const char *label);
-
-void nx_data_frame_make_factor(struct NXDataFrame *df, int col_id);
-
 int nx_data_frame_n_columns(const struct NXDataFrame *df);
-
-const struct NXDataColumn *nx_data_frame_column(const struct NXDataFrame *df, int col_id);
-
+void nx_data_frame_add_column(struct NXDataFrame *df,
+                              enum NXDataColumnType type,
+                              const char *label);
+void nx_data_frame_add_columns(struct NXDataFrame *df,
+                               int n,
+                               const enum NXDataColumnType *types,
+                               const char **labels);
+const struct NXDataColumn *nx_data_frame_column(const struct NXDataFrame *df,
+                                                int col_id);
 enum NXDataColumnType nx_data_column_type(const struct NXDataColumn *dc);
-
 const char *nx_data_column_label(const struct NXDataColumn *dc);
 
+void nx_data_frame_make_factor(struct NXDataFrame *df, int col_id);
 int nx_data_column_n_factor_levels(const struct NXDataColumn *dc);
-
-const char *nx_data_column_factor_level(const struct NXDataColumn *dc, int level_id);
-
-int nx_data_frame_add_row(struct NXDataFrame *df);
+const char *nx_data_column_factor_level(const struct NXDataColumn *dc,
+                                        int level_id);
 
 int nx_data_frame_n_rows(const struct NXDataFrame *df);
+int nx_data_frame_add_row(struct NXDataFrame *df);
+int nx_data_frame_append_row(struct NXDataFrame *df, ...);
 
 NXBool      nx_data_frame_is_na     (const struct NXDataFrame *df, int row_id, int col_id);
 const char *nx_data_frame_get_string(const struct NXDataFrame *df, int row_id, int col_id);
@@ -82,6 +83,8 @@ void nx_data_frame_set_int   (struct NXDataFrame *df, int row_id, int col_id, in
 void nx_data_frame_set_double(struct NXDataFrame *df, int row_id, int col_id, double value);
 void nx_data_frame_set_bool  (struct NXDataFrame *df, int row_id, int col_id, NXBool value);
 void nx_data_frame_set_factor(struct NXDataFrame *df, int row_id, int col_id, const char *value);
+
+NXBool nx_data_frame_fprintf(const struct NXDataFrame *df, FILE *stream, const char *col_sep);
 
 NXBool nx_data_frame_save_csv_stream(const struct NXDataFrame *df, FILE *stream);
 struct NXDataFrame *nx_data_frame_load_csv_stream(FILE *stream, NXBool strings_as_factors);

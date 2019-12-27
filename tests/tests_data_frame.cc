@@ -15,8 +15,8 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU General Public License along with
+ * the VIRG-Nexus Library.  If not, see <https://www.gnu.org/licenses/>.
  *
  * @author Mustafa Ozuysal
  *
@@ -583,8 +583,7 @@ TEST_F(NXDataFrameTest, io) {
         const int n_columns = 5;
         const char *labels[n_columns] = { "col.int", "col.bool", "col.factor", "col.string", "col.double"};
         enum NXDataColumnType types[n_columns] = { NX_DCT_INT, NX_DCT_BOOL, NX_DCT_FACTOR, NX_DCT_STRING, NX_DCT_DOUBLE };
-        for (int i = 0; i < n_columns; ++i)
-                nx_data_frame_add_column(df, types[i], labels[i]);
+        nx_data_frame_add_columns(df, n_columns, &types[0], &labels[0]);
 
         int row_id = nx_data_frame_add_row(df);
         nx_data_frame_set(df, row_id, 123, NX_TRUE, "abc\"def", "123.0", 1.0/3.0);
@@ -593,8 +592,8 @@ TEST_F(NXDataFrameTest, io) {
         nx_data_frame_set(df, row_id, -123, NX_FALSE, "", "", 0.33);
         nx_data_frame_set_na(df, row_id, 2);
 
-        row_id = nx_data_frame_add_row(df);
-        nx_data_frame_set(df, row_id, INT_MAX, NX_TRUE, "abcd", "ef\ngh", 1.0/3.0 + 3.0);
+        row_id = nx_data_frame_append_row(df, INT_MAX, NX_TRUE, "abcd",
+                                          "ef\ngh", 1.0/3.0 + 3.0);
 
         FILE *tmp_stream = nx_xtmpfile();
         EXPECT_TRUE(nx_data_frame_save_csv_stream(df, tmp_stream));

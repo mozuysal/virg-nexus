@@ -15,8 +15,8 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU General Public License along with
+ * the VIRG-Nexus Library.  If not, see <https://www.gnu.org/licenses/>.
  *
  * @author Mustafa Ozuysal
  *
@@ -40,14 +40,16 @@
 #define CHECK_DATA_COLUMN_TYPE(dc,col_type)                             \
         do {                                                            \
                 if (dc->type != col_type)                               \
-                        NX_FATAL(NX_LOG_TAG, "Data frame column %d is not of type %s!", col_id, #col_type); \
+                        NX_FATAL(NX_LOG_TAG, "Data frame column %d is not of type %s!", \
+                                 col_id, #col_type);                    \
         } while (0)
 
 #define CHECK_DATA_FRAME_ELEMENT(dc,row_id,col_type)                    \
         do {                                                            \
                 CHECK_DATA_COLUMN_TYPE(dc,col_type);                    \
                 if (dc->elems[row_id] == NULL)                          \
-                        NX_FATAL(NX_LOG_TAG, "Data frame element at %d,%d is N/A!", row_id, col_id); \
+                        NX_FATAL(NX_LOG_TAG, "Data frame element at %d,%d is N/A!", \
+                                 row_id, col_id);                       \
         } while (0)
 
 #define NA_DATA_FRAME_ELEMENT(dc,row_id)                \
@@ -69,7 +71,8 @@ struct NXDataColumn {
         struct NXStringArray *levels;
 };
 
-static struct NXDataColumn *nx_data_column_alloc(enum NXDataColumnType type, const char *label)
+static struct NXDataColumn *nx_data_column_alloc(enum NXDataColumnType type,
+                                                 const char *label)
 {
         struct NXDataColumn *dc = NX_NEW(1, struct NXDataColumn);
         dc->size = 0;
@@ -96,7 +99,8 @@ static void nx_data_column_grow(struct NXDataColumn *dc, int new_size)
         }
 }
 
-static struct NXDataColumn *nx_data_column_new(enum NXDataColumnType type, const char *label, int initial_size)
+static struct NXDataColumn *nx_data_column_new(enum NXDataColumnType type,
+                                               const char *label, int initial_size)
 {
         struct NXDataColumn *dc = nx_data_column_alloc(type, label);
         nx_data_column_grow(dc, initial_size);
@@ -109,7 +113,8 @@ static void nx_data_column_append_row(struct NXDataColumn *dc)
         if (dc->size < INT_MAX)
                 nx_data_column_grow(dc,dc->size+1);
         else
-                NX_FATAL(NX_LOG_TAG, "Maximum number of rows (%d) has been reached for data frame column %s!", dc->size, dc->label);
+                NX_FATAL(NX_LOG_TAG, "Maximum number of rows (%d) has been reached for data frame column %s!",
+                         dc->size, dc->label);
 }
 
 static void nx_data_column_free(struct NXDataColumn *dc)
@@ -127,7 +132,8 @@ static void nx_data_column_free(struct NXDataColumn *dc)
 }
 
 
-static int nx_data_column_value_to_factor(struct NXDataColumn *dc, const char *value)
+static int nx_data_column_value_to_factor(struct NXDataColumn *dc,
+                                          const char *value)
 {
         int level_id = nx_string_array_find(dc->levels, value);
         if (level_id < 0) {
@@ -172,7 +178,9 @@ void nx_data_frame_free(struct NXDataFrame *df)
         }
 }
 
-void nx_data_frame_add_column(struct NXDataFrame *df, enum NXDataColumnType type, const char *label)
+void nx_data_frame_add_column(struct NXDataFrame *df,
+                              enum NXDataColumnType type,
+                              const char *label)
 {
         NX_ASSERT_PTR(df);
         NX_ASSERT_PTR(label);
@@ -180,6 +188,19 @@ void nx_data_frame_add_column(struct NXDataFrame *df, enum NXDataColumnType type
         struct NXDataColumn *dc = nx_data_column_new(type,label,df->n_rows);
         NX_ENSURE_CAPACITY(df->columns->elems, df->columns->capacity, df->columns->size+1);
         df->columns->elems[df->columns->size++] = dc;
+}
+
+void nx_data_frame_add_columns(struct NXDataFrame *df,
+                               int n,
+                               const enum NXDataColumnType *types,
+                               const char **labels)
+{
+        NX_ASSERT_PTR(df);
+        NX_ASSERT_PTR(types);
+        NX_ASSERT_PTR(labels);
+
+        for (int i = 0; i < n; ++i)
+                nx_data_frame_add_column(df, types[i], labels[i]);
 }
 
 void nx_data_frame_make_factor(struct NXDataFrame *df, int col_id)
@@ -191,12 +212,14 @@ void nx_data_frame_make_factor(struct NXDataFrame *df, int col_id)
         if (dc->type == NX_DCT_FACTOR)
                 return;
 
-        df->columns->elems[col_id] = nx_data_column_new(NX_DCT_FACTOR,dc->label,df->n_rows);
+        df->columns->elems[col_id] = nx_data_column_new(NX_DCT_FACTOR,
+                                                        dc->label, df->n_rows);
         if (dc->type == NX_DCT_STRING) {
                 for (int i = 0; i < df->n_rows; ++i) {
                         void *elem_ptr = dc->elems[i];
                         if (elem_ptr)
-                                nx_data_frame_set_factor(df, i, col_id, (const char *)elem_ptr);
+                                nx_data_frame_set_factor(df, i, col_id,
+                                                         (const char *)elem_ptr);
                 }
         } else {
                 for (int i = 0; i < df->n_rows; ++i) {
@@ -223,7 +246,8 @@ int nx_data_frame_n_columns(const struct NXDataFrame *df)
         return df->columns->size;
 }
 
-const struct NXDataColumn *nx_data_frame_column(const struct NXDataFrame *df, int col_id)
+const struct NXDataColumn *nx_data_frame_column(const struct NXDataFrame *df,
+                                                int col_id)
 {
         NX_ASSERT_PTR(df);
         NX_ASSERT_INDEX(col_id,nx_data_frame_n_columns(df));
@@ -269,6 +293,19 @@ int nx_data_frame_add_row(struct NXDataFrame *df) {
 
         int new_row_id = df->n_rows++;
         return new_row_id;
+}
+
+void nx_data_frame_vset(struct NXDataFrame *df, int row_id, va_list args);
+
+int nx_data_frame_append_row(struct NXDataFrame *df, ...)
+{
+        NX_ASSERT_PTR(df);
+
+        int row_id = nx_data_frame_add_row(df);
+        va_list args;
+        va_start(args, df);
+        nx_data_frame_vset(df, row_id, args);
+        va_end(args);
 }
 
 int nx_data_frame_n_rows(const struct NXDataFrame *df)
@@ -331,7 +368,8 @@ NXBool nx_data_frame_get_bool(const struct NXDataFrame *df, int row_id, int col_
         return *((NXBool *)dc->elems[row_id]);
 }
 
-const char *nx_data_frame_get_factor(const struct NXDataFrame *df, int row_id, int col_id)
+const char *nx_data_frame_get_factor(const struct NXDataFrame *df,
+                                     int row_id, int col_id)
 {
         NX_ASSERT_PTR(df);
         NX_ASSERT_INDEX(row_id,df->n_rows);
@@ -343,6 +381,37 @@ const char *nx_data_frame_get_factor(const struct NXDataFrame *df, int row_id, i
         return nx_string_array_get(dc->levels, factor_id);
 }
 
+void nx_data_frame_vset(struct NXDataFrame *df, int row_id, va_list args)
+{
+        NX_ASSERT_PTR(df);
+        NX_ASSERT_INDEX(row_id,df->n_rows);
+
+        for (int col_id = 0; col_id < df->columns->size; ++col_id) {
+                switch (df->columns->elems[col_id]->type) {
+                case NX_DCT_INT:
+                        nx_data_frame_set_int(df, row_id, col_id,
+                                              va_arg(args, int));
+                        break;
+                case NX_DCT_BOOL:
+                        nx_data_frame_set_bool(df, row_id, col_id,
+                                               va_arg(args, NXBool));
+                        break;
+                case NX_DCT_DOUBLE:
+                        nx_data_frame_set_double(df, row_id, col_id,
+                                                 va_arg(args, double));
+                        break;
+                case NX_DCT_STRING:
+                        nx_data_frame_set_string(df, row_id, col_id,
+                                                 va_arg(args, char *));
+                        break;
+                case NX_DCT_FACTOR:
+                        nx_data_frame_set_factor(df, row_id, col_id,
+                                                 va_arg(args, char *));
+                        break;
+                }
+        }
+}
+
 void nx_data_frame_set(struct NXDataFrame *df, int row_id, ...)
 {
         NX_ASSERT_PTR(df);
@@ -350,25 +419,7 @@ void nx_data_frame_set(struct NXDataFrame *df, int row_id, ...)
 
         va_list args;
         va_start(args, row_id);
-        for (int col_id = 0; col_id < df->columns->size; ++col_id) {
-                switch (df->columns->elems[col_id]->type) {
-                case NX_DCT_INT:
-                        nx_data_frame_set_int(df, row_id, col_id, va_arg(args, int));
-                        break;
-                case NX_DCT_BOOL:
-                        nx_data_frame_set_bool(df, row_id, col_id, va_arg(args, NXBool));
-                        break;
-                case NX_DCT_DOUBLE:
-                        nx_data_frame_set_double(df, row_id, col_id, va_arg(args, double));
-                        break;
-                case NX_DCT_STRING:
-                        nx_data_frame_set_string(df, row_id, col_id, va_arg(args, char *));
-                        break;
-                case NX_DCT_FACTOR:
-                        nx_data_frame_set_factor(df, row_id, col_id, va_arg(args, char *));
-                        break;
-                }
-        }
+        nx_data_frame_vset(df, row_id, args);
         va_end(args);
 }
 
@@ -382,7 +433,8 @@ void nx_data_frame_set_na(struct NXDataFrame *df, int row_id, int col_id)
         NA_DATA_FRAME_ELEMENT(dc,row_id);
 }
 
-void nx_data_frame_set_string(struct NXDataFrame *df, int row_id, int col_id, const char *value)
+void nx_data_frame_set_string(struct NXDataFrame *df, int row_id, int col_id,
+                              const char *value)
 {
         NX_ASSERT_PTR(df);
         NX_ASSERT_INDEX(row_id,df->n_rows);
@@ -395,7 +447,8 @@ void nx_data_frame_set_string(struct NXDataFrame *df, int row_id, int col_id, co
         dc->elems[row_id] = nx_strdup(value);
 }
 
-void nx_data_frame_set_int(struct NXDataFrame *df, int row_id, int col_id, int value)
+void nx_data_frame_set_int(struct NXDataFrame *df, int row_id, int col_id,
+                           int value)
 {
         NX_ASSERT_PTR(df);
         NX_ASSERT_INDEX(row_id,df->n_rows);
@@ -409,7 +462,8 @@ void nx_data_frame_set_int(struct NXDataFrame *df, int row_id, int col_id, int v
         dc->elems[row_id] = (void *)elem_ptr;
 }
 
-void nx_data_frame_set_double(struct NXDataFrame *df, int row_id, int col_id, double value)
+void nx_data_frame_set_double(struct NXDataFrame *df, int row_id, int col_id,
+                              double value)
 {
         NX_ASSERT_PTR(df);
         NX_ASSERT_INDEX(row_id,df->n_rows);
@@ -423,7 +477,8 @@ void nx_data_frame_set_double(struct NXDataFrame *df, int row_id, int col_id, do
         dc->elems[row_id] = (void *)elem_ptr;
 }
 
-void nx_data_frame_set_bool(struct NXDataFrame *df, int row_id, int col_id, NXBool value)
+void nx_data_frame_set_bool(struct NXDataFrame *df, int row_id, int col_id,
+                            NXBool value)
 {
         NX_ASSERT_PTR(df);
         NX_ASSERT_INDEX(row_id,df->n_rows);
@@ -437,7 +492,8 @@ void nx_data_frame_set_bool(struct NXDataFrame *df, int row_id, int col_id, NXBo
         dc->elems[row_id] = (void *)elem_ptr;
 }
 
-void nx_data_frame_set_factor(struct NXDataFrame *df, int row_id, int col_id, const char *value)
+void nx_data_frame_set_factor(struct NXDataFrame *df, int row_id, int col_id,
+                              const char *value)
 {
         NX_ASSERT_PTR(df);
         NX_ASSERT_INDEX(row_id,df->n_rows);
@@ -454,19 +510,31 @@ void nx_data_frame_set_factor(struct NXDataFrame *df, int row_id, int col_id, co
         dc->elems[row_id] = (void *)elem_ptr;
 }
 
-NXBool nx_data_frame_save_csv_stream(const struct NXDataFrame *df, FILE *stream)
+NXBool nx_data_frame_fprintf(const struct NXDataFrame *df, FILE *stream,
+                             const char *col_sep)
 {
         NX_ASSERT_PTR(df);
         NX_ASSERT_PTR(stream);
+        NX_ASSERT_PTR(col_sep);
 
         int nc = nx_data_frame_n_columns(df);
         for (int i = 0; i < nc; ++i) {
                 const struct NXDataColumn *dc = nx_data_frame_column(df, i);
-                nx_fputs_readable(nx_data_column_label(dc), stream);
-                if (i != nc-1)
-                        fputs(",", stream);
-                else
-                        fputs("\n", stream);
+                if (EOF == nx_fputs_readable(nx_data_column_label(dc), stream)) {
+                        NX_ERROR(NX_LOG_TAG, "Error printing label of data frame for column %d", i);
+                        return NX_FALSE;
+                }
+                if (i != nc-1) {
+                        if (EOF == fputs(col_sep, stream)) {
+                                NX_ERROR(NX_LOG_TAG, "Error printing seperator of data frame for column %d", i);
+                                return NX_FALSE;
+                        }
+                } else {
+                        if (EOF == fputs("\n", stream)) {
+                                NX_ERROR(NX_LOG_TAG, "Error printing newline at the end of data frame column labels");
+                                return NX_FALSE;
+                        }
+                }
         }
 
         int nr = nx_data_frame_n_rows(df);
@@ -475,25 +543,74 @@ NXBool nx_data_frame_save_csv_stream(const struct NXDataFrame *df, FILE *stream)
                         if (!nx_data_frame_is_na(df, r, c)) {
                                 const struct NXDataColumn *dc = nx_data_frame_column(df, c);
                                 switch (nx_data_column_type(dc)) {
-                                case NX_DCT_STRING: nx_fputs_double_quoted(nx_data_frame_get_string(df,r,c), stream); break;
-                                case NX_DCT_FACTOR: nx_fputs_double_quoted(nx_data_frame_get_factor(df,r,c), stream); break;
-                                case NX_DCT_INT: fprintf(stream, "%d", nx_data_frame_get_int(df,r,c)); break;
-                                case NX_DCT_DOUBLE: fprintf(stream, NX_DATA_FRAME_DOUBLE_IO_FORMAT, nx_data_frame_get_double(df,r,c)); break;
-                                case NX_DCT_BOOL: fprintf(stream, "%s", nx_data_frame_get_bool(df,r,c) ? "true" : "false"); break;
+                                case NX_DCT_STRING:
+                                        if (EOF == nx_fputs_double_quoted(nx_data_frame_get_string(df,r,c),
+                                                                          stream)) {
+                                                NX_ERROR(NX_LOG_TAG, "Error printing data frame string at %d, %d", r, c);
+                                                return NX_FALSE;
+                                        }
+                                        break;
+                                case NX_DCT_FACTOR:
+                                        if (EOF == nx_fputs_double_quoted(nx_data_frame_get_factor(df,r,c),
+                                                                          stream)) {
+                                                NX_ERROR(NX_LOG_TAG, "Error printing data frame factor at %d, %d", r, c);
+                                                return NX_FALSE;
+                                        }
+                                        break;
+                                case NX_DCT_INT:
+                                        if (0 > fprintf(stream, "%d",
+                                                        nx_data_frame_get_int(df,r,c))) {
+                                                NX_ERROR(NX_LOG_TAG, "Error printing data frame integer at %d, %d", r, c);
+                                                return NX_FALSE;
+                                        }
+                                        break;
+                                case NX_DCT_DOUBLE:
+                                        if (0 > fprintf(stream,
+                                                NX_DATA_FRAME_DOUBLE_IO_FORMAT,
+                                                nx_data_frame_get_double(df,r,c))) {
+                                                NX_ERROR(NX_LOG_TAG, "Error printing data frame double at %d, %d", r, c);
+                                                return NX_FALSE;
+                                        }
+                                        break;
+                                case NX_DCT_BOOL:
+                                        if (0 > fprintf(stream, "%s",
+                                                        nx_data_frame_get_bool(df,r,c)
+                                                        ? "true" : "false")) {
+                                                NX_ERROR(NX_LOG_TAG, "Error printing data frame boolean at %d, %d", r, c);
+                                                return NX_FALSE;
+                                        }
+                                        break;
                                 }
                         }
 
-                        if (c != nc-1)
-                                fputs(",", stream);
-                        else
-                                fputs("\n", stream);
+                        if (c != nc-1) {
+                                if (EOF == fputs(col_sep, stream)) {
+                                        NX_ERROR(NX_LOG_TAG, "Error printing seperator of data frame item at %d, %d", r, c);
+                                        return NX_FALSE;
+                                }
+                        } else {
+                                if (EOF == fputs("\n", stream)) {
+                                        NX_ERROR(NX_LOG_TAG, "Error printing newline at the end of data frame items at row %d", r);
+                                        return NX_FALSE;
+                                }
+                        }
                 }
         }
 
         return NX_TRUE;
 }
 
-struct NXDataFrame *nx_data_frame_load_csv_stream(FILE *stream, NXBool strings_as_factors)
+
+NXBool nx_data_frame_save_csv_stream(const struct NXDataFrame *df, FILE *stream)
+{
+        NX_ASSERT_PTR(df);
+        NX_ASSERT_PTR(stream);
+
+        return nx_data_frame_fprintf(df, stream, ",");
+}
+
+struct NXDataFrame *nx_data_frame_load_csv_stream(FILE *stream,
+                                                  NXBool strings_as_factors)
 {
         NX_ASSERT_PTR(stream);
 
@@ -530,7 +647,8 @@ NXBool nx_data_frame_save_csv(const struct NXDataFrame *df, const char *filename
 
         FILE *fout = nx_fopen(filename, "w");
         if (fout == NULL) {
-                NX_ERROR(NX_LOG_TAG, "Error opening file %s for CSV data frame output", filename);
+                NX_ERROR(NX_LOG_TAG, "Error opening file %s for CSV data frame output",
+                         filename);
                 return NX_FALSE;
         }
 
@@ -542,17 +660,20 @@ NXBool nx_data_frame_save_csv(const struct NXDataFrame *df, const char *filename
         return res;
 }
 
-struct NXDataFrame *nx_data_frame_load_csv(const char *filename, NXBool strings_as_factors)
+struct NXDataFrame *nx_data_frame_load_csv(const char *filename,
+                                           NXBool strings_as_factors)
 {
         NX_ASSERT_PTR(filename);
 
         FILE *fin = nx_fopen(filename, "r");
         if (fin == NULL) {
-                NX_ERROR(NX_LOG_TAG, "Error opening file %s for reading CSV data", filename);
+                NX_ERROR(NX_LOG_TAG, "Error opening file %s for reading CSV data",
+                         filename);
                 return NX_FALSE;
         }
 
-        struct NXDataFrame *df = nx_data_frame_load_csv_stream(fin, strings_as_factors);
+        struct NXDataFrame *df = nx_data_frame_load_csv_stream(fin,
+                                                               strings_as_factors);
 
         if (nx_fclose(fin, filename) != NX_OK) {
                 nx_data_frame_free(df);
@@ -568,16 +689,20 @@ void nx_data_frame_xsave_csv(const struct NXDataFrame *df, const char *filename)
         NX_ASSERT_PTR(filename);
 
         if (!nx_data_frame_save_csv(df, filename))
-                NX_FATAL(NX_LOG_TAG, "Error saving data frame to CSV file %s", filename);
+                NX_FATAL(NX_LOG_TAG, "Error saving data frame to CSV file %s",
+                         filename);
 }
 
-struct NXDataFrame *nx_data_frame_xload_csv(const char *filename, NXBool strings_as_factors)
+struct NXDataFrame *nx_data_frame_xload_csv(const char *filename,
+                                            NXBool strings_as_factors)
 {
         NX_ASSERT_PTR(filename);
 
-        struct NXDataFrame *df = nx_data_frame_load_csv(filename, strings_as_factors);
+        struct NXDataFrame *df = nx_data_frame_load_csv(filename,
+                                                        strings_as_factors);
         if (df == NULL)
-                NX_FATAL(NX_LOG_TAG, "Error loading data frame from file %s", filename);
+                NX_FATAL(NX_LOG_TAG, "Error loading data frame from file %s",
+                         filename);
 
         return df;
 }
