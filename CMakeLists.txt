@@ -39,7 +39,7 @@ set(virg_nexus_C_SOURCES
   src/nx_json_tree.c
   src/nx_json_bundle.c
   src/nx_json_log.c
-  src/nx_plotter.c
+  src/nx_gnuplot.c
   src/nx_gc_cairo_imp.c
   src/nx_filter.c
   src/nx_image.c
@@ -109,7 +109,7 @@ set(virg_nexus_C_HEADERS
   include/virg/nexus/nx_json_tree.h
   include/virg/nexus/nx_json_bundle.h
   include/virg/nexus/nx_json_log.h
-  include/virg/nexus/nx_plotter.h
+  include/virg/nexus/nx_gnuplot.h
   include/virg/nexus/nx_gc.h
   include/virg/nexus/nx_filter.h
   include/virg/nexus/nx_image.h
@@ -368,6 +368,7 @@ set(test_SOURCES
   tests/tests_json_lexer.cc
   tests/tests_csv_lexer.cc
   tests/tests_csv_parser.cc
+  tests/tests_gnuplot.cc
   tests/tests_gc.cc
 )
 
