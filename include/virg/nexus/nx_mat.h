@@ -35,7 +35,10 @@ __NX_BEGIN_DECL
 static inline void nx_dmat_set_zero(int m, int n, double *A, int ldA);
 static inline void nx_dmat_set     (int m, int n, double *A,
                                     int ldA, double value);
-
+static inline void nx_dmat_mul     (int m, int n, int k,
+                                    const double *A, int ldA,
+                                    const double *B, int ldB,
+                                    double *C, int ldC);
 
 /* --------------------------------- Definitions ---------------------------------- */
 static inline void nx_dmat_set_zero(int m, int n, double *A, int ldA)
@@ -55,6 +58,21 @@ static inline void nx_dmat_set(int m, int n, double *A, int ldA, double value)
 
         for (int i = 0; i < n; ++i) {
                 nx_dvec_set(m, A + i * ldA, value);
+        }
+}
+
+static inline void nx_dmat_mul(int m, int n, int k,
+                               const double *A, int ldA,
+                               const double *B, int ldB,
+                               double *C, int ldC)
+{
+        for (int c = 0; c < n; ++c) {
+                for (int r = 0; r < m; ++r) {
+                        C[c * ldC + r] = 0;
+                        for (int j = 0; j < k; ++j)
+                                C[c * ldC + r] += A[j * ldA + r]
+                                        * B[c * ldB + j];
+                }
         }
 }
 

@@ -29,7 +29,11 @@
 #include <cmath>
 #include <ctime>
 
+#include "virg/nexus/nx_alloc.h"
 #include "virg/nexus/nx_log.h"
+#include "virg/nexus/nx_vec.h"
+#include "virg/nexus/nx_mat234.h"
+#include "virg/nexus/nx_mat.h"
 #include "virg/nexus/nx_homography.h"
 #include "virg/nexus/nx_epipolar.h"
 #include "virg/nexus/nx_pinhole.h"
@@ -67,7 +71,7 @@ static const float KEY_SIGMA0 = 0.5f;
 static const float MATCH_COST_UPPER_BOUND = 70.0f;
 static const float INLIER_TOL_H = 3.0f;
 static const float INLIER_TOL_F = 2.0f;
-static const int MAX_RANSAC_ITER = 3000;
+static const int MAX_RANSAC_ITER = 10000;
 
 struct Frame {
         string label;
@@ -256,6 +260,174 @@ static int estimate_guided_homography(StereoFrame& sf, bool is_verbose)
         return n_inliers;
 }
 
+static double
+homography_transfer_error_and_jacobian(int n, struct NXPointMatch2D *pm,
+                                       const double *h,
+                                       double *e, double *Jt)
+{
+        double E = 0;
+        int n_inliers = 0;
+        for (int i = 0; i < n; ++i) {
+                if (!pm[i].is_inlier)
+                        continue;
+                n_inliers++;
+                double xi = pm[i].x[0];
+                double yi = pm[i].x[1];
+                double Hx[3];
+                Hx[0] = h[0] * xi + h[3] * yi + h[6];
+                Hx[1] = h[1] * xi + h[4] * yi + h[7];
+                Hx[2] = h[2] * xi + h[5] * yi + h[8];
+                double Ex = pm[i].xp[0] - Hx[0] / Hx[2];
+                double Ey = pm[i].xp[1] - Hx[1] / Hx[2];
+                E += (Ex * Ex + Ey * Ey);
+
+                if (e) {
+                        e[0] = Ex;
+                        e[1] = Ey;
+                        e += 2;
+                }
+
+                if (Jt) {
+                        Jt[0] = xi / Hx[2];
+                        Jt[1] = 0.0;
+                        Jt[2] = - xi * Hx[0] / (Hx[2] * Hx[2]);
+                        Jt[3] = yi / Hx[2];
+                        Jt[4] = 0.0;
+                        Jt[5] = - yi * Hx[0] / (Hx[2] * Hx[2]);
+                        Jt[6] = 1.0 / Hx[2];
+                        Jt[7] = 0.0;
+                        Jt[8] = - Hx[0] / (Hx[2] * Hx[2]);
+
+                        Jt[9]  = 0.0;
+                        Jt[10] = xi / Hx[2];
+                        Jt[11] = - xi * Hx[1] / (Hx[2] * Hx[2]);
+                        Jt[12] = 0.0;
+                        Jt[13] = yi / Hx[2];
+                        Jt[14] = - yi * Hx[1] / (Hx[2] * Hx[2]);;
+                        Jt[15] = 0.0;
+                        Jt[16] = 1.0 / Hx[2];
+                        Jt[17] = - Hx[1] / (Hx[2] * Hx[2]);
+                        Jt += 18;
+                }
+        }
+
+        E /= n_inliers;
+
+        return E;
+}
+
+static void lev_mar_compute_A(int n, double *A, double lambda,
+                              int m, const double *Jt)
+{
+        for (int c = 0; c < n; ++c) {
+                for (int r = 0; r < n; ++r) {
+                        A[c * n + r] = 0.0;
+                        for (int k = 0; k < m; ++k) {
+                                A[c * n + r] = Jt[k * n + r] * Jt[c * m + k];
+                        }
+                }
+        }
+
+        for (int i = 0; i < n; ++i)
+                A[i * n + i] += lambda * A[i * n + i];
+ }
+
+static int estimate_homography_nonlinear(StereoFrame& sf, bool is_verbose)
+{
+        double *h = sf.H.data();
+        for (int i = 0; i < 9; ++i)
+                h[i] /= h[8];
+        printf("h = [%16.10f%16.10f%16.10f%16.10f%16.10f%16.10f%16.10f%16.10f%16.10f]\n",
+               h[0], h[1], h[2], h[3], h[4], h[5], h[6], h[7], h[8]);
+
+        int n = sf.hcorr.size();
+        struct NXPointMatch2D *pm = sf.hcorr.matches();
+
+        int N = nx_point_match_2d_count_inliers(n, pm);
+        double *e = NX_NEW_D(2*N);
+        double *Jt = NX_NEW_D(2*N*9);
+        double E = homography_transfer_error_and_jacobian(n, pm, h, e, Jt);
+
+        double Jte[9];
+        nx_dmat_mul(9, 1, 2*N, Jt, 9, e, 2*N, Jte, 9);
+        double g_mag = 4.0 * nx_dvec_norm(9, &Jte[0]);
+        NX_LOG(LOG_TAG, "Nonlinear Opt. for Homography E = %.6f, |g| = %.6f", E, g_mag);
+
+        double lambda = 1.0;
+        double A[9*9];
+        double hnew[9];
+        for (int i = 0; i < 10; ++i) {
+                NXBool done = NX_FALSE;
+                double Enew;
+                while (!done) {
+                        lev_mar_compute_A(9, &A[0], lambda, 2*N, Jt);
+                        int ipiv[9];
+                        int info = nx_dsym_solver(NX_SYMMETRIC_LOWER, 9, 1, &A[0], 9,
+                                                  &Jte[0], 9, &ipiv[0]);
+                        if (info != 0) {
+                                NX_FATAL("!", "info = %d", info);
+                        }
+
+                        for (int j = 0; j < 9; ++j)
+                                hnew[j] = h[j] + Jte[j];
+
+                        Enew = homography_transfer_error_and_jacobian(n, pm, hnew,
+                                                                      NULL, NULL);
+                        if (Enew < E) {
+                                done = NX_TRUE;
+                                lambda /= 1.2;
+                        } else {
+                                lambda *= 2.0;
+                        }
+                        NX_LOG(NX_LOG_TAG, "Enew = %.2e, lambda = %.2e", Enew, lambda);
+                        static int tries = 0;
+                        tries ++;
+                        if (tries > 40)
+                                NX_FATAL("NX!", "Quitting");
+                }
+                for (int j = 0; j < 9; ++j)
+                        h[j] += Jte[j];
+                E = homography_transfer_error_and_jacobian(n, pm, h, e, Jt);
+                nx_dmat_mul(9, 1, 2*N, Jt, 9, e, 2*N, Jte, 9);
+                g_mag = 4.0 * nx_dvec_norm(9, &Jte[0]);
+
+                if (i % 1 == 1) {
+                        NX_LOG(LOG_TAG, "   Iter %10d: E = %.6f, |g| = %.6f",
+                               i, E, g_mag);
+                }
+
+        }
+
+        if (is_verbose) {
+                E = homography_transfer_error_and_jacobian(n, pm, h, e, Jt);
+                nx_dmat_mul(9, 1, 2*N, Jt, 9, e, 2*N, Jte, 9);
+                g_mag = 4.0 * nx_dvec_norm(9, &Jte[0]);
+                NX_LOG(LOG_TAG, "   Iter END: E = %.6f, |g| = %.6f",
+                       E, g_mag);
+                double te_fwd = nx_homography_transfer_error_fwd(h, n, pm);
+                double te_sym = nx_homography_transfer_error_sym(h, n, pm);
+                NX_LOG(LOG_TAG, "   Transfer error (fwd/sym) = %.2f / %.2f",
+                       te_fwd, te_sym);
+                printf("h = [%16.10f%16.10f%16.10f%16.10f%16.10f%16.10f%16.10f%16.10f%16.10f]\n",
+                       h[0], h[1], h[2], h[3], h[4], h[5], h[6], h[7], h[8]);
+        }
+
+        int n_inliers = nx_homography_mark_inliers(h, n, pm, INLIER_TOL_H);
+        if (is_verbose) {
+                double te_fwd = nx_homography_transfer_error_fwd(h, n, pm);
+                double te_sym = nx_homography_transfer_error_sym(h, n, pm);
+
+                NX_LOG(LOG_TAG, "Homography from nonlinear opt. returned %d inliers.", n_inliers);
+                NX_LOG(LOG_TAG, "   transfer error (fwd/sym) = %.2f / %.2f",
+                       te_fwd, te_sym);
+        }
+
+        nx_free(e);
+        nx_free(Jt);
+
+        return n_inliers;
+}
+
 static int estimate_initial_fundamental_matrix(StereoFrame& sf, bool is_verbose)
 {
         sf.fcorr.normalize();
@@ -315,7 +487,9 @@ int main(int argc, char** argv)
         if (n_inliers_h >= 15) {
                 match_frames_guided_by_homography(sf, is_verbose);
                 estimate_guided_homography(sf, is_verbose);
+                n_inliers_h = estimate_homography_nonlinear(sf, is_verbose);
         }
+
 
         // int n_inliers_f = estimate_initial_fundamental_matrix(sf, is_verbose);
         // if (n_inliers_f >= 30) {
