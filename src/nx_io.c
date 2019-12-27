@@ -101,46 +101,64 @@ void nx_xfread(void *ptr, size_t size, size_t nmemb, FILE *stream)
                 NX_IO_FATAL(NX_LOG_TAG, "Error read %zd items from stream", nmemb);
 }
 
-void nx_fputs_readable(const char *s, FILE *stream)
+int nx_fputs_readable(const char *s, FILE *stream)
 {
         if (s == NULL) {
-                fprintf(stream, "null");
-                return;
+                if (4 == fprintf(stream, "null"))
+                        return 0;
+                else
+                        return EOF;
         }
 
-        fputc('\"', stream);
+        if (EOF == fputc('\"', stream))
+                return EOF;
         while (*s != '\0') {
                 switch (*s) {
-                case '\n': fputs("\\n", stream); break;
-                case '\r': fputs("\\r", stream); break;
-                case '\t': fputs("\\t", stream); break;
-                case '\b': fputs("\\b", stream); break;
-                case '\f': fputs("\\f", stream); break;
-                case '\"': fputs("\\\"", stream); break;
-                case '\\': fputs("\\\\", stream); break;
+                case '\n': if (EOF == fputs("\\n", stream)) return EOF; break;
+                case '\r': if (EOF == fputs("\\r", stream)) return EOF; break;
+                case '\t': if (EOF == fputs("\\t", stream)) return EOF; break;
+                case '\b': if (EOF == fputs("\\b", stream)) return EOF; break;
+                case '\f': if (EOF == fputs("\\f", stream)) return EOF; break;
+                case '\"': if (EOF == fputs("\\\"", stream)) return EOF; break;
+                case '\\': if (EOF == fputs("\\\\", stream)) return EOF; break;
                 default:
-                        fputc(*s, stream);
+                        if (EOF == fputc(*s, stream))
+                                return EOF;
                 }
 
                 ++s;
         }
-        fputc('\"', stream);
+        if (EOF == fputc('\"', stream))
+                return EOF;
+
+        return 0;
 }
 
-void nx_fputs_double_quoted(const char *s, FILE *stream)
+int nx_fputs_double_quoted(const char *s, FILE *stream)
 {
         if (s == NULL)
-                return;
+                return 0;
 
-        fputc('\"', stream);
+        if (EOF == fputc('\"', stream)) {
+                return EOF;
+        }
         while (*s != '\0') {
-                if (*s == '\"')
-                        fputs("\"\"", stream);
-                else
-                        fputc(*s, stream);
+                if (*s == '\"') {
+                        if (EOF == fputs("\"\"", stream)) {
+                                return EOF;
+                        }
+                } else {
+                        if (EOF == fputc(*s, stream)) {
+                                return EOF;
+                        }
+                }
                 ++s;
         }
-        fputc('\"', stream);
+        if (EOF == fputc('\"', stream)) {
+                return EOF;
+        }
+
+        return 0;
 }
 
 FILE *nx_xtmpfile(void)
