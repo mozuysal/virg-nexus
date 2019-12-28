@@ -78,7 +78,18 @@ TEST_F(NXGNUPlotTest, PDFLine) {
         nx_gnuplot_set_terminal_pdf(gnuplot, 20.0, 20.0, "/tmp/line.pdf");
         nx_gnuplot_send_command(gnuplot, "plot '-' using 1:2;\n");
         struct NXDataFrame *df = make_line_data(20, 2.0, 1.0);
-        nx_gnuplot_send_data_frame(gnuplot, df);
+        nx_gnuplot_send_data_frame(gnuplot, df, NULL);
+        nx_gnuplot_flush(gnuplot);
+        nx_data_frame_free(df);
+}
+
+TEST_F(NXGNUPlotTest, PDFLineLabeled) {
+        gnuplot = nx_gnuplot_new(nullptr, NX_FALSE);
+        nx_gnuplot_set_terminal_pdf(gnuplot, 20.0, 20.0, "/tmp/line_labeled.pdf");
+        struct NXDataFrame *df = make_line_data(20, 2.0, 1.0);
+        nx_gnuplot_send_data_frame(gnuplot, df, "Line");
+        nx_gnuplot_send_command(gnuplot, "plot $Line using 1:2 with linespoints, "
+                                "$Line using 1:2 with circles;\n");
         nx_gnuplot_flush(gnuplot);
         nx_data_frame_free(df);
 }

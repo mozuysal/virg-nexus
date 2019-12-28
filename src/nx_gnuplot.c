@@ -93,15 +93,24 @@ void nx_gnuplot_send_command(struct NXGNUPlot *gnuplot, const char *cmd, ...)
 }
 
 void nx_gnuplot_send_data_frame(struct NXGNUPlot *gnuplot,
-                                const struct NXDataFrame *frm)
+                                const struct NXDataFrame *frm,
+                                const char *label)
 {
         NX_ASSERT_PTR(gnuplot);
         NX_ASSERT_PTR(frm);
 
-        if (!nx_data_frame_fprintf(frm, gnuplot->pgplot, " ")) {
-                NX_ERROR(NX_LOG_TAG, "Error sending data frame to GNUPlot");
+        if (label) {
+                fprintf(gnuplot->pgplot, "$%s << EOD\n", label);
+                if (!nx_data_frame_fprintf(frm, gnuplot->pgplot, " ")) {
+                        NX_ERROR(NX_LOG_TAG, "Error sending data frame to GNUPlot");
+                }
+                fprintf(gnuplot->pgplot, "EOD\n");
+        } else {
+                if (!nx_data_frame_fprintf(frm, gnuplot->pgplot, " ")) {
+                        NX_ERROR(NX_LOG_TAG, "Error sending data frame to GNUPlot");
+                }
+                fprintf(gnuplot->pgplot, "e\n");
         }
-        fprintf(gnuplot->pgplot, "e\n");
 }
 
 void nx_gnuplot_flush(struct NXGNUPlot *gnuplot)
