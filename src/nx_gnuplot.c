@@ -44,9 +44,9 @@ struct NXGNUPlot
 static void nx_gnuplot_init(struct NXGNUPlot *gnuplot)
 {
         nx_gnuplot_send_command(gnuplot,
-                                "set border 3 lw 3\n"
-                                "set xtics out nomirror\n"
-                                "set ytics out nomirror\n");
+                                "set border 3 lw 3;\n"
+                                "set xtics out nomirror;\n"
+                                "set ytics out nomirror;\n");
 }
 
 struct NXGNUPlot *nx_gnuplot_new(FILE *stream, NXBool persist)
@@ -125,7 +125,9 @@ void nx_gnuplot_set_terminal_window(struct NXGNUPlot *gnuplot, int width, int he
         NX_ASSERT_PTR(gnuplot);
         NX_ASSERT_PTR(title);
 
-        nx_gnuplot_send_command(gnuplot, "set terminal qt %d size %d,%d enhanced title \"%s\"\n",
+        nx_gnuplot_send_command(gnuplot,
+                                "set terminal qt %d size %d,%d enhanced title \"%s\";\n"
+                                "unset output;\n",
                                 id, width, height, title);
 }
 
@@ -136,8 +138,8 @@ void nx_gnuplot_set_terminal_svg(struct NXGNUPlot *gnuplot, int width, int heigh
         NX_ASSERT_PTR(title);
         NX_ASSERT_PTR(filename);
 
-        nx_gnuplot_send_command(gnuplot, "set terminal svg size %d,%d enhanced name \"%s\"\n"
-                                "set output \"%s\"\n",
+        nx_gnuplot_send_command(gnuplot, "set terminal svg size %d,%d enhanced name \"%s\";\n"
+                                "set output \"%s\";\n",
                                 width, height, title, filename);
 }
 
@@ -158,7 +160,7 @@ void nx_gnuplot_set_terminal_eps(struct NXGNUPlot *gnuplot, double width_in_cm,
         NX_ASSERT_PTR(gnuplot);
         NX_ASSERT_PTR(filename);
 
-        nx_gnuplot_send_command(gnuplot, "set terminal epscairo enhanced color size %lfcm,%lfcm\n"
+        nx_gnuplot_send_command(gnuplot, "set terminal epscairo enhanced color size %lfcm,%lfcm;\n"
                                 "set output \"%s\"\n",
                                 width_in_cm, height_in_cm, filename);
 }
@@ -166,7 +168,7 @@ void nx_gnuplot_set_terminal_eps(struct NXGNUPlot *gnuplot, double width_in_cm,
 void nx_gnuplot_set_terminal_ascii(struct NXGNUPlot *gnuplot, int width,
                                    int height, NXBool linefeed)
 {
-        nx_gnuplot_send_command(gnuplot, "set terminal dumb size %d,%d enhanced %sfeed\n",
+        nx_gnuplot_send_command(gnuplot, "set terminal dumb size %d,%d enhanced %sfeed;\n",
                                 width, height, (linefeed ? "" : "no"));
 }
 
@@ -191,7 +193,7 @@ void nx_gnuplot_set_title(struct NXGNUPlot *gnuplot, const char *title)
         NX_ASSERT_PTR(gnuplot);
         NX_ASSERT_PTR(title);
 
-        nx_gnuplot_send_command(gnuplot, "set title \"%s\"\n", title);
+        nx_gnuplot_send_command(gnuplot, "set title \"%s\";\n", title);
 }
 
 void nx_gnuplot_set_xlabel(struct NXGNUPlot *gnuplot,
@@ -200,7 +202,7 @@ void nx_gnuplot_set_xlabel(struct NXGNUPlot *gnuplot,
         NX_ASSERT_PTR(gnuplot);
         NX_ASSERT_PTR(label);
 
-        nx_gnuplot_send_command(gnuplot, "set title xlabel \"%s\"\n", label);
+        nx_gnuplot_send_command(gnuplot, "set title xlabel \"%s\";\n", label);
 }
 
 void nx_gnuplot_set_ylabel(struct NXGNUPlot *gnuplot,
@@ -209,7 +211,7 @@ void nx_gnuplot_set_ylabel(struct NXGNUPlot *gnuplot,
         NX_ASSERT_PTR(gnuplot);
         NX_ASSERT_PTR(label);
 
-        nx_gnuplot_send_command(gnuplot, "set title ylabel \"%s\"\n", label);
+        nx_gnuplot_send_command(gnuplot, "set title ylabel \"%s\";\n", label);
 }
 
 void nx_gnuplot_set_title_and_labels(struct NXGNUPlot *gnuplot, const char *title,
@@ -220,9 +222,9 @@ void nx_gnuplot_set_title_and_labels(struct NXGNUPlot *gnuplot, const char *titl
         NX_ASSERT_PTR(xlabel);
         NX_ASSERT_PTR(ylabel);
 
-        nx_gnuplot_send_command(gnuplot, "set title \"%s\"\n"
-                                "set xlabel \"%s\"\n"
-                                "set ylabel \"%s\"\n",
+        nx_gnuplot_send_command(gnuplot, "set title \"%s\";\n"
+                                "set xlabel \"%s\";\n"
+                                "set ylabel \"%s\";\n",
                                 title, xlabel, ylabel);
 }
 
