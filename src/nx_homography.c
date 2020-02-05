@@ -142,13 +142,19 @@ double nx_homography_estimate_4pt(double *h, int corr_ids[4], const struct NXPoi
         }
 
         double hup[9];
-        double sval = nx_homography_estimate_unit(hup, xp);
+        double det = nx_homography_estimate_unit(hup, xp);
+        if (det == 0.0)
+                return 0.0;
 
         double hup_inv[9] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+        det = nx_dmat3_det(hup);
+        if (det == 0.0)
+                return 0.0;
+
         nx_dmat3_inv(hup_inv, hup);
         nx_dmat3_mul(h, hup_inv, hu);
 
-        return sval;
+        return det;
 }
 
 static inline void nx_homography_constraints_from_corr(double *rcons, const struct NXPointMatch2D *corr)
@@ -272,10 +278,11 @@ int nx_homography_estimate_ransac(double *h, int n_corr, struct NXPointMatch2D *
 
             // In every iteration try to generate a good homography
             int tries = 10;
+            double det;
             do {
                 nx_select_prosac_candidates(n_top_hypo, corr_ids);
-                nx_homography_estimate_4pt(h, corr_ids, corr_list);
-            } while (--tries && !nx_homography_check(h, max_abs_cos));
+                det = nx_homography_estimate_4pt(h, corr_ids, corr_list);
+            } while ((det == 0.0) && --tries && !nx_homography_check(h, max_abs_cos));
 
             n_inliers = nx_homography_mark_inliers(h, n_corr, corr_list, inlier_tolerance);
 
