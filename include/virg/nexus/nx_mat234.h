@@ -31,6 +31,7 @@
 #include <math.h>
 
 #include "virg/nexus/nx_config.h"
+#include "virg/nexus/nx_assert.h"
 #include "virg/nexus/nx_log.h"
 #include "virg/nexus/nx_svd.h"
 #include "virg/nexus/nx_linear_solvers.h"
@@ -48,6 +49,7 @@ static inline void   nx_smat3_mul(float *C, const float *A, const float *B);
 static inline void   nx_smat4_mul  (float *C, const float *A, const float *B);
 static inline void   nx_smat4_print(const float *A, const char *label);
 
+static inline void   nx_dmat3_copy(double *dest, const double *src);
 static inline double nx_dmat3_inv(double *M3i, const double *M3);
 static inline void   nx_dmat3_mul(double *C, const double *A, const double *B);
 static inline void   nx_dmat3_mul_ua(double *C, const double *U, const double *A);
@@ -83,6 +85,13 @@ static inline NXBool nx_dmat2_sym_solve_single(const double *A, double *b)
         return nx_dsym_solver(NX_SYMMETRIC_LOWER, 2, 1, &AA[0], 2, b, 2, &ipiv[0]);
 }
 
+static inline void nx_dmat3_copy(double *dest, const double *src)
+{
+        NX_ASSERT_PTR(dest);
+        NX_ASSERT_PTR(src);
+        memcpy(dest, src, 9*sizeof(*dest));
+}
+
 static inline void nx_smat3_set_zero(float *A)
 {
         memset(A, 0, 9*sizeof(*A));
@@ -99,7 +108,7 @@ static inline float nx_smat3_inv(float *M3i, const float *M3)
 
         float detM3 = t4 * M3[8] - t6 * M3[5] - t8 * M3[8] + t10 * M3[5] + t12 * M3[7] - t14 * M3[4];
 
-        if(fabs(detM3) > 0.0f) {
+        if(detM3 != 0.0f) {
                 const float t17 = 1.0 / detM3;
                 M3i[0] = (M3[4] * M3[8] - M3[7] * M3[5]) * t17;
                 M3i[1] = -(M3[1] * M3[8] - M3[7] * M3[2]) * t17;
@@ -196,7 +205,7 @@ static inline double nx_dmat3_inv(double *M3i, const double *M3)
 
         double detM3 = t4 * M3[8] - t6 * M3[5] - t8 * M3[8] + t10 * M3[5] + t12 * M3[7] - t14 * M3[4];
 
-        if(fabs(detM3) > 0.0) {
+        if(detM3 != 0.0) {
                 const double t17 = 1.0 / detM3;
                 M3i[0] = (M3[4] * M3[8] - M3[7] * M3[5]) * t17;
                 M3i[1] = -(M3[1] * M3[8] - M3[7] * M3[2]) * t17;
