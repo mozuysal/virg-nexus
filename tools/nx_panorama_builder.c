@@ -260,7 +260,7 @@ int *nx_panorama_builder_find_shortest_paths(int n, double* weights, int source)
                         if (i == current || visited[i])
                                 continue;
 
-                        double w = weights[current + i * n];
+                        double w = weights[current * n + i];
                         double val = node_val[i] + w;
                         if (val > node_val[i]) {
                                 node_val[i] = val;
@@ -393,7 +393,7 @@ void nx_panorama_builder_init(struct NXPanoramaBuilder *builder)
                 fprintf(stderr, "%d", node);
                 while (node != next) {
                         fprintf(stderr, " .. %d", next);
-                        const double *H_to_next = builder->H[node * N + next];
+                        const double *H_to_next = builder->H[next * N + node];
                         NX_ASSERT_PTR(H_to_next);
 
                         double H[9];
