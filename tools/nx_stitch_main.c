@@ -29,6 +29,7 @@
 #include "virg/nexus/nx_log.h"
 #include "virg/nexus/nx_assert.h"
 #include "virg/nexus/nx_alloc.h"
+#include "virg/nexus/nx_image_io.h"
 
 #include "nx_panorama_builder.h"
 
@@ -50,7 +51,8 @@ int main(int argc, char **argv)
         nx_panorama_builder_run(builder);
 
         const struct NXImage *panorama = nx_panorama_builder_get_panorama(builder);
-        /* nx_image_xsave(panorama, "/tmp/panorama.jpeg"); */
+        nx_image_xsave(panorama, "/tmp/panorama.jpeg");
+        NX_LOG(NX_LOG_TAG, "Saved panorama as /tmp/panorama.jpeg");
 
         nx_panorama_builder_free(builder);
         nx_options_free(opt);
