@@ -29,6 +29,7 @@
 #include <stdlib.h>
 
 #include "virg/nexus/nx_config.h"
+#include "virg/nexus/nx_types.h"
 
 __NX_BEGIN_DECL
 
@@ -49,6 +50,7 @@ void *nx_xaligned_alloc(size_t alignment, size_t sz);
 void nx_free(void *ptr);
 
 #define NX_NEW(n,type) ((type *)nx_xmalloc((n) * sizeof(type)))
+#define NX_NEW_B(n)    NX_NEW((n),NXBool)
 #define NX_NEW_C(n)    NX_NEW((n),char)
 #define NX_NEW_UC(n)   NX_NEW((n),unsigned char)
 #define NX_NEW_SI(n)   NX_NEW((n),short)
