@@ -64,7 +64,7 @@ static inline struct NXSIFTDetectorParams nx_sift_default_parameters()
         params.sigma0 = 1.6f;
         params.kernel_truncation_factor = 4;
         params.border_distance = 5;
-        params.peak_threshold = 0.08f;
+        params.peak_threshold = 0.04f;
         params.edge_threshold = 10.0f;
         params.magnification_factor = 3;
 
