@@ -274,7 +274,7 @@ int nx_homography_estimate_ransac(double *h, int n_corr, struct NXPointMatch2D *
         // Main loop. Quits after max. num. of iterations of we already have a
         // large group of inliers.
         int iter = 0;
-        while (iter < max_n_iter && n_inliers < 100) {
+        while (iter < max_n_iter && n_inliers < 200) {
 
             // In every iteration try to generate a good homography
             int tries = 10;
