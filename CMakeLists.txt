@@ -258,7 +258,7 @@ endforeach(virg_nexus_header)
 install(FILES lib/pkgconfig/virg-nexus.pc DESTINATION lib/pkgconfig)
 
 # --------------------------------- edit target ----------------------------------
-add_custom_target(edit emacsclient -n ${virg_nexus_SOURCES} ${virg_nexus_HEADERS}
+add_custom_target(edit emacsclient -n ${virg_nexus_SOURCES} ${virg_nexus_HEADERS} CMakeLists.txt
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   COMMENT "Open source and header files using Emacs server")
 
