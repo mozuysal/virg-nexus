@@ -40,7 +40,7 @@
 #include "virg/nexus/nx_sift_detector.h"
 #include "virg/nexus/nx_homography.h"
 
-#define SIFT_DISTANCE_RATIO_THR 0.6f
+#define SIFT_DISTANCE_RATIO_THR 0.4f
 #define INIT_MIN_N_INLIERS 20
 #define INIT_HOMOGRAPHY_INLIER_THRESHOLD 3.0f
 #define INIT_HOMOGRAPHY_MAX_N_RANSAC_ITERS 10000
@@ -78,7 +78,7 @@ struct NXPanoramaBuilder
         int *n_matches; // NxN matrix of int
         struct NXPointMatch2D**matches; // NxN matrix of struct NXPointMatch2D *
         double **H; // NxN matrix of double *
-        double *affinity; // NxN matrix of double *
+        double *match_cost; // NxN matrix of double *
 
         // output data
         struct NXImage *panorama;
@@ -131,8 +131,8 @@ nx_panorama_builder_new_from_options(struct NXOptions *opt)
         builder->H = NX_NEW(N*N, double *);
         memset(builder->H, 0, N*N*sizeof(builder->H[0]));
 
-        builder->affinity = NX_NEW_D(N*N);
-        memset(builder->affinity, 0, N*N*sizeof(builder->affinity[0]));
+        builder->match_cost = NX_NEW_D(N*N);
+        memset(builder->match_cost, 0, N*N*sizeof(builder->match_cost[0]));
 
         // Allocate output data
         builder->panorama = nx_image_alloc();
@@ -172,7 +172,7 @@ void nx_panorama_builder_free(struct NXPanoramaBuilder *builder)
                 }
                 nx_free(builder->matches);
                 nx_free(builder->H);
-                nx_free(builder->affinity);
+                nx_free(builder->match_cost);
 
                 // Deallocate output data
                 nx_image_free(builder->panorama);
@@ -235,8 +235,8 @@ int *nx_panorama_builder_find_shortest_paths(int n, double* weights, int source)
         next_node[source] = source;
 
         double *node_val = NX_NEW_D(n);
-        nx_dvec_set_zero(n, node_val);
-        node_val[source] = DBL_MAX;
+        nx_dvec_set(n, node_val, DBL_MAX);
+        node_val[source] = 0;
 
         NXBool *visited = NX_NEW_B(n);
         for (int i = 0; i < n; ++i)
@@ -245,9 +245,9 @@ int *nx_panorama_builder_find_shortest_paths(int n, double* weights, int source)
 
         while (n_not_visited > 0) {
                 int current = -1;
-                double current_val = 0.0;
+                double current_val = DBL_MAX;
                 for (int i = 0; i < n; ++i) {
-                        if (!visited[i] && node_val[i] > current_val) {
+                        if (!visited[i] && node_val[i] < current_val) {
                                 current = i;
                                 current_val = node_val[i];
                         }
@@ -257,12 +257,14 @@ int *nx_panorama_builder_find_shortest_paths(int n, double* weights, int source)
                 n_not_visited--;
 
                 for (int i = 0; i < n; ++i) {
-                        if (i == current || visited[i])
+                        if (visited[i]) // current is already visited
                                 continue;
 
                         double w = weights[current * n + i];
-                        double val = node_val[i] + w;
-                        if (val > node_val[i]) {
+                        if (w < 0.0)
+                                w = DBL_MAX;
+                        double val = node_val[current] + w;
+                        if (val < node_val[i]) {
                                 node_val[i] = val;
                                 next_node[i] = current;
                         }
@@ -295,7 +297,6 @@ void nx_panorama_builder_init(struct NXPanoramaBuilder *builder)
         // Detect keys & extract descriptors
         struct NXSIFTDetectorParams sift_param = nx_sift_default_parameters();
         struct NXSIFTDetector *detector = nx_sift_detector_new(sift_param);
-
         for (int i = 0; i < N; ++i) {
                 builder->n_keys[i] = nx_sift_detector_compute_with_cache(detector,
                                                                          builder->images[i],
@@ -339,7 +340,7 @@ void nx_panorama_builder_init(struct NXPanoramaBuilder *builder)
 
         // Estimate initial homographies and inlier matches
         nx_ivec_set_zero(N, builder->total_n_corr);
-        nx_dvec_set_zero(N*N, builder->affinity);
+        nx_dvec_set_zero(N*N, builder->match_cost);
 
         for (int i = 0; i < N; ++i) {
                 for (int j = 0; j < N; ++j) {
@@ -355,20 +356,22 @@ void nx_panorama_builder_init(struct NXPanoramaBuilder *builder)
                                                                             corr);
                         builder->total_n_corr[i] += ni;
                         builder->total_n_corr[j] += ni;
-                        builder->affinity[j*N + i] = ni;
+                        builder->match_cost[j*N + i] = ni > 0 ? exp(-ni/1000.0) : -1;
                         NX_LOG(NX_LOG_TAG, "%2d <-> %2d : %d inliers --> %s",
                                i, j, ni, *hp ? "OK" : "FAILED");
                 }
         }
 
-        fprintf(stderr, "------- Affinity -------\n");
+        fprintf(stderr, "------- Match_Cost -------\n");
         for (int i = 0; i < N; ++i) {
                 for (int j = 0; j < N; ++j) {
+                        double mc = builder->match_cost[j*N + i];
                         if (i == j)
-                                fprintf(stderr, "%4s ", "-");
+                                fprintf(stderr, "%6s ", ".");
+                        else if (mc < 0.0)
+                                fprintf(stderr, "%6s ", "-");
                         else
-                                fprintf(stderr, "%4.0f ",
-                                        builder->affinity[j*N + i]);
+                                fprintf(stderr, "%6.2f ", mc);
                 }
                 fprintf(stderr, "\n");
         }
@@ -380,11 +383,11 @@ void nx_panorama_builder_init(struct NXPanoramaBuilder *builder)
                builder->reference_image);
 
         int *next_node = nx_panorama_builder_find_shortest_paths(N,
-                                                                 builder->affinity,
+                                                                 builder->match_cost,
                                                                  builder->reference_image);
-        for (int i = 0; i < N; ++i) {
-                NX_LOG(NX_LOG_TAG, "%d --> %d", i, next_node[i]);
-        }
+        /* for (int i = 0; i < N; ++i) { */
+                /* NX_LOG(NX_LOG_TAG, "%d --> %d", i, next_node[i]); */
+        /* } */
 
         for (int i = 0; i < N; ++i) {
                 nx_dmat3_eye(builder->H_to_ref[i]);
@@ -431,7 +434,7 @@ void nx_panorama_builder_create_reference(struct NXPanoramaBuilder *builder)
 
         for (int i = 0; i < N; ++i) {
                 const double *H = builder->H_to_ref[i];
-                nx_dmat3_print(H, "H_to_ref_i");
+                /* nx_dmat3_print(H, "H_to_ref_i"); */
                 float wi = builder->images[i]->width;
                 float hi = builder->images[i]->height;
 
@@ -440,16 +443,12 @@ void nx_panorama_builder_create_reference(struct NXPanoramaBuilder *builder)
                 float xp[2];
                 for (int j = 0; j < 4; ++j) {
                         nx_homography_transfer_fwd(H, &xp[0], &x[j][0]);
-                        fprintf(stderr, "%.0f, %.0f --> %.2f, %.2f\n",
-                                x[j][0], x[j][1], xp[0], xp[1]);
                         dims.min_x = nx_min_i(dims.min_x, (int)(xp[0]));
                         dims.min_y = nx_min_i(dims.min_y, (int)(xp[1]));
                         dims.max_x = nx_max_i(dims.max_x, (int)(xp[0]));
                         dims.max_y = nx_max_i(dims.max_y, (int)(xp[1]));
                 }
         }
-        fprintf(stderr, "dims: %d %d %d %d\n",
-                dims.min_x, dims.min_y, dims.max_x, dims.max_y);
 
         // resize panorama
         int width  = dims.max_x - dims.min_x;
