@@ -52,6 +52,36 @@
 
 #define NX_SIFT_N_ORI_BINS 36
 
+void nx_sift_parameters_add_to_options(struct NXOptions *opt)
+{
+        struct NXSIFTDetectorParams default_params = nx_sift_default_parameters();
+        nx_options_add(opt, "biddiddi",
+                       "--sift-double-image", "double input image size before computation", NX_FALSE,
+                       "--sift-n-scales-per-octave", "number of intermediate scales within each octave", default_params.n_scales_per_octave,
+                       "--sift-sigma0", "initial sigma for the input image", (double)default_params.sigma0,
+                       "--sift-kernel-truncation-factor", "multipler for filter size computation", (double)default_params.kernel_truncation_factor,
+                       "--sift-border-distance", "distance to border within which to skip extraction", default_params.border_distance,
+                       "--sift-peak-threshold", "DoG score threshold, decrease to get more keypoints", (double)default_params.peak_threshold,
+                       "--sift-edge-threshold", "threshold for filtering edge like regions", (double)default_params.edge_threshold,
+                       "--sift-magnification-factor", "multipler to determine descriptor radius", default_params.magnification_factor);
+}
+
+struct NXSIFTDetectorParams
+nx_sift_parameters_from_options(struct NXOptions *opt)
+{
+        struct NXSIFTDetectorParams params;
+        params.double_image = nx_options_get_bool(opt, "--sift-double-image");
+        params.n_scales_per_octave = nx_options_get_int(opt, "--sift-n-scales-per-octave");
+        params.sigma0 = nx_options_get_double(opt, "--sift-sigma0");
+        params.kernel_truncation_factor = nx_options_get_double(opt, "--sift-kernel-truncation-factor");
+        params.border_distance = nx_options_get_int(opt, "--sift-border-distance");
+        params.peak_threshold = nx_options_get_double(opt, "--sift-peak-threshold");
+        params.edge_threshold = nx_options_get_double(opt, "--sift-edge-threshold");
+        params.magnification_factor = nx_options_get_int(opt, "--sift-magnification-factor");
+
+        return params;
+}
+
 struct NXSIFTDetector
 {
         struct NXSIFTDetectorParams param;

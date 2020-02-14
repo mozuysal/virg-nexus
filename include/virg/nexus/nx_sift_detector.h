@@ -37,6 +37,7 @@
 
 #include "virg/nexus/nx_config.h"
 #include "virg/nexus/nx_types.h"
+#include "virg/nexus/nx_options.h"
 #include "virg/nexus/nx_image.h"
 #include "virg/nexus/nx_keypoint.h"
 #include "virg/nexus/nx_point_match_2d.h"
@@ -62,7 +63,7 @@ static inline struct NXSIFTDetectorParams nx_sift_default_parameters()
         params.double_image = NX_TRUE;
         params.n_scales_per_octave = 3;
         params.sigma0 = 1.6f;
-        params.kernel_truncation_factor = 4;
+        params.kernel_truncation_factor = 4.0f;
         params.border_distance = 5;
         params.peak_threshold = 0.04f;
         params.edge_threshold = 10.0f;
@@ -70,6 +71,9 @@ static inline struct NXSIFTDetectorParams nx_sift_default_parameters()
 
         return params;
 }
+
+void nx_sift_parameters_add_to_options(struct NXOptions *opt);
+struct NXSIFTDetectorParams nx_sift_parameters_from_options(struct NXOptions *opt);
 
 struct NXSIFTDetector;
 
