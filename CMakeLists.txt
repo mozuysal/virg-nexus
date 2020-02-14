@@ -409,6 +409,7 @@ set(NEXUS_TOOLS
   nx-harris-detector
   nx-sift-benchmark
   nx-stitch
+  nx-fit-homography
 )
 
 add_executable(nx-harris-detector tools/nx_harris_detector_main.c)
@@ -417,6 +418,8 @@ install(FILES ${TOOL_MAN_DIR}/nx-harris-detector.1 DESTINATION ${TOOL_MAN_INSTAL
 add_executable(nx-sift-benchmark tools/nx_sift_benchmark_main.c)
 
 add_executable(nx-stitch tools/nx_stitch_main.c tools/nx_panorama_builder.c)
+
+add_executable(nx-fit-homography tools/nx_fit_homography_main.c)
 
 if(VIRG_NEXUS_CXX_API)
   list(APPEND NEXUS_TOOLS vg-stereo-matcher)
