@@ -56,10 +56,12 @@ void nx_panorama_builder_add_options(struct NXOptions *opt)
         nx_options_add(opt,
                        "R",
                        "IMAGES");
+        nx_sift_parameters_add_to_options(opt);
 }
 
 struct NXPanoramaBuilder
 {
+        struct NXSIFTDetector *detector;
         int reference_image;
 
         // per image data
@@ -89,6 +91,10 @@ nx_panorama_builder_new_from_options(struct NXOptions *opt)
 {
         const int N_INITIAL_KEY_BUFFER_SIZE = 1000;
         struct NXPanoramaBuilder *builder = NX_NEW(1, struct NXPanoramaBuilder);
+
+        builder->reference_image = -1;
+        struct NXSIFTDetectorParams sift_param = nx_sift_parameters_from_options(opt);
+        builder->detector = nx_sift_detector_new(sift_param);
 
         builder->image_names = nx_string_array_new_from_null_terminated_list(nx_options_get_rest(opt));
         builder->n_images = nx_string_array_size(builder->image_names);
@@ -144,6 +150,8 @@ void nx_panorama_builder_free(struct NXPanoramaBuilder *builder)
 {
         if (builder) {
                 const int N = builder->n_images;
+
+                nx_sift_detector_free(builder->detector);
 
                 // Deallocate per image data
                 nx_string_array_free(builder->image_names);
@@ -295,10 +303,8 @@ void nx_panorama_builder_init(struct NXPanoramaBuilder *builder)
         const int N = builder->n_images;
 
         // Detect keys & extract descriptors
-        struct NXSIFTDetectorParams sift_param = nx_sift_default_parameters();
-        struct NXSIFTDetector *detector = nx_sift_detector_new(sift_param);
         for (int i = 0; i < N; ++i) {
-                builder->n_keys[i] = nx_sift_detector_compute_with_cache(detector,
+                builder->n_keys[i] = nx_sift_detector_compute_with_cache(builder->detector,
                                                                          builder->images[i],
                                                                          builder->max_n_keys + i,
                                                                          builder->keys + i,
@@ -308,7 +314,6 @@ void nx_panorama_builder_init(struct NXPanoramaBuilder *builder)
                        builder->n_keys[i],
                        nx_string_array_get(builder->image_names, i));
         }
-        nx_sift_detector_free(detector);
 
         // Create initial similarity network and matches
         for (int i = 0; i < N; ++i) {
