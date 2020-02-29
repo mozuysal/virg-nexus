@@ -466,7 +466,7 @@ void nx_options_print_values(const struct NXOptions *opt, FILE* stream)
         if (opt->rest != NULL) {
                 fprintf(stream, "%*s: [", name_col_width, opt->rest->help);
                 size_t rest_len = opt->rest->default_value.i;
-                for (int i = 0; i < rest_len; ++i) {
+                for (size_t i = 0; i < rest_len; ++i) {
                         fprintf(stream, "'%s'", opt->rest->value.r[i]);
                         if (i != rest_len-1)
                                 fprintf(stream, ", ");

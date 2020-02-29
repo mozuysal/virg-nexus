@@ -77,8 +77,9 @@ static inline void nx_affine_warp_processor_reset_transforms(struct NXAffineWarp
 static inline void nx_affine_warp_processor_update_transforms(struct NXAffineWarpProcessor *wp, const double *center_in, const double *center_out, double scale_x, double scale_y, double angle);
 static inline void nx_affine_warp_processor_update_inverse_transform(struct NXAffineWarpProcessor *wp, const double *center_in, const double *center_out, double scale_x, double scale_y, double angle);
 static inline void nx_affine_warp_processor_update_forward_transform(struct NXAffineWarpProcessor *wp, const double *center_in, const double *center_out, double scale_x, double scale_y, double angle);
-static inline void nx_affine_warp_processor_transformed_buffer_size(struct NXAffineWarpProcessor *wp, int *width, int *height,
-                                                                    double scale_x, double scale_y, double angle, const double *current_t);
+static inline void nx_affine_warp_processor_transformed_buffer_size(int *width, int *height,
+                                                                    double scale_x, double scale_y,
+                                                                    double angle, const double *current_t);
 static inline void nx_affine_warp_processor_resize_buffers(struct NXAffineWarpProcessor *wp,
                                                            double scale, double planar_angle, double tilt, double tilt_angle);
 static inline void nx_affine_warp_processor_resize_skew_rotation_buffer(struct NXAffineWarpProcessor *wp, double tilt_angle);
@@ -288,8 +289,9 @@ static inline double max4(double a, double b, double c, double d)
         return MAX(ab,cd);
 }
 
-void nx_affine_warp_processor_transformed_buffer_size(struct NXAffineWarpProcessor *wp, int *width, int *height,
-                                                      double scale_x, double scale_y, double angle, const double *current_t)
+void nx_affine_warp_processor_transformed_buffer_size(int *width, int *height,
+                                                      double scale_x, double scale_y,
+                                                      double angle, const double *current_t)
 {
         const double BUFFER_BORDER_SIZE = 1.0;
 
@@ -366,7 +368,7 @@ void nx_affine_warp_processor_resize_buffer(struct NXAffineWarpProcessor *wp, co
         int wo = wp->image->width;
         int ho = wp->image->height;
 
-        nx_affine_warp_processor_transformed_buffer_size(wp, &wo, &ho, scale_x, scale_y, angle, wp->forward_t);
+        nx_affine_warp_processor_transformed_buffer_size(&wo, &ho, scale_x, scale_y, angle, wp->forward_t);
         nx_image_resize(out_buffer, wo, ho, -1, NX_IMAGE_GRAYSCALE, in_buffer->dtype);
         nx_image_set_zero(out_buffer);
 

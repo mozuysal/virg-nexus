@@ -116,7 +116,7 @@ void VGImageAnnotator::draw_roi(double x_tl, double y_tl,
                                 double line_width, VGColor color)
 {
         m_gc.set_color(color);
-        m_gc.set_line_width(width);
+        m_gc.set_line_width(line_width);
         m_gc.new_path();
 
         m_gc.rectangle(x_tl, y_tl, width, height);

@@ -74,7 +74,7 @@ static double **nx_read_poses_from_pose_file(FILE *fp, int *length)
         const int START_CAP = 300;
         size_t cap = START_CAP;
         double **poses = NX_NEW(cap, double *);
-        int n = 0;
+        size_t n = 0;
 
         double P[12];
         while (12 == fscanf(fp, "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf",
@@ -101,7 +101,7 @@ static double *nx_read_times_from_times_file(FILE *fp, int *length)
         const int START_CAP = 300;
         size_t cap = START_CAP;
         double *times = NX_NEW_D(cap);
-        int n = 0;
+        size_t n = 0;
 
         double t;
         while (1 == fscanf(fp, "%lf", &t)) {

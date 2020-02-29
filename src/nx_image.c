@@ -258,17 +258,17 @@ void nx_image_axpy_uc(struct NXImage *img, float a, float y)
         NX_IMAGE_ASSERT_UCHAR(img);
 
         int nc = nx_image_n_channels(img->type);
-        for (int y = 0; y < img->height; ++y) {
-                uchar *row = img->data.uc + y*img->row_stride;
-                for (int x = 0; x < img->width; ++x) {
+        for (int yc = 0; yc < img->height; ++yc) {
+                uchar *row = img->data.uc + yc*img->row_stride;
+                for (int xc = 0; xc < img->width; ++xc) {
                         for (int c = 0; c < nc; ++c) {
-                                int p = a*row[nc*x+c]+y;
+                                int p = a * row[nc * xc + c] + y;
                                 if (p < 0)
                                         p = 0;
                                 else if (p > 255) {
                                         p = 255;
                                 }
-                                row[nc*x+c] = p;
+                                row[nc * xc + c] = p;
                         }
                 }
         }

@@ -60,6 +60,13 @@ nx_gl_debug_callback(GLenum source, GLenum type,
                 NX_ERROR(NXGL_LOG_TAG, "%s", msg);
                 break;
         };
+
+        /* Turn off GCC warnings for unused parameters */
+        (void)source;
+        (void)type;
+        (void)id;
+        (void)length;
+        (void)userParam;
 }
 
 void nx_gl_debug_enable()

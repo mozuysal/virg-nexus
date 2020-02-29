@@ -306,6 +306,8 @@ int nx_data_frame_append_row(struct NXDataFrame *df, ...)
         va_start(args, df);
         nx_data_frame_vset(df, row_id, args);
         va_end(args);
+
+        return row_id;
 }
 
 int nx_data_frame_n_rows(const struct NXDataFrame *df)
@@ -632,6 +634,13 @@ struct NXDataFrame *nx_data_frame_load_csv_stream(FILE *stream,
         struct NXCSVLexer *clex = nx_csv_lexer_new(csv_text);
         struct NXCSVParser *cp = nx_csv_parser_new(clex);
         struct NXDataFrame *df = nx_csv_parser_parse(cp);
+
+        if (strings_as_factors) {
+                for (int col_id = 0; col_id < df->columns->size; ++i) {
+                        if (nx_data_frame_column(df, col_id)->type == NX_DCT_STRING)
+                                nx_data_frame_make_factor(df, col_id);
+                }
+        }
 
         nx_csv_parser_free(cp);
         nx_csv_lexer_free(clex);

@@ -351,7 +351,7 @@ NXResult nx_brief_extractor_write(const struct NXBriefExtractor *be, FILE *strea
                 return NX_FAIL;
 
         int n_offsets = be->n_octets*4*8;
-        if (fwrite(be->offsets, sizeof(*be->offsets), n_offsets, stream) != n_offsets)
+        if (fwrite(be->offsets, sizeof(*be->offsets), n_offsets, stream) != (size_t)n_offsets)
                 return NX_FAIL;
 
         if (fwrite(&be->pyr_level_offset, sizeof(be->pyr_level_offset), 1, stream) != 1)
@@ -376,7 +376,7 @@ NXResult nx_brief_extractor_read(struct NXBriefExtractor *be, FILE *stream)
         nx_brief_extractor_resize(be, radius, n_octets);
 
         int n_offsets = be->n_octets*4*8;
-        if (fread(be->offsets, sizeof(*be->offsets), n_offsets, stream) != n_offsets)
+        if (fread(be->offsets, sizeof(*be->offsets), n_offsets, stream) != (size_t)n_offsets)
                 return NX_FAIL;
         nx_brief_extractor_update_limits(be);
 

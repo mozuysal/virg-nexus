@@ -71,8 +71,7 @@ protected:
                 EXPECT_GT(TOL, fabs(v0[2]-v1[2]));
         }
 
-        void check_quaternion_axis_angle(const double *v,
-                                         const double *axis, double theta) {
+        void check_quaternion_axis_angle(const double *v) {
                 nx_dvec3_copy(&vq[0], v);
                 nx_quaternion_rotate(&q[0], &vq[0]);
 
@@ -117,10 +116,10 @@ TEST_F(NXQuaternionTest, quaternion_from_axis_angle) {
                         nx_quaternion_from_axis_angle(&q[0], n, theta[j]);
                         nx_rotation_3d_axis_angle(&R[0], n, theta[j]);
 
-                        check_quaternion_axis_angle(&vx[0], n, theta[j]);
-                        check_quaternion_axis_angle(&vy[0], n, theta[j]);
-                        check_quaternion_axis_angle(&vz[0], n, theta[j]);
-                        check_quaternion_axis_angle(&vt[0], n, theta[j]);
+                        check_quaternion_axis_angle(&vx[0]);
+                        check_quaternion_axis_angle(&vy[0]);
+                        check_quaternion_axis_angle(&vz[0]);
+                        check_quaternion_axis_angle(&vt[0]);
                 }
         }
 }

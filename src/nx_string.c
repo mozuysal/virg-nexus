@@ -87,7 +87,7 @@ char *nx_vfstr(const char* format, va_list args)
                         NX_FATAL(NX_LOG_TAG, "Error making string from format %s",
                                  format);
 
-                if (n >= ls) {
+                if ((size_t)n >= ls) {
                         ls = n+1;
                         s = nx_xrealloc(s, ls);
                 } else {

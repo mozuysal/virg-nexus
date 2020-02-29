@@ -111,7 +111,7 @@ static NXResult read_pnm_data(struct NXImage *img, enum NXImageType img_type,
                 if (img_type == NX_IMAGE_GRAYSCALE) {
                         for (int y = 0; y < img->height; ++y) {
                                 uchar* row = img->data.uc + y * img->row_stride;
-                                if (fread((void*)row, sizeof(uchar), img->width, pnm) != img->width)
+                                if (fread((void*)row, sizeof(uchar), img->width, pnm) != (size_t)img->width)
                                         return NX_FAIL;
                         }
                 } else if (img_type == NX_IMAGE_RGBA) {

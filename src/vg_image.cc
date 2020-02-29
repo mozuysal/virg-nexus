@@ -105,7 +105,7 @@ VGImage& VGImage::wrap(struct NXImage* img, bool own_memory)
                 shared_ptr<struct NXImage> ptr(img, nx_image_free);
                 m_img = ptr;
         } else {
-                shared_ptr<struct NXImage> ptr(img, [](struct NXImage *ptr) {});
+                shared_ptr<struct NXImage> ptr(img, [](struct NXImage */* ptr */) {});
                 m_img = ptr;
         }
         return *this;
