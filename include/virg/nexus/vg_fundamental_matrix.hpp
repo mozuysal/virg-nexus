@@ -1,7 +1,7 @@
 /**
  * @file vg_fundamental_matrix.hpp
  *
- * Copyright (C) 2019 Mustafa Ozuysal. All rights reserved.
+ * Copyright (C) 2019,2020 Mustafa Ozuysal. All rights reserved.
  *
  * This file is part of the VIRG-Nexus Library
  *

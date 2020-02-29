@@ -1,7 +1,7 @@
 /**
  * @file nx_harris_detector_main.c
  *
- * Copyright (C) 2019 Mustafa Ozuysal. All rights reserved.
+ * Copyright (C) 2019,2020 Mustafa Ozuysal. All rights reserved.
  *
  * This file is part of the VIRG-Nexus Library
  *
@@ -54,7 +54,7 @@ int main(int argc, char** argv)
                                                "-v|--verbose", "log more information to stderr", NX_FALSE);
         nx_options_add_help(opt);
         nx_options_set_usage_header(opt, "Detects Harris corner points.\n\n");
-        nx_options_set_usage_footer(opt, "\nCopyright (C) 2019 Mustafa Ozuysal.\n");
+        nx_options_set_usage_footer(opt, "\nCopyright (C) 2019,2020 Mustafa Ozuysal.\n");
 
         nx_options_set_from_args(opt, argc, argv);
         const char* input_name = nx_options_get_string(opt, "-i");
