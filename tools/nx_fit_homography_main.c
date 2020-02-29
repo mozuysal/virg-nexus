@@ -33,8 +33,11 @@
 #include "virg/nexus/nx_log.h"
 #include "virg/nexus/nx_assert.h"
 #include "virg/nexus/nx_alloc.h"
+#include "virg/nexus/nx_timing.h"
 #include "virg/nexus/nx_image_io.h"
 #include "virg/nexus/nx_sift_detector.h"
+#include "virg/nexus/nx_homography.h"
+#include "virg/nexus/nx_point_match_2d_stats.h"
 
 struct NXKeyStore {
         int n_keys;
@@ -46,6 +49,16 @@ struct NXKeyStore {
 struct NXImage **load_images(struct NXOptions *opt);
 struct NXKeyStore *compute_keypoints_and_descriptors(struct NXOptions *opt,
                                                      struct NXImage **imgs);
+struct NXPointMatch2D *match_images(struct NXOptions *opt,
+                                    struct NXImage **imgs,
+                                    struct NXKeyStore *stores, int *n_matches);
+int fit_ransac(double * h, struct NXOptions *opt, struct NXImage **imgs,
+               struct NXKeyStore *stores,
+               int n_matches, struct NXPointMatch2D *matches);
+
+void ransac_benchmark(struct NXOptions *opt, struct NXImage **imgs,
+                      struct NXKeyStore *stores,
+                      int n_matches, struct NXPointMatch2D *matches);
 
 int main(int argc, char **argv)
 {
@@ -55,20 +68,44 @@ int main(int argc, char **argv)
         nx_options_add(opt, "ss",
                        "-l|--left",  "first image in the pair to match", NULL,
                        "-r|--right", "second image in the pair to match", NULL);
+
+        nx_options_add(opt, "bi",
+                       "--benchmark-ransac", "run RANSAC benchmark instead of fitting a homography once", NX_FALSE,
+                       "--benchmark-steps", "number of runs per benchmark", 10000);
+
         nx_sift_parameters_add_to_options(opt);
+        nx_options_add(opt, "d", "--snn-threshold",
+                       "second nearest neighbor threshold to filter matches", -1.0);
+        nx_options_add(opt, "id",
+                       "--ransac-max-n-iterations", "RANSAC terminates after this many iterations", 10000,
+                       "--ransac-inlier-threshold", "maximum forward transfer error for inliers", 3.0);
         nx_options_add(opt, "b",
                        "-v|--verbose", "log more information", NX_FALSE);
         nx_options_add_help(opt);
         nx_options_set_from_args(opt, argc, argv);
 
         NXBool is_verbose = nx_options_get_bool(opt, "-v");
+        NXBool run_ransac_benchmark = nx_options_get_bool(opt, "--benchmark-ransac");
         if (is_verbose)
                 nx_options_print_values(opt, stderr);
 
         struct NXImage **imgs = load_images(opt);
         struct NXKeyStore *stores = compute_keypoints_and_descriptors(opt,
                                                                       imgs);
+        int n_matches = 0;
+        struct NXPointMatch2D *matches = match_images(opt, imgs, stores,
+                                                      &n_matches);
 
+
+        if (run_ransac_benchmark) {
+                ransac_benchmark(opt, imgs, stores, n_matches, matches);
+        } else {
+                double h[9];
+                int n_inliers = fit_ransac(&h[0], opt, imgs, stores,
+                                           n_matches, matches);
+        }
+
+        nx_free(matches);
         nx_free(stores[0].keys);
         nx_free(stores[0].desc);
         nx_free(stores[1].keys);
@@ -81,6 +118,101 @@ int main(int argc, char **argv)
 
         return EXIT_SUCCESS;
 }
+
+void ransac_benchmark(struct NXOptions *opt, struct NXImage **imgs,
+                      struct NXKeyStore *stores,
+                      int n_matches, struct NXPointMatch2D *matches)
+{
+        const int N_BENCHMARK_STEPS = nx_options_get_int(opt, "--benchmark-steps");
+        NXBool is_verbose = nx_options_get_bool(opt, "-v");
+        double inlier_tolerance = nx_options_get_double(opt, "--ransac-inlier-threshold");
+        int max_n_ransac_iter = nx_options_get_int(opt, "--ransac-max-n-iterations");
+
+        struct NXPointMatch2DStats *stats = nx_point_match_2d_stats_new();
+        nx_point_match_2d_stats_normalize_matches(stats, n_matches, matches);
+        double norm_tol = inlier_tolerance / stats->dp;
+
+        int *n_inliers = NX_NEW_I(N_BENCHMARK_STEPS);
+        double *runtime = NX_NEW_D(N_BENCHMARK_STEPS);
+        double **h = NX_NEW(N_BENCHMARK_STEPS, double *);
+        for (int i = 0; i < N_BENCHMARK_STEPS; ++i) {
+                h[i] = NX_NEW_D(9);
+        }
+
+        struct NXTimer timer;
+        for (int i = 0; i < N_BENCHMARK_STEPS; ++i) {
+                nx_timer_start(&timer);
+                n_inliers[i] = nx_homography_estimate_ransac(h[i], n_matches,
+                                                             matches, norm_tol,
+                                                             max_n_ransac_iter);
+                nx_timer_stop(&timer);
+                runtime[i] = nx_timer_measure_in_msec(&timer);
+        }
+
+        nx_point_match_2d_stats_denormalize_matches(stats, n_matches, matches);
+        for (int i = 0; i < N_BENCHMARK_STEPS; ++i) {
+                nx_point_match_2d_stats_denormalize_homography(stats, h[i]);
+        }
+
+        for (int i = 0; i < N_BENCHMARK_STEPS; ++i) {
+                printf("%4d %5.2f\n", n_inliers[i], runtime[i]);
+        }
+
+        nx_point_match_2d_stats_free(stats);
+}
+
+int fit_ransac(double *h, struct NXOptions *opt, struct NXImage **imgs,
+               struct NXKeyStore *stores,
+               int n_matches, struct NXPointMatch2D *matches)
+{
+        NXBool is_verbose = nx_options_get_bool(opt, "-v");
+        double inlier_tolerance = nx_options_get_double(opt, "--ransac-inlier-threshold");
+        int max_n_ransac_iter = nx_options_get_int(opt, "--ransac-max-n-iterations");
+        struct NXPointMatch2DStats *stats = nx_point_match_2d_stats_new();
+        nx_point_match_2d_stats_normalize_matches(stats, n_matches, matches);
+        double norm_tol = inlier_tolerance / stats->dp;
+        int n_inliers = 0;
+        n_inliers = nx_homography_estimate_ransac(h, n_matches,
+                                                  matches, norm_tol,
+                                                  max_n_ransac_iter);
+
+        nx_point_match_2d_stats_denormalize_homography(stats, h);
+        nx_point_match_2d_stats_denormalize_matches(stats, n_matches, matches);
+
+        if (is_verbose) {
+                NX_LOG(NX_LOG_TAG, "# of inliers is %d", n_inliers);
+        }
+
+        nx_point_match_2d_stats_free(stats);
+
+        return n_inliers;
+}
+
+struct NXPointMatch2D *match_images(struct NXOptions *opt,
+                                    struct NXImage **imgs,
+                                    struct NXKeyStore *stores,
+                                    int *n_matches)
+{
+        NXBool is_verbose = nx_options_get_bool(opt, "-v");
+        float dist_ratio_thr = nx_options_get_double(opt, "--snn-threshold");
+
+        struct NXPointMatch2D *matches = NX_NEW(stores[0].n_keys, struct NXPointMatch2D);
+        *n_matches = nx_sift_match_brute_force(stores[0].n_keys,
+                                               stores[0].keys,
+                                               stores[0].desc,
+                                               stores[1].n_keys,
+                                               stores[1].keys,
+                                               stores[1].desc,
+                                               matches,
+                                               dist_ratio_thr);
+
+        if (is_verbose) {
+                NX_LOG(NX_LOG_TAG, "# of putative matches is %d", *n_matches);
+        }
+
+        return matches;
+}
+
 
 struct NXImage **load_images(struct NXOptions *opt)
 {
