@@ -21,6 +21,7 @@ set(virg_nexus_C_SOURCES
   src/nx_gaussian_sampler.c
   src/nx_bit_ops.c
   src/nx_math.c
+  src/nx_statistics.c
   src/nx_graph.c
   src/nx_rotation_3d.c
   src/nx_quaternion.c
@@ -85,6 +86,7 @@ set(virg_nexus_C_HEADERS
   include/virg/nexus/nx_gaussian_sampler.h
   include/virg/nexus/nx_bit_ops.h
   include/virg/nexus/nx_math.h
+  include/virg/nexus/nx_statistics.h
   include/virg/nexus/nx_graph.h
   include/virg/nexus/nx_rotation_3d.h
   include/virg/nexus/nx_quaternion.h

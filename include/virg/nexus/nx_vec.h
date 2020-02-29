@@ -195,7 +195,7 @@ static inline int nx_ucvec_dist_sq(int n, const uchar *v0, const uchar *v1)
 
         int d_sq = 0;
         for (int i = 0; i < n; ++i) {
-                int d = v0[i] - v1[i];
+                int d = v0[i] - (int)v1[i];
                 d_sq += d*d;
         }
 

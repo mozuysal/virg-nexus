@@ -44,6 +44,9 @@ static inline double nx_max_d(double x, double y);
 
 double nx_erf(double x);
 
+static inline int nx_compare_double_incr(const void *d0p, const void *d1p);
+static inline int nx_compare_int_incr   (const void *i0p, const void *i1p);
+
 /* ----------------------------- inline definitions ------------------------------- */
 static inline int nx_signum(double d)
 {
@@ -78,6 +81,28 @@ float nx_max_s(float x, float y)
 double nx_max_d(double x, double y)
 {
         return (x > y) ? x : y;
+}
+
+int nx_compare_double_incr(const void *d0p, const void *d1p)
+{
+        double d0 = *(double *)d0p;
+        double d1 = *(double *)d1p;
+
+        if (d0 < d1) {
+                return -1;
+        } else if (d0 > d1) {
+                return +1;
+        } else {
+                return 0;
+        }
+}
+
+int nx_compare_int_incr(const void *i0p, const void *i1p)
+{
+        int i0 = *(int *)i0p;
+        int i1 = *(int *)i1p;
+
+        return i0 - i1;
 }
 
 __NX_END_DECL
