@@ -355,6 +355,7 @@ set(test_SOURCES
   tests/tests_graph.cc
   tests/tests_filter.cc
   tests/tests_svd.cc
+  tests/tests_statistics.cc
   tests/tests_sha256.cc
   tests/tests_rotation.cc
   tests/tests_quaternion.cc
