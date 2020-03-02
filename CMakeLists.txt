@@ -332,22 +332,13 @@ foreach(LIB ${EXEC_LIBRARIES})
 endforeach()
 configure_file(virg-nexus.pc.in ${CMAKE_SOURCE_DIR}/lib/pkgconfig/virg-nexus.pc @ONLY)
 
-# --------------------------------- Goggle Test ----------------------------------
-if (CMAKE_USE_PTHREADS_INIT)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGTEST_HAS_PTHREAD=1")
-else()
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGTEST_HAS_PTHREAD=0")
-endif(CMAKE_USE_PTHREADS_INIT)
-set(GTEST_DIR ext/googletest/googletest)
-set(GTEST_INCLUDE_DIRECTORIES ${GTEST_DIR}/include ${GTEST_DIR})
-include_directories(${GTEST_INCLUDE_DIRECTORIES})
-add_library(gtest ${GTEST_DIR}/src/gtest-all.cc)
-set_target_properties(gtest PROPERTIES ARCHIVE_OUTPUT_DIRECTORY lib)
+# ---------------------------- external dependencies -----------------------------
+add_subdirectory(ext)
 
-# ------------------------------- tests --------------------------------
+# ------------------------------------ tests -------------------------------------
 add_subdirectory(tests)
 
-# ------------------------------- tools --------------------------------
+# ------------------------------------ tools -------------------------------------
 add_subdirectory(tools)
 
 # --------------------------------- benchmarks -----------------------------------

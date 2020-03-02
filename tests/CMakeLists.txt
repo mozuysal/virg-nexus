@@ -40,7 +40,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/test_data.hh.in ${CMAKE_CURRENT_SOURC
 add_executable(virg-nexus-tests)
 target_sources(virg-nexus-tests PRIVATE ${test_SOURCES})
 target_include_directories(virg-nexus-tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(virg-nexus-tests virg-nexus gtest ${CMAKE_THREAD_LIBS_INIT} ${EXEC_LIBRARIES})
+target_link_libraries(virg-nexus-tests virg-nexus virg::gtest ${CMAKE_THREAD_LIBS_INIT} ${EXEC_LIBRARIES})
 set_target_properties(virg-nexus-tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 add_custom_target(unit-tests
