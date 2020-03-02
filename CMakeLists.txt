@@ -437,3 +437,7 @@ foreach(NEXUS_TOOL ${NEXUS_TOOLS})
 endforeach(NEXUS_TOOL)
 
 install(TARGETS ${NEXUS_TOOLS} RUNTIME DESTINATION bin)
+
+
+# --------------------------------- benchmarks -----------------------------------
+add_subdirectory(bench)
