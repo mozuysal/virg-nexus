@@ -34,6 +34,7 @@
 #include "virg/nexus/nx_assert.h"
 #include "virg/nexus/nx_alloc.h"
 #include "virg/nexus/nx_timing.h"
+#include "virg/nexus/nx_statistics.h"
 #include "virg/nexus/nx_image_io.h"
 #include "virg/nexus/nx_sift_detector.h"
 #include "virg/nexus/nx_homography.h"
@@ -154,9 +155,29 @@ void ransac_benchmark(struct NXOptions *opt, struct NXImage **imgs,
                 nx_point_match_2d_stats_denormalize_homography(stats, h[i]);
         }
 
-        for (int i = 0; i < N_BENCHMARK_STEPS; ++i) {
-                printf("%4d %5.2f\n", n_inliers[i], runtime[i]);
-        }
+        struct NXStatistics1D inlier_stats;
+        nx_istatistics_1d(&inlier_stats, N_BENCHMARK_STEPS, n_inliers);
+
+        struct NXStatistics1D runtime_stats;
+        nx_dstatistics_1d(&runtime_stats, N_BENCHMARK_STEPS, runtime);
+
+        printf("%6d,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,",
+               inlier_stats.n,
+               inlier_stats.mean, inlier_stats.stdev,
+               inlier_stats.min, inlier_stats.lower_quartile,
+               inlier_stats.median,
+               inlier_stats.upper_quartile, inlier_stats.max);
+        printf("%8.2f,%8.2f,%8.2f,%8.2f,%8.2f,%8.2f,%8.2f\n",
+               runtime_stats.mean, runtime_stats.stdev,
+               runtime_stats.min, runtime_stats.lower_quartile,
+               runtime_stats.median,
+               runtime_stats.upper_quartile, runtime_stats.max);
+
+        /*
+         * for (int i = 0; i < N_BENCHMARK_STEPS; ++i) {
+         *         printf("%4d %5.2f\n", n_inliers[i], runtime[i]);
+         * }
+         */
 
         nx_point_match_2d_stats_free(stats);
 }
