@@ -345,60 +345,7 @@ add_library(gtest ${GTEST_DIR}/src/gtest-all.cc)
 set_target_properties(gtest PROPERTIES ARCHIVE_OUTPUT_DIRECTORY lib)
 
 # ------------------------------- tests --------------------------------
-set(test_SOURCES
-  tests/tests_main.cc
-  tests/tests_mem_block.cc
-  tests/tests_bit_ops.cc
-  tests/tests_string.cc
-  tests/tests_string_array.cc
-  tests/tests_options.cc
-  tests/tests_graph.cc
-  tests/tests_filter.cc
-  tests/tests_svd.cc
-  tests/tests_statistics.cc
-  tests/tests_sha256.cc
-  tests/tests_rotation.cc
-  tests/tests_quaternion.cc
-  tests/tests_homography.cc
-  tests/tests_epipolar.cc
-  tests/tests_pinhole.cc
-  tests/tests_image.cc
-  tests/tests_image_pyr.cc
-  tests/tests_fast_detector.cc
-  tests/tests_brief_extractor.cc
-  tests/tests_data_frame.cc
-  tests/tests_lexer.cc
-  tests/tests_json_lexer.cc
-  tests/tests_csv_lexer.cc
-  tests/tests_csv_parser.cc
-  tests/tests_gnuplot.cc
-  tests/tests_gc.cc
-)
-
-if(VIRG_NEXUS_CXX_API)
-  list(APPEND test_SOURCES
-    tests/tests_options_cxx.cc)
-endif(VIRG_NEXUS_CXX_API)
-
-
-set(VIRG_NEXUS_TEST_DATA_PATH "${CMAKE_SOURCE_DIR}/tests/data")
-configure_file(${CMAKE_SOURCE_DIR}/tests/test_data.hh.in ${CMAKE_SOURCE_DIR}/tests/test_data.hh @ONLY)
-include_directories(${CMAKE_SOURCE_DIR}/tests)
-
-add_executable(virg-nexus-tests ${test_SOURCES})
-target_link_libraries(virg-nexus-tests virg-nexus gtest ${CMAKE_THREAD_LIBS_INIT} ${EXEC_LIBRARIES})
-set_target_properties(virg-nexus-tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY bin)
-
-add_custom_target(unit-tests bin/virg-nexus-tests --gtest_death_test_style=threadsafe `printenv NX_TEST_FLAGS`
-  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-  DEPENDS virg-nexus virg-nexus-tests
-  COMMENT "Unit Testing")
-
-set(valgrind-flags --leak-check=full --track-origins=yes --show-reachable=yes --suppressions=${CMAKE_SOURCE_DIR}/valgrind_nexus.supp)
-add_custom_target(unit-tests-valgrind valgrind ${valgrind-flags} bin/virg-nexus-tests --valgrind --gtest_death_test_style=threadsafe --gtest_filter=-*DEATH `printenv NX_TEST_FLAGS`
-  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-  DEPENDS virg-nexus virg-nexus-tests
-  COMMENT "Unit Testing with Valgrind")
+add_subdirectory(tests)
 
 # ------------------------------- tools --------------------------------
 add_subdirectory(tools)

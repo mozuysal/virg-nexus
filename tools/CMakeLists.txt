@@ -33,7 +33,7 @@ endif(VIRG_NEXUS_CXX_API)
 
 foreach(NEXUS_TOOL ${NEXUS_TOOLS})
   target_link_libraries(${NEXUS_TOOL} virg-nexus ${EXEC_LIBRARIES})
-  set_target_properties(${NEXUS_TOOL} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ../bin)
+  set_target_properties(${NEXUS_TOOL} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 endforeach(NEXUS_TOOL)
 
 install(TARGETS ${NEXUS_TOOLS} RUNTIME DESTINATION bin)
