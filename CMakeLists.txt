@@ -1,10 +1,11 @@
-cmake_minimum_required(VERSION 3.1)
-
-project(virg-nexus C CXX)
+cmake_minimum_required(VERSION 3.15)
 
 set(VERSION_MAJOR 0)
 set(VERSION_MINOR 1)
-set(VERSION ${VERSION_MAJOR}.${VERSION_MINOR})
+project(virg-nexus
+  VERSION ${VERSION_MAJOR}.${VERSION_MINOR}
+  LANGUAGES C CXX
+  DESCRIPTION "VIRG-Nexus Library")
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -12,6 +13,7 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 set(virg_nexus_C_SOURCES
   src/nx_alloc.c
