@@ -161,7 +161,8 @@ void ransac_benchmark(struct NXOptions *opt, struct NXImage **imgs,
         struct NXStatistics1D runtime_stats;
         nx_dstatistics_1d(&runtime_stats, N_BENCHMARK_STEPS, runtime);
 
-        printf("%6d,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,",
+        printf("%6d,%6d,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,",
+               n_matches,
                inlier_stats.n,
                inlier_stats.mean, inlier_stats.stdev,
                inlier_stats.min, inlier_stats.lower_quartile,
