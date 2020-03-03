@@ -3,6 +3,7 @@
 data_dir=/opt/data
 homogr_dir=${data_dir}/cmp/homogr
 bin_dir=../../build/bin
+out_file="out/$(git rev-parse HEAD)".csv
 
 snn_threshold=0.6
 sift_peak_thr=0.06
@@ -18,7 +19,7 @@ options="${sift_options} ${ransac_options} ${benchmark_options}"
 >&2 printf "running ransac benchmark\n  sift_options=%s\n  ransac_options=%s\n  benchmark_options=%s\n" \
     "${sift_options}" "${ransac_options}" "${benchmark_options}"
 
-printf "      dataset,n_corr,     n,ni_avg,ni_std,ni_min,ni_lwq,ni_med,ni_upq,ni_max,  rt_avg,  rt_std,  rt_min,  rt_lwq,  rt_med,  rt_upq,  rt_max\n"
+printf "      dataset,n_corr,     n,ni_avg,ni_std,ni_min,ni_lwq,ni_med,ni_upq,ni_max,  rt_avg,  rt_std,  rt_min,  rt_lwq,  rt_med,  rt_upq,  rt_max\n" | tee "${out_file}"
 for iset in "adam.png boat.png BostonLib.png BruggeTower.png city.png Eiffel.png ExtremeZoom.png graf.png LePoint1.png LePoint2.png LePoint3.png" \
                 "Boston.jpg BruggeSquare.jpg Brussels.jpg CapitalRegion.jpg WhiteBoard.jpg";
 do
@@ -29,6 +30,6 @@ do
         img_left="${homogr_dir}/${img_base}A.${img_ext}"
         img_right="${homogr_dir}/${img_base}B.${img_ext}"
         printf "%13s," ${img_base}
-        ${bin_dir}/nx-fit-homography -l ${img_left}  -r ${img_right} ${options}
+        ${bin_dir}/nx-fit-homography -l ${img_left}  -r ${img_right} ${options} | tee -a "${out_file}"
     done
 done
