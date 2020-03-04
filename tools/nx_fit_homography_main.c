@@ -40,6 +40,8 @@
 #include "virg/nexus/nx_homography.h"
 #include "virg/nexus/nx_point_match_2d_stats.h"
 
+#include "nx_usac_homography.h"
+
 struct NXKeyStore {
         int n_keys;
         int max_n_keys;
@@ -143,9 +145,9 @@ void ransac_benchmark(struct NXOptions *opt, struct NXImage **imgs,
         struct NXTimer timer;
         for (int i = 0; i < N_BENCHMARK_STEPS; ++i) {
                 nx_timer_start(&timer);
-                n_inliers[i] = nx_homography_estimate_ransac(h[i], n_matches,
-                                                             matches, norm_tol,
-                                                             max_n_ransac_iter);
+                n_inliers[i] = nx_usac_estimate_homography(h[i], n_matches,
+                                                           matches, norm_tol,
+                                                           max_n_ransac_iter);
                 nx_timer_stop(&timer);
                 runtime[i] = nx_timer_measure_in_msec(&timer);
         }

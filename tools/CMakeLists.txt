@@ -21,7 +21,7 @@ add_executable(nx-stitch)
 target_sources(nx-stitch PRIVATE nx_stitch_main.c nx_panorama_builder.c)
 
 add_executable(nx-fit-homography)
-target_sources(nx-fit-homography PRIVATE nx_fit_homography_main.c)
+target_sources(nx-fit-homography PRIVATE nx_fit_homography_main.c nx_usac_homography.c nx_usac.c)
 
 if(VIRG_NEXUS_CXX_API)
   list(APPEND NEXUS_TOOLS vg-stereo-matcher)

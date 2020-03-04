@@ -52,7 +52,7 @@ int    nx_homography_mark_inliers (const double *h, int n_corr,
                                    struct NXPointMatch2D *corr_list,
                                    double inlier_tolerance);
 
-double nx_homography_estimate_4pt        (double *h, int corr_ids[4],
+double nx_homography_estimate_4pt        (double *h, const int corr_ids[4],
                                           const struct NXPointMatch2D *corr_list);
 double nx_homography_estimate_dlt        (double *h, int n_corr,
                                           const struct NXPointMatch2D *corr_list);

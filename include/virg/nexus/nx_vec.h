@@ -40,6 +40,7 @@ __NX_BEGIN_DECL
 
 static inline void   nx_dvec_set_zero(int n, double *v);
 static inline void   nx_dvec_set     (int n, double *v, double value);
+static inline void   nx_dvec_copy    (int n, double *dest, const double *src);
 static inline double nx_dvec_norm_sq (int n, const double *v);
 static inline double nx_dvec_norm    (int n, const double *v);
 static inline void   nx_dvec_axpy    (int n, double *y, double a, const double *x);
@@ -77,6 +78,11 @@ static inline void nx_dvec_set(int n, double *v, double value)
         for (int i = 0; i < n; ++i) {
                 v[i] = value;
         }
+}
+
+static inline void nx_dvec_copy(int n, double *dest, const double *src)
+{
+        memcpy(dest, src, n * sizeof(*dest));
 }
 
 static inline double nx_dvec_norm_sq(int n, const double *v)

@@ -122,7 +122,7 @@ int nx_homography_mark_inliers(const double *h, int n_corr,
         return n_inliers;
 }
 
-double nx_homography_estimate_4pt(double *h, int corr_ids[4], const struct NXPointMatch2D *corr_list)
+double nx_homography_estimate_4pt(double *h, const int corr_ids[4], const struct NXPointMatch2D *corr_list)
 {
         double x[8];
         for( int i = 0; i < 4; ++i ) {
