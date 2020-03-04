@@ -29,7 +29,7 @@ do
         img_ext=${i##*.}
         img_left="${homogr_dir}/${img_base}A.${img_ext}"
         img_right="${homogr_dir}/${img_base}B.${img_ext}"
-        printf "%13s," ${img_base}
+        printf "%13s," ${img_base} | tee -a "${out_file}"
         ${bin_dir}/nx-fit-homography -l ${img_left}  -r ${img_right} ${options} | tee -a "${out_file}"
     done
 done
