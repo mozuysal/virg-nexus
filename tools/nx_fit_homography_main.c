@@ -39,8 +39,7 @@
 #include "virg/nexus/nx_sift_detector.h"
 #include "virg/nexus/nx_homography.h"
 #include "virg/nexus/nx_point_match_2d_stats.h"
-
-#include "nx_usac_homography.h"
+#include "virg/nexus/nx_usac_homography.h"
 
 struct NXKeyStore {
         int n_keys;
@@ -196,9 +195,9 @@ int fit_ransac(double *h, struct NXOptions *opt, struct NXImage **imgs,
         nx_point_match_2d_stats_normalize_matches(stats, n_matches, matches);
         double norm_tol = inlier_tolerance / stats->dp;
         int n_inliers = 0;
-        n_inliers = nx_homography_estimate_ransac(h, n_matches,
-                                                  matches, norm_tol,
-                                                  max_n_ransac_iter);
+        n_inliers = nx_usac_estimate_homography(h, n_matches,
+                                                matches, norm_tol,
+                                                max_n_ransac_iter);
 
         nx_point_match_2d_stats_denormalize_homography(stats, h);
         nx_point_match_2d_stats_denormalize_matches(stats, n_matches, matches);

@@ -23,7 +23,7 @@
  * Contact mustafaozuysal@iyte.edu.tr for comments and bug reports.
  *
  */
-#include "nx_usac_homography.h"
+#include "virg/nexus/nx_usac_homography.h"
 
 #include <stdlib.h>
 #include <math.h>
@@ -33,8 +33,7 @@
 #include "virg/nexus/nx_vec.h"
 #include "virg/nexus/nx_uniform_sampler.h"
 #include "virg/nexus/nx_homography.h"
-
-#include "nx_usac.h"
+#include "virg/nexus/nx_usac.h"
 
 struct NXUSACHomographyData {
         int n_corr;

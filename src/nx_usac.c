@@ -23,7 +23,7 @@
  * Contact mustafaozuysal@iyte.edu.tr for comments and bug reports.
  *
  */
-#include "nx_usac.h"
+#include "virg/nexus/nx_usac.h"
 
 #include "float.h"
 
