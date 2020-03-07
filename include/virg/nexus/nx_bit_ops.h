@@ -26,8 +26,11 @@
 #ifndef VIRG_NEXUS_NX_BIT_OPS_H
 #define VIRG_NEXUS_NX_BIT_OPS_H
 
+#include <string.h>
+
 #include "virg/nexus/nx_config.h"
 #include "virg/nexus/nx_types.h"
+#include "virg/nexus/nx_alloc.h"
 
 __NX_BEGIN_DECL
 
@@ -69,6 +72,30 @@ static inline uint32_t nx_compose_big_endian32(const uint8_t *bytep) {
                 | ((uint32_t)bytep[3]);
 }
 
+static inline uint8_t *nx_bit_array_new(size_t n_bits) {
+        size_t n_bytes = (n_bits + 7) / 8;
+        return NX_NEW(n_bytes, uint8_t);
+}
+
+static inline void nx_bit_array_set_zero(size_t n_bits, uint8_t *bv) {
+        size_t n_bytes = (n_bits + 7) / 8;
+        memset(bv, 0, n_bytes * sizeof(*bv));
+}
+
+static inline void nx_bit_array_set(uint8_t *bits, size_t idx, NXBool value) {
+        size_t byte_offset = idx / 8;
+        int bit_offset = idx & 7;
+        if (value)
+                bits[byte_offset] |= (uint8_t)1 << bit_offset;
+        else
+                bits[byte_offset] &= ~((uint8_t)1 << bit_offset);
+}
+
+static inline NXBool nx_bit_array_get(const uint8_t *bits, size_t idx) {
+        size_t byte_offset = idx / 8;
+        int bit_offset = idx & 7;
+        return bits[byte_offset] & ((uint8_t)1 << bit_offset);
+}
 
 __NX_END_DECL
 

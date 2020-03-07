@@ -8,6 +8,7 @@ set(test_SOURCES
   tests_options.cc
   tests_graph.cc
   tests_filter.cc
+  tests_mat.cc
   tests_svd.cc
   tests_statistics.cc
   tests_sha256.cc

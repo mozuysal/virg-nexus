@@ -23,6 +23,7 @@ set(virg_nexus_C_SOURCES
   src/nx_gaussian_sampler.c
   src/nx_bit_ops.c
   src/nx_math.c
+  src/nx_mat.c
   src/nx_statistics.c
   src/nx_graph.c
   src/nx_rotation_3d.c

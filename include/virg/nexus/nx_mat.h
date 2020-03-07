@@ -26,9 +26,12 @@
 #ifndef VIRG_NEXUS_NX_MAT_H
 #define VIRG_NEXUS_NX_MAT_H
 
+#include <stdio.h>
+
 #include "virg/nexus/nx_config.h"
 #include "virg/nexus/nx_assert.h"
 #include "virg/nexus/nx_vec.h"
+#include "virg/nexus/nx_bit_ops.h"
 
 __NX_BEGIN_DECL
 
@@ -39,6 +42,10 @@ static inline void nx_dmat_mul     (int m, int n, int k,
                                     const double *A, int ldA,
                                     const double *B, int ldB,
                                     double *C, int ldC);
+static inline void nx_dmat_transpose(int m, int n, double *A);
+
+void nx_dmat_xwrite(FILE *stream, int m, int n, const double *A);
+double *nx_dmat_xread(FILE *stream, int *m, int *n);
 
 /* --------------------------------- Definitions ---------------------------------- */
 static inline void nx_dmat_set_zero(int m, int n, double *A, int ldA)
@@ -74,6 +81,44 @@ static inline void nx_dmat_mul(int m, int n, int k,
                                         * B[c * ldB + j];
                 }
         }
+}
+
+static inline void nx_dmat_transpose(int m, int n, double *A)
+{
+        NX_ASSERT(m > 0);
+        NX_ASSERT(n > 0);
+        NX_ASSERT_PTR(A);
+
+        size_t q = m * n;
+        uint8_t *is_moved = nx_bit_array_new(q);
+        nx_bit_array_set_zero(q, is_moved);
+        size_t i = 1; // skip 0 since it stays where it is.
+        while (i < (q - 1)) {
+                if (!nx_bit_array_get(is_moved, i)) {
+                        // start cycle
+                        size_t start = i;
+                        size_t idx0 = i;
+                        size_t idx1 = (i * n) % (q - 1);
+                        // skip if item i stays at the same position
+                        if (idx0 != idx1) {
+                                // move elements and mark them until cycle ends
+                                double t0 = A[idx0];
+                                double t1;
+                                do {
+                                        t1 = A[idx1];
+                                        A[idx1] = t0;
+                                        t0 = t1;
+                                        nx_bit_array_set(is_moved, idx0,
+                                                         NX_TRUE);
+                                        idx0 = idx1;
+                                        idx1 = (idx1 * n) % (q - 1);
+                                } while (idx0 != start);
+                        }
+                }
+                ++i;
+        }
+
+        nx_free(is_moved);
 }
 
 __NX_END_DECL

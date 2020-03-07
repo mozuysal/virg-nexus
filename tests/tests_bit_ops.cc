@@ -114,5 +114,39 @@ TEST_F(NXBitOpsTest, patterns64) {
         EXPECT_EQ(bc, 32);
 }
 
+TEST_F(NXBitOpsTest, bit_array_tests) {
+        uint8_t *bv = nx_bit_array_new(17);
+        nx_bit_array_set_zero(17, bv);
+        for (int i = 0; i < 17; ++i) {
+                EXPECT_FALSE(nx_bit_array_get(bv, i));
+        }
+
+        nx_bit_array_set(bv, 0, NX_TRUE);
+        nx_bit_array_set(bv, 1, NX_TRUE);
+        nx_bit_array_set(bv, 2, NX_TRUE);
+        nx_bit_array_set(bv, 3, NX_TRUE);
+        EXPECT_EQ(15, bv[0]);
+        nx_bit_array_set(bv, 4, NX_TRUE);
+        nx_bit_array_set(bv, 5, NX_TRUE);
+        nx_bit_array_set(bv, 6, NX_TRUE);
+        nx_bit_array_set(bv, 7, NX_TRUE);
+        EXPECT_EQ(255, bv[0]);
+
+        nx_bit_array_set(bv, 16, NX_TRUE);
+        EXPECT_EQ(1, bv[2]);
+
+        nx_bit_array_set(bv, 0, NX_FALSE);
+        nx_bit_array_set(bv, 1, NX_FALSE);
+        nx_bit_array_set(bv, 2, NX_FALSE);
+        nx_bit_array_set(bv, 3, NX_FALSE);
+        EXPECT_EQ(240, bv[0]);
+        nx_bit_array_set(bv, 4, NX_FALSE);
+        nx_bit_array_set(bv, 5, NX_FALSE);
+        nx_bit_array_set(bv, 6, NX_FALSE);
+        nx_bit_array_set(bv, 7, NX_FALSE);
+        EXPECT_EQ(0, bv[0]);
+
+        nx_free(bv);
+}
 
 } // namespace
