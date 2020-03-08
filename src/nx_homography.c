@@ -585,8 +585,8 @@ double nx_homography_transfer_error_fwd(const double *h, int n_corr,
                         nx_homography_transfer_fwd(h, &xp[0], &pm->x[0]);
                         double dx = xp[0] - pm->xp[0];
                         double dy = xp[1] - pm->xp[1];
-                        double s_i = pm->sigma_xp;
-                        double e_i = sqrt(dx*dx + dy*dy) / s_i;
+                        /* double s_i = pm->sigma_xp; */
+                        double e_i = sqrt(dx*dx + dy*dy);
                         e += e_i;
                 }
         }
@@ -609,7 +609,7 @@ double nx_homography_transfer_error_bwd(const double *h, int n_corr,
                         nx_homography_transfer_fwd(&h_inv[0], &x[0], &pm->xp[0]);
                         double dx = x[0] - pm->x[0];
                         double dy = x[1] - pm->x[1];
-                        e += sqrt(dx*dx + dy*dy) / pm->sigma_x;
+                        e += sqrt(dx*dx + dy*dy);
                 }
         }
         return e / n_inliers;

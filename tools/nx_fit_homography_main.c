@@ -34,7 +34,9 @@
 #include "virg/nexus/nx_assert.h"
 #include "virg/nexus/nx_alloc.h"
 #include "virg/nexus/nx_timing.h"
+#include "virg/nexus/nx_mat.h"
 #include "virg/nexus/nx_statistics.h"
+#include "virg/nexus/nx_io.h"
 #include "virg/nexus/nx_image_io.h"
 #include "virg/nexus/nx_sift_detector.h"
 #include "virg/nexus/nx_homography.h"
@@ -59,21 +61,25 @@ int fit_ransac(double * h, struct NXOptions *opt, struct NXImage **imgs,
                int n_matches, struct NXPointMatch2D *matches);
 
 void ransac_benchmark(struct NXOptions *opt, struct NXImage **imgs,
-                      struct NXKeyStore *stores,
-                      int n_matches, struct NXPointMatch2D *matches);
+                      struct NXKeyStore *stores, int n_matches,
+                      struct NXPointMatch2D *matches, int n_vpts,
+                      struct NXPointMatch2D *vpts);
+
+struct NXPointMatch2D *load_validation_points(struct NXOptions *opt, int *n_corr);
 
 int main(int argc, char **argv)
 {
         struct NXOptions *opt = nx_options_alloc();
         nx_options_set_usage_header(opt, "Fits a homography to the given pair of images. "
                                     "Specify the input pair of images using -l/-r.\n\n");
-        nx_options_add(opt, "ss",
+        nx_options_add(opt, "sss",
                        "-l|--left",  "first image in the pair to match", NULL,
-                       "-r|--right", "second image in the pair to match", NULL);
+                       "-r|--right", "second image in the pair to match", NULL,
+                       "--validation-points", "name of a file containing K validation points as a 6-by-K matrix, each column containing left and right homogeneous coordinates.", NULL);
 
         nx_options_add(opt, "bi",
                        "--benchmark-ransac", "run RANSAC benchmark instead of fitting a homography once", NX_FALSE,
-                       "--benchmark-steps", "number of runs per benchmark", 10000);
+                       "--benchmark-steps", "number of runs per benchmark", 100);
 
         nx_sift_parameters_add_to_options(opt);
         nx_options_add(opt, "d", "--snn-threshold",
@@ -99,14 +105,29 @@ int main(int argc, char **argv)
                                                       &n_matches);
 
 
+        int n_vpts = 0;
+        struct NXPointMatch2D *vpts = load_validation_points(opt, &n_vpts);
+
         if (run_ransac_benchmark) {
-                ransac_benchmark(opt, imgs, stores, n_matches, matches);
+                ransac_benchmark(opt, imgs, stores,
+                                 n_matches, matches,
+                                 n_vpts, vpts);
         } else {
                 double h[9];
                 int n_inliers = fit_ransac(&h[0], opt, imgs, stores,
                                            n_matches, matches);
+
+                if (vpts && n_vpts > 0) {
+                        double E_fwd = nx_homography_transfer_error_fwd(&h[0],
+                                                                        n_vpts,
+                                                                        vpts);
+                        if (is_verbose) {
+                                NX_LOG(NX_LOG_TAG, "Forward Transfer Error: %g", E_fwd);
+                        }
+                }
         }
 
+        nx_free(vpts);
         nx_free(matches);
         nx_free(stores[0].keys);
         nx_free(stores[0].desc);
@@ -123,7 +144,8 @@ int main(int argc, char **argv)
 
 void ransac_benchmark(struct NXOptions *opt, struct NXImage **imgs,
                       struct NXKeyStore *stores,
-                      int n_matches, struct NXPointMatch2D *matches)
+                      int n_matches, struct NXPointMatch2D *matches,
+                      int n_vpts, struct NXPointMatch2D *vpts)
 {
         const int N_BENCHMARK_STEPS = nx_options_get_int(opt, "--benchmark-steps");
         NXBool is_verbose = nx_options_get_bool(opt, "-v");
@@ -135,6 +157,7 @@ void ransac_benchmark(struct NXOptions *opt, struct NXImage **imgs,
         double norm_tol = inlier_tolerance / stats->dp;
 
         int *n_inliers = NX_NEW_I(N_BENCHMARK_STEPS);
+        double *E_fwd = NX_NEW_D(N_BENCHMARK_STEPS);
         double *runtime = NX_NEW_D(N_BENCHMARK_STEPS);
         double **h = NX_NEW(N_BENCHMARK_STEPS, double *);
         for (int i = 0; i < N_BENCHMARK_STEPS; ++i) {
@@ -154,6 +177,15 @@ void ransac_benchmark(struct NXOptions *opt, struct NXImage **imgs,
         nx_point_match_2d_stats_denormalize_matches(stats, n_matches, matches);
         for (int i = 0; i < N_BENCHMARK_STEPS; ++i) {
                 nx_point_match_2d_stats_denormalize_homography(stats, h[i]);
+                E_fwd[i] = nx_homography_transfer_error_fwd(h[i], n_vpts, vpts);
+        }
+
+        struct NXStatistics1D e_fwd_stats;
+        if (n_vpts > 0 && vpts) {
+                for (int i = 0; i < N_BENCHMARK_STEPS; ++i) {
+                        E_fwd[i] = nx_homography_transfer_error_fwd(h[i], n_vpts, vpts);
+                }
+                nx_dstatistics_1d(&e_fwd_stats, N_BENCHMARK_STEPS, E_fwd);
         }
 
         struct NXStatistics1D inlier_stats;
@@ -169,19 +201,30 @@ void ransac_benchmark(struct NXOptions *opt, struct NXImage **imgs,
                inlier_stats.min, inlier_stats.lower_quartile,
                inlier_stats.median,
                inlier_stats.upper_quartile, inlier_stats.max);
-        printf("%8.2f,%8.2f,%8.2f,%8.2f,%8.2f,%8.2f,%8.2f\n",
+        printf("%8.2f,%8.2f,%8.2f,%8.2f,%8.2f,%8.2f,%8.2f",
                runtime_stats.mean, runtime_stats.stdev,
                runtime_stats.min, runtime_stats.lower_quartile,
                runtime_stats.median,
                runtime_stats.upper_quartile, runtime_stats.max);
 
-        /*
-         * for (int i = 0; i < N_BENCHMARK_STEPS; ++i) {
-         *         printf("%4d %5.2f\n", n_inliers[i], runtime[i]);
-         * }
-         */
+        if (n_vpts > 0 && vpts) {
+                printf(",%8.2f,%8.2f,%8.2f,%8.2f,%8.2f,%8.2f,%8.2f",
+                       e_fwd_stats.mean, e_fwd_stats.stdev,
+                       e_fwd_stats.min, e_fwd_stats.lower_quartile,
+                       e_fwd_stats.median,
+                       e_fwd_stats.upper_quartile, e_fwd_stats.max);
+        }
+
+        printf("\n");
 
         nx_point_match_2d_stats_free(stats);
+        nx_free(n_inliers);
+        nx_free(E_fwd);
+        nx_free(runtime);
+        for (int i = 0; i < N_BENCHMARK_STEPS; ++i) {
+                nx_free(h[i]);
+        }
+        nx_free(h);
 }
 
 int fit_ransac(double *h, struct NXOptions *opt, struct NXImage **imgs,
@@ -296,4 +339,54 @@ compute_keypoints_and_descriptors(struct NXOptions *opt,
         }
 
         return stores;
+}
+
+struct NXPointMatch2D *load_validation_points(struct NXOptions *opt, int *n_corr)
+{
+        NXBool is_verbose = nx_options_get_bool(opt, "-v");
+        const char *validation_filename = nx_options_get_string(opt, "--validation-points");
+
+        *n_corr = 0;
+        if (!validation_filename) {
+                if (is_verbose) {
+                        NX_LOG(NX_LOG_TAG, "Validation file not specified, "
+                               "skipping validation transfer error calculation");
+                }
+                return NULL;
+        }
+
+        int m = 0;
+        FILE *stream = nx_xfopen(validation_filename, "r");
+        double *pts = nx_dmat_xread(stream, &m, n_corr);
+        nx_xfclose(stream, validation_filename);
+
+        if (m != 6) {
+                NX_FATAL(NX_LOG_TAG, "Validation file \"%s\"must contain six rows not %d",
+                         validation_filename, m);
+        }
+
+        if (is_verbose) {
+                NX_LOG(NX_LOG_TAG, "Loaded %d validation points from %s",
+                       *n_corr, validation_filename);
+        }
+
+        if (pts) {
+                struct NXPointMatch2D *corr = NX_NEW(*n_corr, struct NXPointMatch2D);
+                memset(corr, 0, *n_corr * sizeof(struct NXPointMatch2D));
+                for (int i = 0; i < *n_corr; ++i) {
+                        corr[i].x[0] = pts[i * 6 + 0];
+                        corr[i].x[1] = pts[i * 6 + 1];
+                        corr[i].xp[0] = pts[i * 6 + 3];
+                        corr[i].xp[1] = pts[i * 6 + 4];
+                        corr[i].match_cost = 0;
+                        corr[i].sigma_x  = 0.1;
+                        corr[i].sigma_xp = 0.1;
+                        corr[i].is_inlier = NX_TRUE;
+                }
+                nx_free(pts);
+
+                return corr;
+        } else {
+                return NULL;
+        }
 }
