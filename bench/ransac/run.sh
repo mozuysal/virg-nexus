@@ -5,7 +5,7 @@ homogr_dir=${data_dir}/cmp/homogr
 bin_dir=../../build/bin
 out_file="out/$(git rev-parse HEAD)".csv
 
-snn_threshold=0.8
+snn_threshold=0.85
 sift_peak_thr=0.02
 ransac_max_iter=10000
 ransac_inlier_thr=3.0
