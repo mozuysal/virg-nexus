@@ -94,7 +94,7 @@ int nx_usac_fit_homography(int *n_max_models, double **models,
 NXBool nx_usac_check_homography(double *model, const int *sample_ids,
                                 void *data)
 {
-        static const double MIN_ANGLE = 15.0 * NX_PI / 180.0;
+        static const double MIN_ANGLE = 5.0 * NX_PI / 180.0;
         const double MAX_ABS_COS = fabs(cos(MIN_ANGLE));
 
         return nx_homography_check(model, MAX_ABS_COS);
@@ -110,8 +110,8 @@ double nx_usac_score_homography(double *model, const int *sample_ids,
         struct NXUSACHomographyData *hdata = (struct NXUSACHomographyData *)data;
 
         int n_inliers = nx_homography_mark_inliers(model, hdata->n_corr,
-                                                      hdata->corr_list,
-                                                      hdata->inlier_tolerance);
+                                                   hdata->corr_list,
+                                                   hdata->inlier_tolerance);
 
         return n_inliers;
 

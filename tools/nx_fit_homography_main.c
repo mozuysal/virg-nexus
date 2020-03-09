@@ -28,6 +28,7 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
+#include <zlib.h>
 
 #include "virg/nexus/nx_options.h"
 #include "virg/nexus/nx_log.h"
@@ -63,19 +64,25 @@ int fit_ransac(double * h, struct NXOptions *opt, struct NXImage **imgs,
 void ransac_benchmark(struct NXOptions *opt, struct NXImage **imgs,
                       struct NXKeyStore *stores, int n_matches,
                       struct NXPointMatch2D *matches, int n_vpts,
-                      struct NXPointMatch2D *vpts);
+                      struct NXPointMatch2D *vpts, const double *h_l2r,
+                      const double *h_r2l);
 
-struct NXPointMatch2D *load_validation_points(struct NXOptions *opt, int *n_corr);
+struct NXPointMatch2D *load_validation_points(struct NXOptions *opt,
+                                              int *n_corr);
+double *load_ground_truth_from_options(struct NXOptions *opt,
+                                       const char *opt_name);
 
 int main(int argc, char **argv)
 {
         struct NXOptions *opt = nx_options_alloc();
         nx_options_set_usage_header(opt, "Fits a homography to the given pair of images. "
                                     "Specify the input pair of images using -l/-r.\n\n");
-        nx_options_add(opt, "sss",
+        nx_options_add(opt, "sssss",
                        "-l|--left",  "first image in the pair to match", NULL,
                        "-r|--right", "second image in the pair to match", NULL,
-                       "--validation-points", "name of a file containing K validation points as a 6-by-K matrix, each column containing left and right homogeneous coordinates.", NULL);
+                       "--validation-points", "name of a file containing K validation points as a 6-by-K matrix, each column containing left and right homogeneous coordinates.", NULL,
+                       "--ground-truth-l2r", "name of a file containing ground truth homography from left to right", NULL,
+                       "--ground-truth-r2l", "name of a file containing ground truth homography from right to left", NULL);
 
         nx_options_add(opt, "bi",
                        "--benchmark-ransac", "run RANSAC benchmark instead of fitting a homography once", NX_FALSE,
@@ -108,10 +115,14 @@ int main(int argc, char **argv)
         int n_vpts = 0;
         struct NXPointMatch2D *vpts = load_validation_points(opt, &n_vpts);
 
+        double *h_l2r = load_ground_truth_from_options(opt, "--ground-truth-l2r");
+        double *h_r2l = load_ground_truth_from_options(opt, "--ground-truth-r2l");
+
         if (run_ransac_benchmark) {
                 ransac_benchmark(opt, imgs, stores,
                                  n_matches, matches,
-                                 n_vpts, vpts);
+                                 n_vpts, vpts,
+                                 h_l2r, h_r2l);
         } else {
                 double h[9];
                 int n_inliers = fit_ransac(&h[0], opt, imgs, stores,
@@ -127,6 +138,8 @@ int main(int argc, char **argv)
                 }
         }
 
+        nx_free(h_l2r);
+        nx_free(h_r2l);
         nx_free(vpts);
         nx_free(matches);
         nx_free(stores[0].keys);
@@ -145,12 +158,24 @@ int main(int argc, char **argv)
 void ransac_benchmark(struct NXOptions *opt, struct NXImage **imgs,
                       struct NXKeyStore *stores,
                       int n_matches, struct NXPointMatch2D *matches,
-                      int n_vpts, struct NXPointMatch2D *vpts)
+                      int n_vpts, struct NXPointMatch2D *vpts,
+                      const double *h_l2r, const double *h_r2l)
 {
         const int N_BENCHMARK_STEPS = nx_options_get_int(opt, "--benchmark-steps");
         NXBool is_verbose = nx_options_get_bool(opt, "-v");
         double inlier_tolerance = nx_options_get_double(opt, "--ransac-inlier-threshold");
         int max_n_ransac_iter = nx_options_get_int(opt, "--ransac-max-n-iterations");
+
+        NXBool has_ground_truth = h_l2r || h_r2l;
+        int n_inliers_gt = 0;
+        if (has_ground_truth) {
+                if (h_l2r)
+                        n_inliers_gt = nx_homography_mark_inliers(h_l2r, n_matches,
+                                                                  matches, inlier_tolerance);
+                else
+                        n_inliers_gt = nx_homography_mark_inliers_inv(h_r2l, n_matches,
+                                                                      matches, inlier_tolerance);
+        }
 
         struct NXPointMatch2DStats *stats = nx_point_match_2d_stats_new();
         nx_point_match_2d_stats_normalize_matches(stats, n_matches, matches);
@@ -177,7 +202,6 @@ void ransac_benchmark(struct NXOptions *opt, struct NXImage **imgs,
         nx_point_match_2d_stats_denormalize_matches(stats, n_matches, matches);
         for (int i = 0; i < N_BENCHMARK_STEPS; ++i) {
                 nx_point_match_2d_stats_denormalize_homography(stats, h[i]);
-                E_fwd[i] = nx_homography_transfer_error_fwd(h[i], n_vpts, vpts);
         }
 
         struct NXStatistics1D e_fwd_stats;
@@ -194,8 +218,25 @@ void ransac_benchmark(struct NXOptions *opt, struct NXImage **imgs,
         struct NXStatistics1D runtime_stats;
         nx_dstatistics_1d(&runtime_stats, N_BENCHMARK_STEPS, runtime);
 
-        printf("%6d,%6d,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,",
-               n_matches,
+        if (is_verbose) {
+                fprintf(stderr, "n_corr,");
+                if (has_ground_truth)
+                        fprintf(stderr, " ni_gt, ir_gt,");
+                fprintf(stderr, "     n,"
+                        "ni_avg,ni_std,ni_min,ni_lwq,ni_med,ni_upq,ni_max,"
+                        "  rt_avg,  rt_std,  rt_min,  rt_lwq,  rt_med,  rt_upq,  rt_max");
+                if (n_vpts > 0 && vpts)
+                        fprintf(stderr, ",Efwd_avg,Efwd_std,Efwd_min,Efwd_lwq,Efwd_med,Efwd_upq,Efwd_max");
+                fprintf(stderr, "\n");
+        }
+
+        printf("%6d",
+               n_matches);
+
+        if (has_ground_truth)
+                printf(",%6d,%6.1f", n_inliers_gt, n_inliers_gt * 100.0 / n_matches);
+
+        printf(",%6d,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,",
                inlier_stats.n,
                inlier_stats.mean, inlier_stats.stdev,
                inlier_stats.min, inlier_stats.lower_quartile,
@@ -389,4 +430,27 @@ struct NXPointMatch2D *load_validation_points(struct NXOptions *opt, int *n_corr
         } else {
                 return NULL;
         }
+}
+
+double *load_ground_truth_from_options(struct NXOptions *opt,
+                                       const char *opt_name)
+{
+        NXBool is_verbose = nx_options_get_bool(opt, "-v");
+
+        const char *gt_filename = nx_options_get_string(opt, opt_name);
+        if (!gt_filename)
+                return NULL;
+
+        FILE *stream = nx_xfopen(gt_filename, "r");
+        int m, n;
+        double *h_gt = nx_dmat_xread(stream, &m, &n);
+        if (m != 3 || n != 3)
+                NX_FATAL(NX_LOG_TAG, "Ground truth matrix must be 3-by-3, loaded %d-by-%d from %s",
+                         m, n, gt_filename);
+
+        if (is_verbose)
+                NX_LOG(NX_LOG_TAG, "Loaded ground truth homograhy from %s provided to %s",
+                       gt_filename, opt_name);
+
+        return h_gt;
 }

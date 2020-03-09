@@ -122,6 +122,31 @@ int nx_homography_mark_inliers(const double *h, int n_corr,
         return n_inliers;
 }
 
+int nx_homography_mark_inliers_inv(const double *h_inv, int n_corr,
+                                   struct NXPointMatch2D *corr_list,
+                                   double inlier_tolerance)
+{
+        double tol_sqr = inlier_tolerance*inlier_tolerance;
+        int n_inliers = 0;
+
+        for (int i = 0; i < n_corr; ++i) {
+                float m[2];
+                nx_homography_transfer_fwd(h_inv, &m[0], &(corr_list[i].xp[0]));
+
+                double dx = m[0] - corr_list[i].x[0];
+                double dy = m[1] - corr_list[i].x[1];
+                double d_sqr = dx*dx + dy*dy;
+                if (d_sqr < tol_sqr) {
+                        corr_list[i].is_inlier = NX_TRUE;
+                        ++n_inliers;
+                } else {
+                        corr_list[i].is_inlier = NX_FALSE;
+                }
+        }
+
+        return n_inliers;
+}
+
 double nx_homography_estimate_4pt(double *h, const int corr_ids[4], const struct NXPointMatch2D *corr_list)
 {
         double x[8];
