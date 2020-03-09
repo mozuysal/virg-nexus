@@ -62,7 +62,10 @@ void run_vgg_benchmark(struct BenchmarkOptions *bopt,
 int main(int argc, char **argv)
 {
         struct NXOptions *opt = nx_options_alloc();
+
+        nx_sift_parameters_add_to_options(opt);
         add_options(opt);
+
         nx_options_set_from_args(opt, argc, argv);
         struct BenchmarkOptions *bopt = parse_options(opt);
 
@@ -71,8 +74,9 @@ int main(int argc, char **argv)
                 nx_options_print_values(opt, stderr);
         }
 
+        struct NXSIFTDetectorParams sift_param = nx_sift_parameters_from_options(opt);
         struct NXSIFTDetector *detector = NULL;
-        detector = nx_sift_detector_new(nx_sift_default_parameters());
+        detector = nx_sift_detector_new(sift_param);
 
         run_vgg_benchmark(bopt, detector);
 
@@ -154,45 +158,48 @@ void evaluate_vgg_pair(struct BenchmarkOptions *bopt,
 
         // Report
         // seq, pair_id, n_keys0, n_keysi, compute_time, match_time, inliers0, ...
-        printf("%s,%d,%d,%d,%.3f,%.3f,%d,%d,%d\n",
+        printf("%8s,%8d,%8d,%8d,%10.2f,%10.2f,%10d,%8d,%8d,%8d\n",
                vgg_seq->name, pair_id, n_keys0, n_keysi,
-               compute_time, match_time,
+               compute_time, match_time, n_pm,
                n_inliers[0], n_inliers[1], n_inliers[2]);
 
         nx_free(pm);
         nx_free(desci);
         nx_free(keysi);
         nx_image_free(imgi);
- }
+}
 
 void run_vgg_benchmark(struct BenchmarkOptions *bopt,
                        struct NXSIFTDetector *detector)
 {
-        struct NXVGGAffineSequence *vgg_seq = NULL;
-        const char *seq_name = "graf";
-        vgg_seq = nx_vgg_affine_sequence_new(bopt->vgg_base, seq_name);
-        NX_INFO(NX_LOG_TAG, "Loaded sequence \"%s\" of length %d",
-                vgg_seq->name, vgg_seq->length);
+        printf("seq_name, pair_id, n_keys0, n_keysi, t_compute,   t_match, n_matches, ni_tol3, ni_tol2, ni_tol1\n");
 
-        struct NXImage *img0 = nx_image_alloc();
-        nx_vgg_affine_sequence_xload_frame(vgg_seq, 0, img0,
-                                           NX_IMAGE_LOAD_GRAYSCALE);
-        NX_INFO(NX_LOG_TAG, "Loaded image 0: %dx%d", img0->width, img0->height);
+        for (int sid = 0; sid < NX_VGG_AFFINE_N_SEQ; ++sid) {
+                struct NXVGGAffineSequence *vgg_seq = NULL;
+                vgg_seq = nx_vgg_affine_sequence_new(bopt->vgg_base, NX_VGG_AFFINE_SEQ_NAMES[sid]);
+                NX_INFO(NX_LOG_TAG, "Loaded sequence \"%s\" of length %d",
+                        vgg_seq->name, vgg_seq->length);
 
-        struct NXKeypoint *keys0 = NX_NEW(N_KEYS_INIT, struct NXKeypoint);
-        uchar *desc0 = NX_NEW_UC(N_KEYS_INIT * NX_SIFT_DESC_DIM);
-        int max_n_keys0 = N_KEYS_INIT;
-        int n_keys0 = nx_sift_detector_compute(detector, img0, &max_n_keys0,
-                                               &keys0, &desc0);
-        NX_INFO(NX_LOG_TAG, "Detected %d keypoints on image 0", n_keys0);
+                struct NXImage *img0 = nx_image_alloc();
+                nx_vgg_affine_sequence_xload_frame(vgg_seq, 0, img0,
+                                                   NX_IMAGE_LOAD_GRAYSCALE);
+                NX_INFO(NX_LOG_TAG, "  Loaded image 0: %dx%d", img0->width, img0->height);
 
-        for (int i = 1; i < vgg_seq->length; ++i) {
-                evaluate_vgg_pair(bopt, detector, vgg_seq, img0,
-                                  keys0, desc0, n_keys0, i);
+                struct NXKeypoint *keys0 = NX_NEW(N_KEYS_INIT, struct NXKeypoint);
+                uchar *desc0 = NX_NEW_UC(N_KEYS_INIT * NX_SIFT_DESC_DIM);
+                int max_n_keys0 = N_KEYS_INIT;
+                int n_keys0 = nx_sift_detector_compute(detector, img0, &max_n_keys0,
+                                                       &keys0, &desc0);
+                NX_INFO(NX_LOG_TAG, "  Detected %d keypoints on image 0", n_keys0);
+
+                for (int i = 1; i < vgg_seq->length; ++i) {
+                        evaluate_vgg_pair(bopt, detector, vgg_seq, img0,
+                                          keys0, desc0, n_keys0, i);
+                }
+
+                nx_free(desc0);
+                nx_free(keys0);
+                nx_image_free(img0);
+                nx_vgg_affine_sequence_free(vgg_seq);
         }
-
-        nx_free(desc0);
-        nx_free(keys0);
-        nx_image_free(img0);
-        nx_vgg_affine_sequence_free(vgg_seq);
 }

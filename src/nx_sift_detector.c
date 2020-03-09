@@ -775,7 +775,7 @@ int nx_sift_match_brute_force(int n,  const struct NXKeypoint *keys,
                                 }
                         }
 
-                        if (nn_dist_sq[0]  > DIST_THR_SQ * nn_dist_sq[1]) {
+                        if (nn_dist_sq[0] < DIST_THR_SQ * nn_dist_sq[1]) {
                                 const struct NXKeypoint *kp = keyps + nn_ids[0];
                                 struct NXPointMatch2D *pm = corr + n_matches;
                                 *pm = nx_point_match_2d_from_keypoints(k, kp,

@@ -5,13 +5,13 @@ homogr_dir=${data_dir}/cmp/homogr
 bin_dir=../../build/bin
 out_file="out/$(git rev-parse HEAD)".csv
 
-snn_threshold=0.4
-sift_peak_thr=0.06
+snn_threshold=0.8
+sift_peak_thr=0.02
 ransac_max_iter=10000
 ransac_inlier_thr=3.0
 n_steps=30
 
-sift_options="--sift-peak-threshold ${sift_peak_thr} --snn-threshold ${snn_threshold}"
+sift_options="--sift-double-image --sift-peak-threshold ${sift_peak_thr} --snn-threshold ${snn_threshold}"
 ransac_options="--ransac-max-n-iterations ${ransac_max_iter} --ransac-inlier-threshold ${ransac_inlier_thr}"
 benchmark_options="--benchmark-ransac --benchmark-steps ${n_steps}"
 options="${sift_options} ${ransac_options} ${benchmark_options}"

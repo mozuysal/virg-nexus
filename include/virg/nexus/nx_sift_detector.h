@@ -97,7 +97,7 @@ int nx_sift_detector_compute_with_cache(struct NXSIFTDetector *detector,
 /**
    Match SIFT descriptors brute force from desc to descp and return the number
    of matches. Applies distance ratio check if distance ratio threshold > 0 and
-   create a point match structure. corr must have at least n elements.
+   creates a point match structure. corr must have at least n elements.
  */
 int nx_sift_match_brute_force(int n,  const struct NXKeypoint *keys,
                               const uchar *desc,
