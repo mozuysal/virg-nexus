@@ -5,6 +5,7 @@ set(TOOL_MAN_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/share/man)
 
 set(NEXUS_TOOLS
   nx-harris-detector
+  nx-sift-detector
   nx-sift-benchmark
   nx-stitch
   nx-fit-homography
@@ -13,6 +14,9 @@ set(NEXUS_TOOLS
 add_executable(nx-harris-detector)
 target_sources(nx-harris-detector PRIVATE nx_harris_detector_main.c)
 install(FILES ${TOOL_MAN_DIR}/nx-harris-detector.1 DESTINATION ${TOOL_MAN_INSTALL_DIR}/man1)
+
+add_executable(nx-sift-detector)
+target_sources(nx-sift-detector PRIVATE nx_sift_detector_main.c)
 
 add_executable(nx-sift-benchmark)
 target_sources(nx-sift-benchmark PRIVATE nx_sift_benchmark_main.c)
