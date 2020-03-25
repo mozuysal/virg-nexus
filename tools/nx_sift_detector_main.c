@@ -33,6 +33,7 @@ int main(int argc, char **argv)
 {
         struct NXOptions* opt = nx_options_alloc();
         nx_options_add(opt, "S", "-i", "filename of the IMAGE to use", NULL);
+        nx_options_add(opt, "s", "-o", "output filename to save keypoints and descriptors", "sift.bin");
         nx_sift_parameters_add_to_options(opt);
         nx_options_add(opt, "b", "-v|--verbose", "display more information", NX_FALSE);
         nx_options_add_help(opt);
@@ -42,6 +43,7 @@ int main(int argc, char **argv)
         nx_options_set_from_args(opt, argc, argv);
         NXBool is_verbose = nx_options_get_bool(opt, "-v");
         const char *input_name = nx_options_get_string(opt, "-i");
+        const char *output_name = nx_options_get_string(opt, "-o");
 
         if (is_verbose)
                 nx_options_print_values(opt, stderr);
@@ -64,22 +66,7 @@ int main(int argc, char **argv)
         if (is_verbose)
                 NX_LOG("SIFT", "detected %d keys", n_keys);
 
-        printf("%d %d\n", n_keys, NX_SIFT_DESC_DIM);
-        for (int i = 0; i < n_keys; ++i) {
-                struct NXKeypoint *key = keys + i;
-                uchar *kdesc = desc + i * NX_SIFT_DESC_DIM;
-
-                float s = key->scale;
-                printf("%4.2f %4.2f %4.2f %4.3f",
-                       s * key->ys, s * key->xs,
-                       s * key->sigma, key->ori);
-                for (int j = 0; j < NX_SIFT_DESC_DIM; j++) {
-                        if (j % 20 == 0)
-                                printf("\n");
-                        printf(" %d", (int) kdesc[j]);
-                }
-                printf("\n");
-        }
+        nx_sift_xsave(output_name, n_keys, keys, desc);
 
         nx_free(desc);
         nx_free(keys);

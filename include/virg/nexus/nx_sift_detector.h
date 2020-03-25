@@ -37,6 +37,7 @@
 
 #include "virg/nexus/nx_config.h"
 #include "virg/nexus/nx_types.h"
+#include "virg/nexus/nx_io.h"
 #include "virg/nexus/nx_options.h"
 #include "virg/nexus/nx_image.h"
 #include "virg/nexus/nx_keypoint.h"
@@ -95,9 +96,9 @@ int nx_sift_detector_compute_with_cache(struct NXSIFTDetector *detector,
                                         const char *cache_dir);
 
 /**
-   Match SIFT descriptors brute force from desc to descp and return the number
-   of matches. Applies distance ratio check if distance ratio threshold > 0 and
-   creates a point match structure. corr must have at least n elements.
+ * Match SIFT descriptors brute force from desc to descp and return the number
+ * of matches. Applies distance ratio check if distance ratio threshold > 0 and
+ * creates a point match structure. corr must have at least n elements.
  */
 int nx_sift_match_brute_force(int n,  const struct NXKeypoint *keys,
                               const uchar *desc,
@@ -113,6 +114,12 @@ int nx_sift_match_brute_force_with_cache(int n,  const struct NXKeypoint *keys,
                                          struct NXPointMatch2D *corr,
                                          float dist_ratio_thr,
                                          const char *cache_dir);
+
+void nx_sift_xsave(const char *filename, int n, const struct NXKeypoint *keys,
+                   const uchar *desc);
+
+int nx_sift_xload(const char *filename, int *max_n_keys, struct NXKeypoint **keys,
+                   uchar **desc);
 
 __NX_END_DECL
 

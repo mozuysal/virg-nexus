@@ -885,3 +885,61 @@ int nx_sift_match_brute_force_with_cache(int n,  const struct NXKeypoint *keys,
 
         return n_corr;
 }
+
+void nx_sift_xsave(const char *filename, int n, const struct NXKeypoint *keys,
+                   const uchar *desc)
+{
+        NX_ASSERT_PTR(filename);
+        NX_ASSERT(n >= 0);
+        NX_ASSERT_PTR(keys);
+        NX_ASSERT_PTR(desc);
+
+        FILE *fout = nx_xfopen(filename, "w");
+
+        nx_xfwrite(&n, sizeof(n), 1, fout);
+
+        int desc_dim = NX_SIFT_DESC_DIM;
+        nx_xfwrite(&desc_dim, sizeof(desc_dim), 1, fout);
+
+        nx_keypoint_xwrite(keys, n, fout);
+        nx_xfwrite(desc, sizeof(*desc), n * NX_SIFT_DESC_DIM, fout);
+
+        nx_xfclose(fout, filename);
+}
+
+int nx_sift_xload(const char *filename, int *max_n_keys,
+                  struct NXKeypoint **keys, uchar **desc)
+{
+        NX_ASSERT_PTR(filename);
+        NX_ASSERT_PTR(max_n_keys);
+        NX_ASSERT(*max_n_keys >= 0);
+        NX_ASSERT_PTR(keys);
+        NX_ASSERT_PTR(desc);
+
+        FILE *fin = nx_xfopen(filename, "r");
+
+        int n;
+        nx_xfread(&n, sizeof(n), 1, fin);
+        if (n < 0)
+                NX_FATAL(NX_LOG_TAG, "File %s contains a negative number of SIFT keypoints: %d!",
+                         filename, n);
+
+        int desc_dim;
+        nx_xfread(&desc_dim, sizeof(desc_dim), 1, fin);
+        if (desc_dim != NX_SIFT_DESC_DIM)
+                NX_FATAL(NX_LOG_TAG, "File %s descriptor dimension %d does not match the library SIFT descriptor dimension %d!",
+                         filename, desc_dim, NX_SIFT_DESC_DIM);
+
+        if (*max_n_keys < n) {
+                *keys = nx_xrealloc(*keys, n * sizeof(**keys));
+                *desc = nx_xrealloc(*desc, n * NX_SIFT_DESC_DIM * sizeof(**desc));
+                *max_n_keys = n;
+        }
+
+        nx_keypoint_xread(*keys, n, fin);
+        nx_xfread(*desc, sizeof(**desc), n * NX_SIFT_DESC_DIM, fin);
+
+        nx_xfclose(fin, filename);
+
+        return n;
+}
