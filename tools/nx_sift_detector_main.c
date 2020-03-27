@@ -66,6 +66,14 @@ int main(int argc, char **argv)
         if (is_verbose)
                 NX_LOG("SIFT", "detected %d keys", n_keys);
 
+        printf("%10s,%7s,%7s,%5s,%7s,%7s\n",
+               "score", "x","y","scale", "ori", "sigma");
+        for (int i = 0; i < n_keys; ++i) {
+                const struct NXKeypoint *key = keys + i;
+                printf("%10.6f,%7.2f,%7.2f,%5.2f,%7.4f,%7.4f\n",
+                       key->score, key->xs, key->ys,
+                       key->scale, key->ori, key->sigma);
+        }
         nx_sift_xsave(output_name, n_keys, keys, desc);
 
         nx_free(desc);
