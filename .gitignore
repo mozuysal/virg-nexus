@@ -1,8 +1,9 @@
-/build/
-/include/virg/nexus/nx_config.h
-/lib/
-/pynexus/dist/
-/pynexus/nexus.egg-info/
 *~
-/tests/test_data.hh
 /valgrind_nexus.supp
+/build/
+/lib/
+/include/virg/nexus/nx_config.h
+/tests/test_data.hh
+**/__pycache__/
+/pyvirg/dist/
+/pyvirg/virg.egg-info/

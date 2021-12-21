@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(
-    name='nexus',
+    name='virg',
     version='0.1',
-    packages=['nexus']
+    packages=['virg']
 )
