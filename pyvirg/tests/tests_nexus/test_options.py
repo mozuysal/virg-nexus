@@ -8,7 +8,7 @@ class OptionsTest(unittest.TestCase):
         self.opt_items = [
             OptionItem('s'),
             OptionItem('i', 'integer', int, 42, 'magic integer'),
-            OptionItem(None, 'test-flag', bool, 'magic flag'),
+            OptionItem(None, 'test-flag', bool, help_str='magic flag'),
             OptionItem('r', None, float, 3.1415926, 'magic real number') ]
         self.opt = Options([OptionGroup('simple', self.opt_items)])
 
@@ -17,6 +17,8 @@ class OptionsTest(unittest.TestCase):
         self.assertEqual(self.opt_items[1].key_name, 'integer')
         self.assertEqual(self.opt_items[2].key_name, 'test_flag')
         self.assertEqual(self.opt_items[3].key_name, 'r')
+
+        self.assertEqual(self.opt_items[2].help_str, 'magic flag')
 
     def test_empty(self):
         values = self.opt.parse_args([])
