@@ -7,3 +7,5 @@
 **/__pycache__/
 /pyvirg/dist/
 /pyvirg/virg.egg-info/
+/pyvirg/docs/build/
+/pyvirg/docs/source/generated/
