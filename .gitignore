@@ -1,7 +1,11 @@
 *~
-/valgrind_nexus.supp
-/build/
-/lib/
+valgrind_nexus.supp
+compile_commands.json
+build/
+lib/
+doc/
+.clangd/
+bench/**/out/
 /include/virg/nexus/nx_config.h
 /tests/test_data.hh
 **/__pycache__/
