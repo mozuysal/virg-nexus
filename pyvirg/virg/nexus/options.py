@@ -52,11 +52,12 @@ class OptionGroup:
         for item in self.items:
             item.add_as_argument(parser)
 
-    def from_value_dict(self, value_dict):
+    def from_dict(self, dict):
         for item in self.items:
-            item.value = value_dict.get(item.key_name, item.default_value)
+            item.value = dict.get(item.key_name, item.default_value)
+        return self
 
-    def to_value_dict(self):
+    def to_dict(self):
         return { item.key_name: item.value for item in self.items }
 
 
@@ -77,24 +78,29 @@ class Options:
 
     def parse_args(self, args):
         parser = ArgumentParser()
-        self.add_arguments(parser)
+        self.add_arguments_to(parser)
         res = parser.parse_args(args)
 
         if res.from_yaml is None:
-            value_dict = vars(res)
+            dict = vars(res)
         else:
             with open(res.from_yaml) as fin:
-                value_dict = yaml.load(fin, Loader=yaml.Loader)
+                dict = yaml.load(fin, Loader=yaml.Loader)
 
         for group in self.options:
-            group.from_value_dict(value_dict)
-        return value_dict
+            group.from_dict(dict)
+        return dict
 
-    def to_value_dict(self):
-        value_dict = {}
+    def to_dict(self):
+        dict = {}
         for group in self.options:
-            value_dict.update(group.to_value_dict())
-        return value_dict
+            dict.update(group.to_dict())
+        return dict
+
+    def from_dict(self, dict):
+        for group in self.options:
+            group.from_dict(dict)
+        return self
 
     def save_yaml(self, filename):
         with open(filename, 'w') as fout:
@@ -102,8 +108,7 @@ class Options:
 
     def load_yaml(self, filename):
         with open(filename) as fin:
-            value_dict = yaml.load(fin, Loader=yaml.Loader)
+            dict = yaml.load(fin, Loader=yaml.Loader)
 
-        for group in self.options:
-            group.from_value_dict(value_dict)
-        return value_dict
+        self.from_dict(dict)
+        return dict
