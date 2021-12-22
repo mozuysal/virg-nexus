@@ -1,3 +1,6 @@
+"""Module providing classes for simplified command line argument management
+with YAML support.
+"""
 import sys
 from argparse import ArgumentParser
 from pathlib import Path
@@ -5,6 +8,12 @@ from pathlib import Path
 import yaml
 
 class OptionItem:
+    """Class representing a single command line argument with short/long names,
+    type, default value, and help string.
+
+    Its `key_name` is derived from the long name if given or the short name if
+    not by replacing '-' characters with '_'.
+    """
     def __init__(self, short_name, long_name=None,
                  type_of=str, default_value=None, help_str=None):
         self.short_name = short_name
@@ -34,6 +43,11 @@ class OptionItem:
                                 help=self.help_str)
 
 class OptionGroup:
+    """Stores a list of :class:`OptionItem`s together with a title.
+
+    It exists mostly for pretty printing when exporting to other formats such as
+    YAML.
+    """
     def __init__(self, title, items=[]):
         self.title = title
         self.items = items
@@ -62,6 +76,12 @@ class OptionGroup:
 
 
 class Options:
+    """Main class that stores groups of :class:`OptionItem`s for command line
+    argument management.
+
+    Args:
+        options (list of :class:`OptionGroup`): option items
+    """
     def __init__(self, options=[]):
         self.options = options
 
@@ -76,8 +96,14 @@ class Options:
                             help='load options from yaml file'
                             ' ignoring given arguments')
 
-    def parse_args(self, args):
-        parser = ArgumentParser()
+    def parse_args(self, args, parser=None):
+        """Parse the given list of strings using :class:`ArgumentParser` and return a
+        dictionary of values.
+
+        Dictionary keys are the same as `key_item` fields of :class:`OptionItem`s.
+        """
+        if parser is None:
+            parser = ArgumentParser()
         self.add_arguments_to(parser)
         res = parser.parse_args(args)
 
@@ -87,8 +113,8 @@ class Options:
             with open(res.from_yaml) as fin:
                 dict = yaml.load(fin, Loader=yaml.Loader)
 
-        for group in self.options:
-            group.from_dict(dict)
+        self.from_dict(dict)
+
         return dict
 
     def to_dict(self):
